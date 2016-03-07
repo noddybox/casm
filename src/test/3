@@ -1,0 +1,20 @@
+	org	$8000
+
+start:
+	dw	start, end
+end:
+
+wmac:	macro
+.start
+	dw	start,end
+.end
+	endm
+
+	align	8
+	wmac
+	align	8
+	wmac
+	align	8
+	wmac
+
+	text	"EOL"

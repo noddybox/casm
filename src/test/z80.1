@@ -1,0 +1,447 @@
+	option	-list
+	option	+list-hex
+	option	+list-pc
+	option	list-macros,off
+	option	list-labels,off
+
+	;output	file,a.tap
+	;output	format,spectrum
+
+	cpu	z80
+
+	org	$8000
+
+	;
+	; Simple comments
+	;
+
+ld8test:macro reg
+	LD @reg,A	; Comment?
+	LD @reg,B
+	LD @reg,C
+	LD @reg,D
+	LD @reg,E
+	LD @reg,H
+	LD @reg,L
+.test
+	LD @reg,(HL)
+	LD @reg,(IX+127)
+	LD @reg,(IY-128)
+	LD (hl),@reg
+	LD (IX+127),@reg
+	LD (IY-128),@reg
+	ld @reg,$e5
+	ld @reg,ixh
+	ld @reg,ixl
+	ld @reg,iyh
+	ld @reg,iyl
+	endm
+
+ld8test_undoc:macro
+	LD \1,A	; Comment?
+	LD \1,B
+	LD \1,C
+	LD \1,D
+	LD \1,E
+	LD \1,\1
+	LD \1,\1
+	ld \1,$e5
+	endm
+
+ld_tests:
+.value
+	ld (hl),$e5
+	ld (ix+127),$e5
+	ld (iy-128),$e5
+.a
+	ld8test a
+	LD a,(BC)
+	LD a,(DE)
+	LD a,(word)
+	ld a,i
+	ld a,r
+	ld r,a
+	ld i,a
+
+.b
+	ld8test b
+.c
+	ld8test c
+.d
+	ld8test d
+.e
+	ld8test e
+.h
+	ld8test h
+.l
+	ld8test l
+.ixl
+	ld8test_undoc ixl
+.ixh
+	ld8test_undoc ixh
+.iyl
+	ld8test_undoc iyl
+.iyh
+	ld8test_undoc iyh
+
+.bit16
+	ld	bc,word
+	ld	de,word
+	ld	hl,word
+	ld	sp,word
+	ld	ix,word
+	ld	iy,word
+
+	ld	bc,(word)
+	ld	de,(word)
+	ld	hl,(word)
+	ld	sp,(word)
+	ld	ix,(word)
+	ld	iy,(word)
+
+alu:	macro
+	\1	a,a
+	\1	a
+	\1	a,b
+	\1	b
+	\1	a,c
+	\1	a,d
+	\1	a,e
+	\1	a,h
+	\1	a,l
+	\1	a,ixh
+	\1	a,ixl
+	\1	a,iyh
+	\1	a,iyl
+	\1	a,(hl)
+	\1	a,(ix+100)
+	\1	a,(iy-100)
+	endm
+
+alutest:
+	alu	add
+	alu	adc
+	alu	sub
+	alu	sbc
+	alu	and
+	alu	or
+	alu	xor
+	alu	eor
+	alu	cp
+
+	inc	a
+	inc	b
+	inc	c
+	inc	d
+	inc	e
+	inc	h
+	inc	l
+	inc	ixh
+	inc	ixl
+	inc	iyh
+	inc	iyl
+	inc	(hl)
+	inc	(ix-64)
+	inc	(iy+64)
+	inc	bc
+	inc	de
+	inc	hl
+	inc	sp
+	inc	ix
+	inc	iy
+
+	dec	a
+	dec	b
+	dec	c
+	dec	d
+	dec	e
+	dec	h
+	dec	l
+	dec	ixh
+	dec	ixl
+	dec	iyh
+	dec	iyl
+	dec	(hl)
+	dec	(ix-64)
+	dec	(iy+64)
+	dec	bc
+	dec	de
+	dec	hl
+	dec	sp
+	dec	ix
+	dec	iy
+
+	im	0
+	im	1
+	im	2
+
+alu16:
+	add	hl,bc
+	add	hl,de
+	add	hl,hl
+	add	hl,sp
+
+	add	ix,bc
+	add	ix,de
+	add	ix,ix
+	add	ix,sp
+
+	add	iy,bc
+	add	iy,de
+	add	iy,iy
+	add	iy,sp
+
+	adc	hl,bc
+	adc	hl,de
+	adc	hl,hl
+	adc	hl,sp
+
+	sbc	hl,bc
+	sbc	hl,de
+	sbc	hl,hl
+	sbc	hl,sp
+
+stack:
+	push	af
+	push	bc
+	push	de
+	push	hl
+	push	ix
+	push	iy
+	pop	af
+	pop	bc
+	pop	de
+	pop	hl
+	pop	ix
+	pop	iy
+
+exchange:
+	ex	de,hl
+	ex	af,af'
+	ex	(sp),hl
+	ex	(sp),ix
+	ex	(sp),iy
+	ldi
+	ldir
+	ldd
+	lddr
+	cpi
+	cpir
+	cpdr
+
+bitm:	macro
+	\1	a
+	\1	b
+	\1	c
+	\1	d
+	\1	e
+	\1	h
+	\1	l
+	\1	(hl)
+	\1	(ix+1)
+	\1	(iy-1)
+	\1	(ix+1),a
+	\1	(iy-1),a
+	\1	(ix+1),b
+	\1	(iy-1),b
+	\1	(ix+1),c
+	\1	(iy-1),c
+	\1	(ix+1),d
+	\1	(iy-1),d
+	\1	(ix+1),e
+	\1	(iy-1),e
+	\1	(ix+1),h
+	\1	(iy-1),h
+	\1	(ix+1),l
+	\1	(iy-1),l
+	endm
+
+set_res:macro
+	\1	0,a
+	\1	1,b
+	\1	2,c
+	\1	3,d
+	\1	4,e
+	\1	5,h
+	\1	6,l
+	\1	7, (hl)
+	\1	0, (ix+1)
+	\1	0, (iy-1)
+	\1	1, (ix+1),a
+	\1	1, (iy-1),a
+	\1	2, (ix+1),b
+	\1	2, (iy-1),b
+	\1	3, (ix+1),c
+	\1	3, (iy-1),c
+	\1	4, (ix+1),d
+	\1	4, (iy-1),d
+	\1	5, (ix+1),e
+	\1	5, (iy-1),e
+	\1	6, (ix+1),h
+	\1	6, (iy-1),h
+	\1	7, (ix+1),l
+	\1	7, (iy-1),l
+	endm
+
+bits:
+	RLCA
+	RRCA
+	RLA
+	RRA
+
+	bitm	rlc
+	bitm	rl
+	bitm	rrc
+	bitm	rr
+	bitm	sla
+	bitm	SRA
+	bitm	srl
+	bitm	sll
+
+	set_res	set
+	set_res	res
+
+	bit	0,a
+	bit	1,b
+	bit	2,c
+	bit	3,d
+	bit	4,e
+	bit	5,h
+	bit	6,l
+	bit	7, (hl)
+	bit	0, (ix+1)
+	bit	0, (iy-1)
+
+jtest:	macro
+	\1	endjmp
+	\1	nz,endjmp
+	\1	z,endjmp
+	\1	nc,endjmp
+	\1	c,endjmp
+	\1	po,endjmp
+	\1	pe,endjmp
+	\1	p,endjmp
+	\1	m,endjmp
+.endjmp
+	endm
+
+jump:
+	jtest	jp
+	jtest	call
+
+	jp	(hl)
+	jp	(ix)
+	jp	(iy)
+
+.jrjump1
+	jr	jrjump1
+	jr	nz,jrjump1
+	jr	z,jrjump1
+	jr	nc,jrjump1
+	jr	c,jrjump1
+	djnz	jrjump1
+
+	jr	jrjump2
+	jr	nz,jrjump2
+	jr	z,jrjump2
+	jr	nc,jrjump2
+	jr	c,jrjump2
+	djnz	jrjump2
+.jrjump2
+	call	0
+
+	ret
+	ret	nz
+	ret	z
+	ret	nc
+	ret	c
+	ret	po
+	ret	pe
+	ret	p
+	ret	m
+	reti
+	retn
+
+	rst	0
+	rst	0h
+	rst	8
+	rst	8h
+	rst	10
+	rst	10h
+	rst	18
+	rst	18h
+	rst	20
+	rst	20h
+	rst	28
+	rst	28h
+	rst	30
+	rst	30h
+	rst	38
+	rst	38h
+
+
+io:
+	in	(c)
+	in	a,(255)
+	in	a,(c)
+	in	b,(c)
+	in	c,(c)
+	in	d,(c)
+	in	e,(c)
+	in	h,(c)
+	in	l,(c)
+	in	f,(c)
+	ini
+	inir
+	ind
+	indr
+
+	out	(c),0
+	out	(255),a
+	out	(c),a
+	out	(c),b
+	out	(c),c
+	out	(c),d
+	out	(c),e
+	out	(c),h
+	out	(c),l
+	out	(c),f
+	out	(c),255
+	out	(c),123456789
+	outi
+	otir
+	outd
+	otdr
+
+implied:
+	NOP
+	DI
+	EI
+	HALT
+	HLT
+	EXX
+	DAA
+	CPL
+	SCF
+	CCF
+	NEG
+	CPI
+	CPIR
+	CPD
+	CPDR
+	INI
+	INIR
+	IND
+	INDR
+	OUTI
+	OTIR
+	OUTD
+	OTDR
+	LDI
+	LDIR
+	LDD
+	LDDR
+
+word:	defs	2
+
+string:	db	"Hello World",0

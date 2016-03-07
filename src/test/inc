@@ -1,0 +1,6 @@
+	include test/1
+binstart:
+	incbin test/1
+binend:
+
+	;include test/inc

@@ -1,0 +1,68 @@
+	option	+list
+	option	list-macros,all
+	org	$8000
+
+macro1:	macro
+	.byte	"Hello World"
+	.text	0, $ff
+	endm
+
+hello:	macro
+.start
+	macro1
+	dw	start,end
+.end
+	endm
+
+	option	charset, ascii
+ascii:	hello	"ASC",$80
+.should_be_local_to_ascii
+
+	option	charset, zx81
+zx81:
+	hello	"'81",$81
+.should_be_local_to_zx81
+
+	option	charset, spectrum
+speccy:	hello	"48K",$82
+
+	option	charset, cbm
+cbm:	hello	"CBM",$83
+
+	org	$8100
+
+	ds	512,$
+	.ds	512
+	ds	512,$ff
+
+macro2:	macro
+	db	\1,0xe5,\2
+	endm
+
+macro3:	macro
+	macro2	\1,\2
+	endm
+
+macro4: macro a
+	macro3	$ff,@a
+	endm
+
+macrotest:
+	macro4	"0x01"
+	macro4	"0x02"
+	macro4	"0x03"
+	MACRO4	"0x04"
+	macro4	"0x05"
+	macro4	"0x06"
+
+	option	macro-arg-char,&
+
+macro5: macro a
+	defb	&a
+	endm
+
+	macro5 "Hello"
+	macro5 "World"
+
+end:	equ	$
+end2:

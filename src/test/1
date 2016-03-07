@@ -1,0 +1,75 @@
+;
+; Basic parsing and label handling
+;
+; Comments
+;
+		list on
+		list labels,on
+
+		alias	fred,equ
+
+label0:		; First label - should default to zero
+
+label1	org	$8000
+.local_1	org 8001h
+.local_2	org 8002
+
+label2:	equ	11110101b
+.local2_1
+.local_dup
+
+	org	0x8100
+pc_test1:	equ	$
+pc_test_minus_100:	equ	$ - $100
+
+label3:
+.local3_1
+.local_dup
+
+forward:	equ	bin1 + bin2 + hex1
+
+expr1_7	equ	1 + 2 * 3
+expr2_9	equ	{1 + 2} * 3
+
+bin1:	equ	11110101b
+bin2:	equ	11110010b
+hex1:	equ	$1234
+hex2	equ	1234h
+hex3:	equ	0x1234
+oct:	equ	0177
+.dec	equ	65535
+.dec2:	equ	123456
+
+align_test: org	$9001
+
+	align	$10
+should_end_10h:
+
+	align	$100
+should_end_100h:
+
+	cpu	z80
+	option	list
+
+	cpu	6502
+	option	list
+
+	option	zp,true
+	option	zp,on
+	option	zp,yes
+	option	zp,false
+	option	zp,off
+	option	zp,no
+
+	option	+zp
+	option	-zp
+
+one	equ	1
+two	fred	ONE * 2
+
+true1	equ	one == 1
+false1	equ	one != 1
+
+endaddr:end
+
+this is ignored

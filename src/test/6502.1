@@ -1,0 +1,272 @@
+	;option	list-file,list.txt
+	option	+list
+	option	+list-hex
+	option	+list-pc
+	option	list-labels,all
+	option	list-macros,all
+
+	;
+	; Test basically created by pasting in opcodes from 6502.org
+	;
+	cpu	6502
+
+	org	$8000
+
+zero:	equ	0
+
+	option	zero-page,off
+
+adc_test
+	ADC #$44
+	option	+zero-page
+	ADC $44
+	adc $44,x
+	option	-zero-page
+	adc $4400
+	adc $4400,x
+	adc $4400,y
+	ADC ($44,X)
+	ADC ($44),Y
+
+zp_test
+	option	zero-page,auto
+	adc	$80	; Always ZP
+	adc	$8080	; Always !ZP
+	adc	fwd_80	; Always ZP - sure after 2nd pass onwards
+	adc	fwd_101	; Initially ZP - sure !ZP after 2nd pass onwards
+	option	-zero-page
+
+
+addr_mode_tests:	; Uncomment to test
+	option	+zero-page
+	; adc	$4400	; Outside of ZP
+	option	-zero-page
+	; adc	$4400,z	; Unknown index reg
+	; adc	($44,y) ; Wrong indirect reg
+	; adc	($44),x ; Wrong indirect reg
+
+and_test
+	and #$44
+	and $44
+	and $44,x
+	and $4400
+	and $4400,x
+	and $4400,y
+	and ($44,x)
+	and ($44),y
+
+asl_test
+	ASL A
+	ASL $44
+	ASL $44,X
+	ASL $4400
+	ASL $4400,X
+
+bit_test
+	BIT $44
+	BIT $4400
+
+branch_test
+	BPL branch_test
+	BMI branch_test
+	BVC branch_test
+	BVS branch_test
+	BCC branch_test
+	BCS branch_test
+	BNE branch_test
+	BEQ branch_test
+
+	BPL brk_test
+	BMI brk_test
+	BVC brk_test
+	BVS brk_test
+	BCC brk_test
+	BCS brk_test
+	BNE brk_test
+	BEQ brk_test
+
+	; BEQ zero		; Would generate an error/warning
+	; BEQ $f000		; Would generate an error/warning
+
+brk_test
+    	BRK
+
+cmp_test
+.acc
+	CMP #$44
+	CMP $44
+	CMP $44,X
+	CMP $4400
+	CMP $4400,X
+	CMP $4400,Y
+	CMP ($44,X)
+	CMP ($44),Y
+
+.xreg
+	CPX #$44
+	CPX $44
+	CPX $4400
+
+ 
+.yreg
+	CPY #$44
+	CPY $44
+	CPY $4400
+
+dec_test
+	DEC $44
+	DEC $44,X
+	DEC $4400
+	DEC $4400,X
+
+ 
+
+eor_test
+	EOR #$44
+	EOR $44
+	EOR $44,X
+	EOR $4400
+	EOR $4400,X
+	EOR $4400,Y
+	EOR ($44,X)
+	EOR ($44),Y
+
+flag_test
+	CLC
+	SEC
+	CLI
+	SEI
+	CLV
+	CLD
+	SED
+
+inc_test
+	INC $44
+	INC $44,X
+	INC $4400
+	INC $4400,X
+ 
+
+jmp_test
+	JMP $5597
+	JMP ($5597)
+
+jsr_test
+	JSR $5597
+
+ld_test
+.acc
+	LDA #$44
+	LDA $44
+	LDA $44,X
+	LDA $4400
+	LDA $4400,X
+	LDA $4400,Y
+	LDA ($44,X)
+	LDA ($44),Y
+
+.xreg
+	LDX #$44
+	LDX $44
+	LDX $44,Y
+	LDX $4400
+	LDX $4400,Y
+
+.yreg
+	LDY #$44
+	LDY $44
+	LDY $44,X
+	LDY $4400
+	LDY $4400,X
+
+lst_test
+
+	LSR A
+	LSR $44
+	LSR $44,X
+	LSR $4400
+	LSR $4400,X
+
+nop_test
+
+	NOP
+
+ora_test
+	ORA #$44
+	ORA $44
+	ORA $44,X
+	ORA $4400
+	ORA $4400,X
+	ORA $4400,Y
+	ORA ($44,X)
+	ORA ($44),Y
+
+xfer_test
+	TAX
+	TXA
+	DEX
+	INX
+	TAY
+	TYA
+	DEY
+	INY
+ 
+
+rol_test
+	ROL A
+	ROL $44
+	ROL $44,X
+	ROL $4400
+	ROL $4400,X
+
+rot_test
+	ROR A
+	ROR $44
+	ROR $44,X
+	ROR $4400
+	ROR $4400,X
+
+ret_test
+	RTI
+	rts
+
+sbc_test
+	SBC #$44
+	SBC $44
+	SBC $44,X
+	SBC $4400
+	SBC $4400,X
+	SBC $4400,Y
+	SBC ($44,X)
+	SBC ($44),Y
+
+store_test
+.acc
+	STA $44
+	STA $44,X
+	STA $4400
+	STA $4400,X
+	STA $4400,Y
+	STA ($44,X)
+	STA ($44),Y
+
+.xreg
+	STX $44
+	STX $44,Y
+	STX $4400
+ 
+.yreg
+	STY $44
+	STY $44,X
+	STY $4400
+
+stack_test
+	TXS
+	TSX
+	PHA
+	PLA
+	PHP
+	PLP
+
+fwd_80:	equ	$80
+fwd_101	equ	$101
