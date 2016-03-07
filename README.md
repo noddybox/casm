@@ -8,8 +8,8 @@ Simply pass it the file to assemble, i.e.
 
 `casm source.txt`
 
-Full documentation can be found in either [PDF](docs/manual.pdf) or
-[HTML](docs/manual.html) format.
+Full documentation can be found in either [PDF](doc/manual.pdf) or
+[HTML](doc/manual.html) format.
 
 ## Processors
 
