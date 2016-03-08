@@ -1206,10 +1206,15 @@ CommandStatus EX(const char *label, int argc, char *argv[],
     static RegisterPairCodes codes[] =
     {
         DE16,           HL16,           {0xeb},
+        HL16,           DE16,           {0xeb},
         AF16,           AF16_ALT,       {0x08},
+        AF16_ALT,       AF16,           {0x08},
         SP_ADDRESS,     HL16,           {0xe3},
+        HL16,           SP_ADDRESS,     {0xe3},
         SP_ADDRESS,     IX16,           {SHIFT_IX, 0xe3},
-        SP_ADDRESS,     IY16,           {SHIFT_IY, 0xe3}
+        IX16,           SP_ADDRESS,     {SHIFT_IX, 0xe3},
+        SP_ADDRESS,     IY16,           {SHIFT_IY, 0xe3},
+        IY16,           SP_ADDRESS,     {SHIFT_IY, 0xe3}
     };
 
     RegisterMode r1, r2;

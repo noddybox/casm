@@ -406,6 +406,8 @@ static struct
 {
     {"equ", EQU},
     {".equ", EQU},
+    {"eq", EQU},
+    {".eq", EQU},
     {"org", ORG},
     {".org", ORG},
     {"ds", DS},

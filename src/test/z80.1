@@ -221,6 +221,11 @@ exchange:
 	ex	(sp),hl
 	ex	(sp),ix
 	ex	(sp),iy
+	ex	hl,de
+	ex	af',af
+	ex	hl,(sp)
+	ex	ix,(sp)
+	ex	iy,(sp)
 	ldi
 	ldir
 	ldd

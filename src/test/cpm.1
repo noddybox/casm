@@ -1,0 +1,44 @@
+	;
+	; CP/M example (macro test)
+	;
+	cpu	z80
+	option	output-file,x.com
+
+BDOS:	equ	5
+CONOUT:	eq	9
+
+strout:	macro	addr
+	ld	de,@addr
+	ld	c,CONOUT
+	call	BDOS
+	endm
+
+strout1:macro
+	ld	de,str
+	ld	a,'$'
+	ld	c,CONOUT
+.loop
+	ex	de,hl
+	cp	(hl)
+	ex	hl,de
+	jr	z,end_str
+	call	BDOS
+	inc	de
+	jr	loop
+
+.str	defb	\*,0
+.end_str
+
+	endm
+
+
+	; Main code
+	;
+	org	$100
+
+	strout	str
+	strout1	"Bye world", 13, 10, '$'
+
+	ret
+
+str:	defb	"Hello World",13,10,'$'

@@ -390,9 +390,29 @@ char *MacroPlay(Macro *macro)
                     }
                     else
                     {
-                        num[in_num] = 0;
-                        AddArg(str, macro, atoi(num));
-                        in_num = -1;
+                        if (in_num == 0 && line[rd] == '*')
+                        {
+                            int f;
+
+                            rd++;
+
+                            for(f = 0; f < macro->argc; f++)
+                            {
+                                if (f > 0)
+                                {
+                                    VarcharAddChar(str, ',');
+                                }
+
+                                AddArg(str, macro, f);
+                            }
+                            in_num = -1;
+                        }
+                        else
+                        {
+                            num[in_num] = 0;
+                            AddArg(str, macro, atoi(num));
+                            in_num = -1;
+                        }
                     }
                 }
                 else if (in_arg != -1)

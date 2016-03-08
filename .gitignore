@@ -30,3 +30,9 @@
 
 # Debug files
 *.dSYM/
+
+# Custom
+src/casm
+*.com
+src/A-Hdrive
+src/output

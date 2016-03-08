@@ -317,7 +317,9 @@ Macros
 ~~~~~~
 
 Macros can be defined in one of two ways; either parameterless or with named
-parameters.  Macro names are case-insensitive.
+parameters.  Macro names are case-insensitive.  In the parameterless mode the
+special identifier '*' can be used to expand all arguments, which will be
+separated with commas.
 
 ----
 macro1: macro
@@ -325,6 +327,7 @@ macro1: macro
         ld a,\1
         ld b,\2
         call \3
+        defb \*
 
         endm
 
@@ -454,6 +457,27 @@ EOR can be used the same as XOR:
 
     and     a,b         ; These are equivalent
     and     b
+----
+
+For exchange opcodes with parameters the parameters can be reversed from their
+official form:
+
+----
+    ; The official forms
+    ;
+    ex      de,hl
+    ex      af,af'
+    ex      (sp),hl
+    ex      (sp),ix
+    ex      (sp),iy
+
+    ; Also supported
+    ;
+    ex      hl,de
+    ex      af',af
+    ex      hl,(sp)
+    ex      ix,(sp)
+    ex      iy,(sp)
 ----
 
 Where the high/low register parts of the IX and IY registers are to be used,
