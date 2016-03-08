@@ -86,7 +86,7 @@ int IsIntermediatePass(void)
 }
 
 
-int SetNeededPasses(int n)
+void SetNeededPasses(int n)
 {
     if (!IsFinalPass())
     {

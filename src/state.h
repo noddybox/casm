@@ -69,7 +69,7 @@ int     IsIntermediatePass(void);
 
 /* Set number of passes needed.  This works while IsFinalPass() returns FALSE.
 */
-int     SetNeededPasses(int n);
+void    SetNeededPasses(int n);
 
 
 /* Set the current PC
