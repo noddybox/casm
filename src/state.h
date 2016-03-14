@@ -19,7 +19,9 @@
 
     -------------------------------------------------------------------------
 
-    Stores assembly state.
+    Stores assembly state (passes, memory, etc).
+
+    Memory is arranged in banks of RAM of 64K each.
 
 */
 
@@ -28,23 +30,37 @@
 
 /* ---------------------------------------- TYPES
 */
+#define BANK_SIZE       0x10000u
+
 typedef enum
 {
     MSB_Word,
     LSB_Word
 } WordMode;
 
+
+typedef struct mbnk
+{
+    unsigned    number;                 /* The bank number, 0 .. n       */
+    Byte        memory[BANK_SIZE];      /* The memory in that bank       */
+    int         min_address_used;       /* Will be BANK_SIZE if not used */
+    int         max_address_used;       /* Will be -1 if not used        */
+    struct mbnk *next;                  /* The next memory bank          */
+} MemoryBank;
+
 /* ---------------------------------------- INTERFACES
 */
 
-/* Clear state to default.  This creates 64K of RAM to write into.
+/* Clear state to default.  This creates 64K of RAM to write into and sets
+   zero as the current bank.
 */
 void    ClearState(void);
 
 
-/* Sets the number of bytes in RAM.  Addressing always starts from zero.
+/* Sets the current bank to use.  If it's never been used before it will be
+   initialised as an empty 64K of RAM.
 */
-void    SetAddressSpace(int size);
+void    SetAddressBank(unsigned bank);
 
 
 /* Move onto the next pass
@@ -103,22 +119,13 @@ void    PCWriteWord(int i);
 void    PCWriteWordMode(int i, WordMode mode);
 
 
-/* Get the minimum address written to
+/* Gets a list of the banks used.  A NULL return means no memory was written
+   to at all.
 */
-int     GetMinAddressWritten(void);
+const MemoryBank *MemoryBanks(void);
 
 
-/* Get the maximum address written to
-*/
-int     GetMaxAddressWritten(void);
-
-
-/* Access the address space directly
-*/
-const Byte *AddressSpace(void);
-
-
-/* Read a byte from the address space
+/* Read a byte from the current bank.
 */
 Byte    ReadByte(int addr);
 

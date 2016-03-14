@@ -31,17 +31,89 @@
 #include "expr.h"
 
 
-/* ---------------------------------------- GLOBALS
+/* ---------------------------------------- TYPES AND GLOBALS
 */
+#define BANK_SIZE       0x10000u
+
 static int      pass = 1;
 static int      maxpass = 2;
 static int      pc = 0;
-static int      size = 0x10000;
-static Byte     *mem = NULL;
-static int      minw = 0;
-static int      maxw = 0;
+static unsigned currbank = 0;
 static WordMode wmode = LSB_Word;
 
+static MemoryBank       *bank;
+static MemoryBank       *current;
+
+/* ---------------------------------------- PRIVATE
+*/
+static void RemoveBanks(void)
+{
+    while(bank)
+    {
+        MemoryBank *t = bank->next;
+
+        free(bank);
+        bank = t;
+    }
+
+    current = NULL;
+    currbank = 0;
+}
+
+static MemoryBank *FindBank(unsigned n)
+{
+    MemoryBank *t = bank;
+
+    while(t)
+    {
+        if (t->number == n)
+        {
+            return t;
+        }
+
+        t = t->next;
+    }
+
+    return NULL;
+}
+
+static void ClearBankWriteMarkers(void)
+{
+    MemoryBank *t = bank;
+
+    while(t)
+    {
+        t->min_address_used = BANK_SIZE;
+        t->max_address_used = -1;
+        t = t->next;
+    }
+}
+
+static MemoryBank *AddBank(unsigned n)
+{
+    MemoryBank *t = Malloc(sizeof *t);
+
+    t->min_address_used = BANK_SIZE;
+    t->max_address_used = -1;
+    t->number = n;
+
+    t->next = bank;
+    bank = t;
+
+    return t;
+}
+
+static MemoryBank *GetOrAddBank(unsigned n)
+{
+    MemoryBank *b = FindBank(n);
+
+    if (!b)
+    {
+        b = AddBank(n);
+    }
+
+    return b;
+}
 
 /* ---------------------------------------- INTERFACES
 */
@@ -50,10 +122,9 @@ void ClearState(void)
 {
     pass = 1;
     pc = 0;
-    minw = size;
-    maxw = -1;
     wmode = LSB_Word;
-    SetAddressSpace(0x10000);
+    RemoveBanks();
+    SetAddressBank(0);
 }
 
 
@@ -61,8 +132,7 @@ void NextPass(void)
 {
     if (pass < maxpass)
     {
-        minw = size;
-        maxw = -1;
+        ClearBankWriteMarkers();
         pass++;
     }
 }
@@ -95,12 +165,9 @@ void SetNeededPasses(int n)
 }
 
 
-void SetAddressSpace(int s)
+void SetAddressBank(unsigned b)
 {
-    size = s;
-
-    mem = Malloc(s);
-    memset(mem, 0, size);
+    currbank = b;
 }
 
 
@@ -128,28 +195,33 @@ void PCAdd(int i)
 
     while(pc < 0)
     {
-        pc += size;
+        pc += BANK_SIZE;
     }
 
-    pc %= size;
+    pc %= BANK_SIZE;
 }
 
 
 void PCWrite(int i)
 {
-    if (pc < minw)
+    if (!current)
     {
-        minw = pc;
+        current = GetOrAddBank(currbank);
     }
 
-    if (pc > maxw)
+    if (pc < current->min_address_used)
     {
-        maxw = pc;
+        current->min_address_used = pc;
     }
 
-    mem[pc] = ExprConvert(8, i);
+    if (pc > current->max_address_used)
+    {
+        current->max_address_used = pc;
+    }
 
-    pc = (pc + 1) % size;
+    current->memory[pc] = ExprConvert(8, i);
+
+    pc = (pc + 1) % BANK_SIZE;
 }
 
 
@@ -185,21 +257,9 @@ void PCWriteWordMode(int i, WordMode mode)
 }
 
 
-int GetMinAddressWritten(void)
+const MemoryBank *MemoryBanks(void)
 {
-    return minw;
-}
-
-
-int GetMaxAddressWritten(void)
-{
-    return maxw;
-}
-
-
-const Byte *AddressSpace(void)
-{
-    return mem;
+    return bank;
 }
 
 
@@ -207,9 +267,9 @@ Byte ReadByte(int addr)
 {
     Byte b = 0;
 
-    if (addr > -1 && addr < size)
+    if (addr > -1 && addr < BANK_SIZE && current)
     {
-        b = mem[addr];
+        b = current->memory[addr];
     }
 
     return b;

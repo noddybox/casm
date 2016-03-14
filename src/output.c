@@ -193,15 +193,22 @@ CommandStatus OutputSetOption(int opt, int argc, char *argv[],
 
 int OutputCode(void)
 {
-    int min = GetMinAddressWritten();
-    int max = GetMaxAddressWritten();
-    const Byte *mem = AddressSpace();
+    const MemoryBank *bank = MemoryBanks();
+    int min;
+    int max;
+    const Byte *mem;
 
-    if (max == -1)
+    if (!bank)
     {
         fprintf(stderr, "Skipping output; no written memory to write\n");
         return TRUE;
     }
+
+    /* TODO: Fix to pass banks proper
+    */
+    min = bank[0].min_address_used;
+    max = bank[0].max_address_used;
+    mem = bank[0].memory;
 
     switch(format)
     {
