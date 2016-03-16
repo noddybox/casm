@@ -139,6 +139,27 @@ static CommandStatus ORG(const char *label, int argc, char *argv[],
         LabelSet(label, result, ANY_LABEL);
     }
 
+    /* See if an optional bank was supplied
+    */
+    if (argc > 2)
+    {
+        CMD_EXPR(argv[2], result);
+        SetAddressBank(result);
+    }
+
+    return CMD_OK;
+}
+
+static CommandStatus BANK(const char *label, int argc, char *argv[],
+                          int quoted[], char *err, size_t errsize)
+{
+    int result;
+
+    CMD_ARGC_CHECK(2);
+    CMD_EXPR(argv[1], result);
+
+    SetAddressBank(result);
+
     return CMD_OK;
 }
 
@@ -410,6 +431,8 @@ static struct
     {".eq", EQU},
     {"org", ORG},
     {".org", ORG},
+    {"bank", BANK},
+    {".bank", BANK},
     {"ds", DS},
     {".ds", DS},
     {"defs", DS},

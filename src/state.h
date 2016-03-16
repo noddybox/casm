@@ -39,13 +39,12 @@ typedef enum
 } WordMode;
 
 
-typedef struct mbnk
+typedef struct
 {
     unsigned    number;                 /* The bank number, 0 .. n       */
     Byte        memory[BANK_SIZE];      /* The memory in that bank       */
     int         min_address_used;       /* Will be BANK_SIZE if not used */
     int         max_address_used;       /* Will be -1 if not used        */
-    struct mbnk *next;                  /* The next memory bank          */
 } MemoryBank;
 
 /* ---------------------------------------- INTERFACES
@@ -119,10 +118,14 @@ void    PCWriteWord(int i);
 void    PCWriteWordMode(int i, WordMode mode);
 
 
-/* Gets a list of the banks used.  A NULL return means no memory was written
-   to at all.
+/* Gets a list of the banks used as an array of pointers.  A NULL return means
+   no memory was written to at all.
+   
+   *count will be updated with the number of banks used, or zero if no memory
+   was written to.  Note that banks may not be contiguously numbered, but will
+   be in ascending order.
 */
-const MemoryBank *MemoryBanks(void);
+MemoryBank **MemoryBanks(int *count);
 
 
 /* Read a byte from the current bank.

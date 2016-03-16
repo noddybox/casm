@@ -38,40 +38,50 @@
 static int      pass = 1;
 static int      maxpass = 2;
 static int      pc = 0;
+static int      num_banks = 0;
 static unsigned currbank = 0;
 static WordMode wmode = LSB_Word;
 
-static MemoryBank       *bank;
+static MemoryBank       **bank;
 static MemoryBank       *current;
 
 /* ---------------------------------------- PRIVATE
 */
+static int SortBank(const void *a, const void *b)
+{
+    const MemoryBank *ma = a;
+    const MemoryBank *mb = b;
+
+    return (int)ma->number - (int)mb->number;
+}
+
+
 static void RemoveBanks(void)
 {
-    while(bank)
-    {
-        MemoryBank *t = bank->next;
+    int f;
 
-        free(bank);
-        bank = t;
+    for(f = 0; f < num_banks; f++)
+    {
+        free(bank[f]);
     }
 
-    current = NULL;
+    free(bank);
+
     currbank = 0;
+    bank = NULL;
+    current = NULL;
 }
 
 static MemoryBank *FindBank(unsigned n)
 {
-    MemoryBank *t = bank;
+    int f;
 
-    while(t)
+    for(f = 0; f < num_banks; f++)
     {
-        if (t->number == n)
+        if (bank[f]->number == n)
         {
-            return t;
+            return bank[f];
         }
-
-        t = t->next;
     }
 
     return NULL;
@@ -79,28 +89,27 @@ static MemoryBank *FindBank(unsigned n)
 
 static void ClearBankWriteMarkers(void)
 {
-    MemoryBank *t = bank;
+    int f;
 
-    while(t)
+    for(f = 0; f < num_banks; f++)
     {
-        t->min_address_used = BANK_SIZE;
-        t->max_address_used = -1;
-        t = t->next;
+        bank[f]->min_address_used = BANK_SIZE;
+        bank[f]->max_address_used = -1;
     }
 }
 
 static MemoryBank *AddBank(unsigned n)
 {
-    MemoryBank *t = Malloc(sizeof *t);
+    current = NULL;
+    num_banks++;
 
-    t->min_address_used = BANK_SIZE;
-    t->max_address_used = -1;
-    t->number = n;
+    bank = Realloc(bank, (sizeof *bank) * num_banks);
+    bank[num_banks-1] = Malloc(sizeof **bank);
+    bank[num_banks-1]->number = n;
 
-    t->next = bank;
-    bank = t;
+    qsort(bank, num_banks, sizeof *bank, SortBank);
 
-    return t;
+    return FindBank(n);
 }
 
 static MemoryBank *GetOrAddBank(unsigned n)
@@ -168,6 +177,7 @@ void SetNeededPasses(int n)
 void SetAddressBank(unsigned b)
 {
     currbank = b;
+    current = NULL;
 }
 
 
@@ -257,8 +267,9 @@ void PCWriteWordMode(int i, WordMode mode)
 }
 
 
-const MemoryBank *MemoryBanks(void)
+MemoryBank **MemoryBanks(int *count)
 {
+    *count = num_banks;
     return bank;
 }
 
@@ -266,6 +277,11 @@ const MemoryBank *MemoryBanks(void)
 Byte ReadByte(int addr)
 {
     Byte b = 0;
+
+    if (!current)
+    {
+        current = GetOrAddBank(currbank);
+    }
 
     if (addr > -1 && addr < BANK_SIZE && current)
     {

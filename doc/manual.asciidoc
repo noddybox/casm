@@ -29,6 +29,13 @@ casm file
 
 Assembles file, and places the output in _output_ by default.
 
+Memory Layout
+-------------
+
+There is 64K of RAM that the assembler will generate output into.  Extra 64K
+banks of RAM can be added by using the 'bank' or 'org' directives.  Banks are
+numbered from zero upwards.
+
 
 Source Format Example
 ---------------------
@@ -111,8 +118,13 @@ equ _value_::
     Sets the top level label to _value_.  Note this requires a label on the
     same line.
 
-org _value_::
-    Sets the program counter (PC) to _value_.  The PC defaults to zero.
+org _value_[,_bank_]::
+    Sets the program counter (PC) to _value_.  The PC defaults to zero.  If the
+    optional second argument is passed the current memory bank in use is set
+    to _bank_.
+
+bank _value_::
+    The current memory bank in use is set to _value_.
 
 ds _value_[, _fill_]::
     Skips on the program counter _value_ bytes.  If the optional _fill_ is
@@ -371,12 +383,15 @@ Output Format
 -------------
 
 By default the assembled code is written to a file called *output* as raw
-binary covering the block of memory that the assembly touched.
+binary covering the block of memory that the assembly touched.  If memory
+banks have been used then *output* is appended with the memory bank number, so
+that a separate output file is generated for each bank.
 
 This can be controlled with the following options.
 
 option output-file, _file_::
-    Send the output to _file_.
+    Send the output to _file_.  If memory banks have been used then files are
+    generated with the names _file_.0, _file_.1, and so on.
 
 option output-type, _format_::
     Controls the output format with the following settings
@@ -389,7 +404,9 @@ option output-type, _format_::
             be given the same name as the output filename, and its load address
             will be set to the start of the created memory.  Remember that TAP
             files can be concatenated, so the output could be appended to
-            another TAP file containing a BASIC loader for example.
+            another TAP file containing a BASIC loader for example.  Note that
+            if memory banks have been used then each bank is output to the TAP
+            file as separate code blocks.
 
 
 Listing

@@ -26,7 +26,7 @@ manual.html: manual.asciidoc
 	asciidoc manual.asciidoc
 
 manual.pdf: manual.asciidoc
-	a2x -fpdf -dbook manual.asciidoc
+	a2x manual.asciidoc
 
 clean:
-	rm -f manual.html manual.pdf
+	rm -f manual.html manual.pdf manual.xml

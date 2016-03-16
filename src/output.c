@@ -65,19 +65,42 @@ static ValueTable       format_table[] =
 
 /* ---------------------------------------- PRIVATE FUNCTIONS
 */
-static int OutputRawBinary(const Byte *mem,  int min, int max)
+static int OutputRawBinary(MemoryBank **bank, int count)
 {
-    FILE *fp = fopen(output, "wb");
+    char buff[4096];
+    int f;
 
-    if (!fp)
+    for(f = 0; f < count; f++)
     {
-        snprintf(error, sizeof error,"Failed to open %s\n", output);
-        return FALSE;
+        FILE *fp;
+        const char *name;
+        const Byte *mem;
+        int min, max;
+
+        if (count == 1)
+        {
+            name = output;
+        }
+        else
+        {
+            snprintf(buff, sizeof buff, "%s.%u", output, bank[f]->number);
+            name = buff;
+        }
+
+        if (!(fp = fopen(name, "wb")))
+        {
+            snprintf(error, sizeof error,"Failed to open %s\n", name);
+            return FALSE;
+        }
+
+        mem = bank[f]->memory;
+        min = bank[f]->min_address_used;
+        max = bank[f]->max_address_used;
+
+        fwrite(mem + min, 1, max - min + 1, fp);
+
+        fclose(fp);
     }
-
-    fwrite(mem + min, 1, max - min + 1, fp);
-
-    fclose(fp);
 
     return TRUE;
 }
@@ -110,11 +133,10 @@ static Byte TapString(FILE *fp, const char *p, int len, Byte chk)
 }
 
 
-static int OutputSpectrumTap(const Byte *mem,  int min, int max)
+static int OutputSpectrumTap(MemoryBank **bank, int count)
 {
     FILE *fp = fopen(output, "wb");
-    Byte chk = 0;
-    int len = max - min + 1;
+    int f;
 
     if (!fp)
     {
@@ -124,32 +146,44 @@ static int OutputSpectrumTap(const Byte *mem,  int min, int max)
 
     /* Output header
     */
-    TapWord(fp, 19, 0);
-
-    chk = TapByte(fp, 0, chk);
-    chk = TapByte(fp, 3, chk);
-    chk = TapString(fp, output, 10, chk);
-    chk = TapWord(fp, len, chk);
-    chk = TapWord(fp, min, chk);
-    chk = TapWord(fp, 32768, chk);
-
-    TapByte(fp, chk, 0);
-
-    /* Output file data
-    */
-    TapWord(fp, len + 2, 0);
-
-    chk = 0;
-
-    chk = TapByte(fp, 0xff, chk);
-
-    while(min <= max)
+    for(f = 0; f < count; f++)
     {
-        chk = TapByte(fp, mem[min], chk);
-        min++;
-    }
+        Byte chk = 0;
+        const Byte *mem;
+        int min, max, len;
 
-    TapByte(fp, chk, 0);
+        mem = bank[f]->memory;
+        min = bank[f]->min_address_used;
+        max = bank[f]->max_address_used;
+        len = max - min + 1;
+
+        TapWord(fp, 19, 0);
+
+        chk = TapByte(fp, 0, chk);
+        chk = TapByte(fp, 3, chk);
+        chk = TapString(fp, output, 10, chk);
+        chk = TapWord(fp, len, chk);
+        chk = TapWord(fp, min, chk);
+        chk = TapWord(fp, 32768, chk);
+
+        TapByte(fp, chk, 0);
+
+        /* Output file data
+        */
+        TapWord(fp, len + 2, 0);
+
+        chk = 0;
+
+        chk = TapByte(fp, 0xff, chk);
+
+        while(min <= max)
+        {
+            chk = TapByte(fp, mem[min], chk);
+            min++;
+        }
+
+        TapByte(fp, chk, 0);
+    }
 
     fclose(fp);
 
@@ -193,10 +227,13 @@ CommandStatus OutputSetOption(int opt, int argc, char *argv[],
 
 int OutputCode(void)
 {
-    const MemoryBank *bank = MemoryBanks();
+    MemoryBank **bank;
+    int count;
     int min;
     int max;
     const Byte *mem;
+
+    bank = MemoryBanks(&count);
 
     if (!bank)
     {
@@ -204,19 +241,13 @@ int OutputCode(void)
         return TRUE;
     }
 
-    /* TODO: Fix to pass banks proper
-    */
-    min = bank[0].min_address_used;
-    max = bank[0].max_address_used;
-    mem = bank[0].memory;
-
     switch(format)
     {
         case Raw:
-            return OutputRawBinary(mem, min, max);
+            return OutputRawBinary(bank, count);
 
         case SpectrumTap:
-            return OutputSpectrumTap(mem, min, max);
+            return OutputSpectrumTap(bank, count);
 
         default:
             break;
