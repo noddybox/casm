@@ -1,0 +1,1113 @@
+<html>
+<head>
+
+<title>CASM - A simple, portable multi-pass assembler</title>
+
+<style>
+
+h1
+{
+    padding-top: 20px;
+    padding-top: 10px;
+}
+
+h2
+{
+    padding-top: 20px;
+    padding-top: 10px;
+}
+
+body
+{
+    background-color: white;
+    color: black;
+    font-family: sans-serif;
+    font-weight: normal;
+    width: 80%;
+    margin: auto;
+}
+
+.legalise
+{
+    font-variant: small-caps;
+    font-size: 80%;
+    width: 45%;
+}
+
+.codeblock
+{
+    font-family: monospace;
+    border: 1px solid black;
+    width: 100%;
+    background-color: #e0e0ff;
+    padding: 5px;
+}
+
+li
+{
+  padding-bottom: 3px;
+}
+
+table
+{
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+
+tr
+{
+    padding-bottom: 5px;
+}
+
+thead
+{
+    font-weight: bold;
+    background-color: black;
+    color: white;
+    white-space: nowrap;
+    font-variant: small-caps;
+}
+
+td.head
+{
+    vertical-align: top;
+    padding: 10px;
+}
+
+td.cmd
+{
+    vertical-align: top;
+    padding: 5px;
+    font-family: monospace;
+    font-weight: bold;
+    background-color: #e0e0e0;
+    white-space: nowrap;
+}
+
+td.def
+{
+    padding-left: 10px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    vertical-align: top;
+}
+
+td.alias
+{
+    padding-left: 10px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    vertical-align: top;
+    font-family: monospace;
+    background-color: #e0e0e0;
+    white-space: nowrap;
+}
+
+h1
+{
+    border-top: 2px solid black;
+}
+
+h2
+{
+    border-top: 1px solid #888888;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="legalise">
+<p><b>casm</b> is a simple, portable multi-pass assembler</p>
+
+<p>Copyright (C) 2003-2015  Ian Cowburn</p>
+
+<p>This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.</p>
+
+<p>This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.</p>
+
+<p>You should have received a copy of the GNU General Public License
+along with this program.  If not, see 
+<a href="http://www.gnu.org/licenses/gpl-3.0.html">
+http://www.gnu.org/licenses/gpl-3.0.html)</a></p>
+</div>
+
+
+<h1>CASM</h1>
+
+<h2>Usage</h2>
+
+<div class="codeblock">
+casm <i>file</i>
+</div>
+
+<p>Assembles <i>file</i>, and places the resulting code in a file called
+<b>output</b> by default.</p>
+
+<p>Note that switches aren't used by <b>casm</b>.  Instead options are
+controlled by commands in the source <i>file</i>.</p>
+
+
+<h2>Memory Layout</h2>
+
+<p>There is 64K of RAM that the assembler will generate output into.  Extra 64K
+banks of RAM can be added by using the <b>bank</b> or <b>org</b> directives.
+Banks are numbered from zero upwards.</p>
+
+
+<h2>Source Code</h2>
+
+<h3>Layout</h3>
+
+The source files follow this basic format:
+
+<pre class="codeblock">
+    ; Comments
+    ;
+    label1: equ     0xffff
+
+            org     $4000;
+            
+            db      "Hello, World\n",0
+
+    main    jp      local_label     ; Comments
+
+    .local_label
+            inc     a
+
+    another:
+            inc     b
+            jp      local_label     ; Actually jumps to the following
+                                    ; local_label.
+
+    .local_label
+            ret
+</pre>
+
+
+<p>The source files follow the following rules:</p>
+
+<ul>
+
+<li>Any text past a semicolon (;) is discarded as a comment (except when part
+of a string constant).</li>
+
+<li>Labels must start in column zero (the left hand most column).</li>
+
+  <ul>
+  <li>If the label ends with a colon (:) then the colon is removed.</li>
+
+  <li>If the label doesn't start with a period (.) then it is assumed a global
+  label.</li>
+
+  <li>If the label starts with a period (.) then it is assumed to be a local
+  label.  Local labels are associated with the preceding global label.
+  If a global label and related local label have the same name, the local
+  label will be used on expansion.</li>
+
+  <li>Any label can be followed by an <code>equ</code> directive, in which case
+  the label is set to that value rather than the current program counter.</li>
+
+  <li>Labels are case-insensitive.</li>
+
+</ul>
+
+<li>Directives and opcodes must appear further along the line (anywhere else
+other than the left hand column where labels live basically).</li>
+
+<li>Strings can either be quoted with single or double quotes; this allows you
+to put the other quote type inside the string.</li>
+
+</ul>
+
+
+<h3>Recognised directives</h3>
+
+<p>The following directives are also recognised with an optional period (.) in
+front of them, and are case insensitive.  Directives can also be used to
+control the output of a program listing, and the output of the assembly
+itself.  These are documented in subsequent sections.</p>
+
+<table>
+
+<thead><tr><td class="head">Directive</td>
+<td class="head">Description</td></tr></thead>
+<tr>
+
+<td class="cmd">
+processor <i>cpu</i>
+</td>
+
+<td class="def">
+Sets the processor type to <i>CPU</i>.  If omitted then Z80 is the default. 
+Note that this can appear multiple times in the same file.  See the later
+sections on processors to see what values are supported.</p>
+</td></tr>
+
+<tr><td class="cmd">
+option <i>setting</i>, <i>value</i>
+</td>
+
+<td class="def">
+Set options.  Options are defined later on, and each CPU and output driver
+can also have its own options.  For options that support booleans
+(on/off/true/false),the <i>setting</i> can be prefixed with a plus or minus
+character to switch it on or off respectively.
+</td></tr>
+
+<tr><td class="cmd">
+equ <i>value</i></code>
+</td>
+<td class="def">
+Sets the top level label to <i>value</i>.  Note this requires a label on the
+same line as this directive.
+</td></tr>
+
+<tr><td class="cmd">
+org <i>value</i>[, <i>bank</i>]
+</td>
+<td class="def">
+Sets the program counter (PC) to <i>value</i>.  The PC defaults to zero on
+initialisation.  If the optional second argument is passed the current memory
+bank in use is set to <i>bank</i>.
+</td></tr>
+
+<tr><td class="cmd">
+bank <i>value</i>
+</td>
+<td class="def">
+The current memory bank in use is set to <i>value</i>.
+</td></tr>
+
+<tr><td class="cmd">
+ds <i>value</i>[, <i>fill</i>]
+</td>
+<td class="def">
+Skips the program counter on <i>value</i> bytes.  If the optional <i>fill</i> is
+provided then the bytes are filled with <i>fill</i>, otherwise they are filled
+with zero.
+</td>
+
+<tr><td class="cmd">
+db <i>value</i>[, <i>value</i>]
+</td>
+<td class="def">
+Writes bytes represented by <i>value</i> to the current PC.  The values can be
+constants, expressions, labels or strings which are expanded to a list of byte
+values for each character in the string.
+</td></tr>
+
+<tr><td class="cmd">
+dw <i>value</i>[, <i>value</i>]
+</td>
+<td class="def">
+Writes words (16-bit values) represented by <i>value</i> to the current PC.
+The values can be constants, expressions, labels or strings.  Strings are
+written as 16-bit versions of their byte values, i.e. the high byte will be zero
+and the low byte the character code.
+</td></tr>
+
+<tr><td class="cmd">
+align <i>value</i>[, <i>fill</i>]
+</td>
+<td class="def">
+Align the PC so that (PC modulus <i>value</i>) is zero.  Will error if
+<i>value</i> is less than 2 or greater that 32768.  No values are written to
+the skipped bytes unless the optional <i>fill</i> is supplied.
+</td></tr>
+
+<tr><td class="cmd">
+include <i>filename</i></code>
+</td>
+<td class="def">
+Includes the source file <i>filename</i> as if it was text entered at the
+current location.
+</td></tr>
+
+<tr><td class="cmd">
+incbin <i>filename</i>
+</td>
+<td class="def">
+Includes the binary file <i>filename</i> at the current PC, as if it was a
+sequence of <code>db</code> directives with all the bytes from the file.
+</td></tr>
+
+<tr><td class="cmd">
+alias <i>command</i>, <i>replacement</i>
+</td>
+<td class="def">
+Creates an alias so that whenever the command <i>command</i> is found in the
+source it is replaced with <i>replacement</i>.  The idea of this is to make it
+easier to import sources that use unknown directives, e.g.
+
+<pre class="codeblock">
+    alias setaddr,org
+    alias ldreg,ld
+
+    cpu         z80
+
+    setaddr     $8000   ; These two are
+    org         $8000   ; equivalent.
+
+    ld          a,(hl)  ; These two are
+    ldreg       a,(hl)  ; equivalent.
+</pre>
+</td></tr>
+
+<tr><td class="cmd">
+nullcmd
+</td>
+<td class="def">
+Simply does nothing.  It's only real use is as an alias if you wished to
+strip a directive from a foreign source file.
+</td></tr>
+
+<tr><td class="cmd">
+end
+</td>
+<td class="def">
+Terminates input processing.  Anything past the directive will be ignored.
+</td></tr>
+</table>
+
+<h3>Built-in Aliases</h3>
+
+The following are built-in aliases for the above directives.
+
+<table>
+
+<thead><tr><td class="head">Command</td>
+<td class="head">Built-in Alias</td></tr></thead>
+
+<tr><td class="cmd">equ</td>
+<td class="alias">
+eq
+</td></tr>
+
+<tr><td class="cmd">ds</td>
+<td class="alias">
+defs
+</td></tr>
+
+<tr><td class="cmd">db</td>
+<td class="alias">
+defb<br>
+byte<br>
+text<br>
+</td></tr>
+
+<tr><td class="cmd">dw</td>
+<td class="alias">
+defw<br>
+word<br>
+</td></tr>
+
+</table>
+
+<h3>Expressions</h3>
+
+<p>In any of the directives above, where a value is defined, an expression can
+be entered.</p>
+
+<p>Assembly instructions will also permit these expressions to be used where
+applicable.  As many opcodes use parenthesis to indicate addressing modes,
+remember that {} brackets can be used to alter expression precedence.</p>
+
+<pre class="codeblock">
+    ld  a,{8+2}*2               ; On the Z80 loads A with the value 20
+    ld  a,({8+2}*2)             ; On the Z80 loads A with the value stored at
+                                ; address 20
+</pre>
+
+<p>Note that the expression is evaluated using a standard C int, and then cast
+to the appropriate size.</p>
+
+<p>The following formats for constant numbers are supported:</p>
+
+<table>
+
+<thead><tr><td class="head">Format (regular expression)</td>
+<td class="head">Description</td></tr></thead>
+
+<tr><td class="cmd">
+"." <i>or</i> '.'
+</td>
+<td class="def">
+A single quoted character will be converted into the appropriate character
+code.
+</td></tr>
+
+<tr><td class="cmd">
+[1-9][0-9]*
+</td>
+<td class="def">
+A decimal number, e.g. 42.
+</td></tr>
+
+<tr><td class="cmd">
+0[0-7]*
+</td>
+<td class="def">
+An octal number, e.g. 052.
+</td></tr>
+
+<tr><td class="cmd">
+0x[0-9a-fA-f]+
+</td>
+<td class="def">
+A hex number, e.g. 0x2a.
+</td></tr>
+
+<tr><td class="cmd">
+[0-9a-fA-f]+h
+</td>
+<td class="def">
+A hex number, e.g. 2ah.
+</td></tr>
+
+<tr><td class="cmd">
+$[0-9a-fA-f]+
+</td>
+<td class="def">
+A hex number, e.g. $2a.
+</td></tr>
+
+<tr><td class="cmd">
+[01]+b
+</td>
+<td class="def">
+A binary number, e.g. 00101010b
+</td></tr>
+
+<tr><td class="cmd">
+[a-zA-Z_0-9]+
+</td>
+<td class="def">
+A label, e.g. `main_loop`.
+</td></tr>
+
+</table>
+
+The following operators are understood.  The order here is the order of
+precedence.
+
+<table>
+
+<thead><tr><td class="head">Arithmetic Operators</td>
+<td class="head">Description</td></tr></thead>
+
+<tr><td class="cmd">
+{ }
+</td>
+<td class="def">
+Brackets used to alter the order of precedence.  Note normal parenthesis
+aren't used as the assembly language may make use of them.
+</td></tr>
+
+<tr><td class="cmd">
+~ + -
+</td>
+<td class="def">
+Bitwise NOT/unary plus/unary minus.
+</td></tr>
+
+<tr><td class="cmd">
+&lt;&lt; &gt;&gt;
+</td>
+<td class="def">
+Shift left/shift right.
+</td></tr>
+
+<tr><td class="cmd">
+/ * %
+</td>
+<td class="def">
+Division/multiplication/modulus.
+</td></tr>
+
+<tr><td class="cmd">
++ -
+</td>
+<td class="def">
+Addition/subtraction.
+</td></tr>
+
+</table>
+
+All the following have the same precedence, and so will be done left to right.
+
+<table>
+
+<thead><tr><td class="head">Comparison Operators</td>
+<td class="head">Description</td></tr></thead>
+
+<tr><td class="cmd">
+==
+</td>
+<td class="def">
+Equality.  Returns 1 if the arguments are equal, otherwise zero.
+</td></tr>
+
+<tr><td class="cmd">
+!=
+</td>
+<td class="def">
+Inequality.  Returns 1 if the arguments are unequal, otherwise zero.
+</td></tr>
+
+<tr><td class="cmd">
+&lt; &lt;= &gt; &gt;=
+</td>
+<td class="def">
+Less than/less than or equal/greater than/greater than or equal.  Returns 1
+if the arguments are equal, otherwise zero.
+</td></tr>
+
+</table>
+
+All the following have the same precedence, and so will be done left to right.
+
+<table>
+
+<thead><tr><td class="head">Boolean Operators</td>
+<td class="head">Description</td></tr></thead>
+
+<tr><td class="cmd">
+&amp;&amp; &amp;
+</td>
+<td class="def">
+Boolean/bitwise AND.  For boolean operation arguments, zero is FALSE,
+otherwise TRUE.
+</td></tr>
+
+<tr><td class="cmd">
+|| |
+</td>
+<td class="def">
+Boolean/bitwise OR.
+</td></tr>
+
+<tr><td class="cmd">
+^
+</td>
+<td class="def">
+Bitwise XOR.
+</td></tr>
+
+</table>
+
+<h3>Character Sets</h3>
+
+<p>The assembler has built-in support for a few different character sets.
+These can be set by using the options `charset` or `codepage`, i.e.</p>
+
+<pre class="codeblock">
+    option codepage, <i>format</i>
+    option charset, <i>format</i>
+</pre>
+
+<p>The following values can be used for <i>format</i>.</p>
+
+<table>
+
+<thead><tr><td class="head">Format</td>
+<td class="head">Description</td></tr></thead>
+
+<tr><td class="cmd">
+ascii
+</td>
+<td class="def">
+7-bit ASCII.  This is the default.
+</td></tr>
+
+<tr><td class="cmd">
+spectrum
+</td>
+<td class="def">
+The character codes as used on the Sinclair ZX Spectrum.
+</td></tr>
+
+<tr><td class="cmd">
+zx81
+</td>
+<td class="def">
+The character codes as used on the Sinclair ZX-81.  Lower case
+letters are encoded as normal upper case letters and upper case
+letter will be encoded as inverse upper case letters.
+</td></tr>
+
+<tr><td class="cmd">
+cbm
+</td>
+<td class="def">
+PETSCII as used on the Commodore Business Machine's range from the
+PET to the C128.  See <a href="https://en.wikipedia.org/wiki/PETSCII">
+https://en.wikipedia.org/wiki/PETSCII</a> more details.
+</td></tr>
+</table>
+
+<p>e.g.</p>
+
+<pre class="codeblock">
+    option  +list
+    option  +list-hex
+
+    option  charset,ascii
+    db      "Hello",'A'
+    ; $48 $65 $6C $6C $6F $41
+
+    option  charset,zx81
+    db      "Hello",'A'
+    ; $AD $2A $31 $31 $34 $A6
+
+    option  codepage,cbm
+    db      "Hello",'A'
+    ; $48 $45 $4C $4C $4F $41
+
+    option  codepage,spectrum
+    db      "Hello",'A'
+    ; $48 $65 $6C $6C $6F $41
+</pre>
+
+
+<h3>Macros</h3>
+
+<p>
+Macros can be defined in one of two ways; either parameterless or with named
+parameters.  Macro names are case-insensitive.  In the parameterless mode the
+special identifier '*' can be used to expand all arguments, which will be
+separated with commas.
+</p>
+
+<p>
+When expanded the macro will have an internally generated top-level label
+assigned to it, so local variables will work inside the macro.
+</p>
+
+<p>e.g.</p>
+
+<pre class="codeblock">
+macro1: macro
+
+        ld a,\1
+        ld b,\2
+        ld hl,data
+        call \3
+        jr dataend
+.data
+        defb \*
+.dataend
+
+        endm
+
+macro2: macro char,junk,interface
+
+        ld a,@char
+        ld b,@junk
+        call @interface
+
+        endm
+</pre>
+
+<p>
+Note that trying to expand and unknown/missing argument will be replaced with
+an empty string.  Also the two argument reference styles can be mixed, though
+obviously the @ form only makes sense in a parameterised macro, e.g.
+</p>
+
+<pre class="codeblock">
+mac:    macro char,junk,interface
+
+        ld a,@char
+        ld b,\2
+        call @interface
+
+        endm
+</pre>
+
+<p>
+The at symbol (@) used for parameter expansion in named argument macros can
+be replaced by using the following option, e.g.
+</p>
+
+<pre class="codeblock">
+        option  macro-arg-char,&
+</pre>
+
+<p>
+Note that this is enforced when the macro is *used*, not when it is *defined*.
+Also the character must not be quoted, as that will be parsed as a string
+holding the character code of the character.
+</p>
+
+
+<h3>Output Format</h3>
+
+By default the assembled code is written to a file called `output` as raw
+binary covering the block of memory that the assembly touched.  If memory
+banks have been used then *output* is appended with the memory bank number, so
+that a separate output file is generated for each bank.
+
+The generated output can be controlled with the following options.
+
+<table>
+
+<thead><tr><td class="head">Output Option</td>
+<td class="head">Description</td></tr></thead>
+
+<tr><td class="cmd">
+option output-file, <i>file</i>
+</td>
+<td class="def">
+Send the output to <i>file</i>.
+</td></tr>
+
+<tr><td class="cmd">
+option output-type, <i>format</i>
+</td>
+<td class="def">
+Controls the format of the output file.  The following are the
+supported output formats:
+
+<table>
+
+<tr><td class="cmd">
+raw
+</td>
+<td class="def">
+A simply raw binary image of the memory.
+</td></tr>
+
+<tr><td class="cmd">
+spectrum
+</td>
+<td class="def">
+<p>
+Generates a Spectrum TAP file for an emulator.
+</p>
+
+The TAP file will be given the same name as the output filename, and its load
+address will be set to the start of the created memory.  If memory banks have
+been used then each bank is output to the TAP file as separate code files.
+</p>
+
+<p>
+Remember that TAP files can be concatenated, so the output could be appended to
+another TAP file containing a BASIC loader for example.
+</p>
+</td></tr>
+
+</table>
+
+</td></tr>
+
+</table>
+
+<h3>Listing</h3>
+
+<p>
+By default no output listing is generated.  This can be controlled by the
+following options.
+</p>
+
+<table>
+
+<thead><tr><td class="head">Listing Option</td>
+<td class="head">Description</td></tr></thead>
+
+<tr><td class="cmd">
+option list, &lt;on|off&gt;
+</td>
+<td class="def">
+Enables or disables listing.  The listing will go to stdout by default. 
+Defaults to <i>off</i>.
+</td></tr>
+
+<tr><td class="cmd">
+option list-file, <i>filename</i>
+</td>
+<td class="def">
+Sends the listing to <i>filename</i>.  Note this should appear before enabling
+the listing.
+</td></tr>
+
+<tr><td class="cmd">
+option list-pc, &lt;on|off&gt;
+</td>
+<td class="def">
+Control the output of the current PC in the as a comment preceding the
+line (so that a listing could be reassembled with no editing).  Defaults
+to <i>off</i>.
+</td></tr>
+
+<tr><td class="cmd">
+option list-hex, &lt;on|off&gt;
+</td>
+<td class="def">
+Control the output of the bytes generated by the source line in hex.
+Defaults to <i>off</i>.  If <i>on</i> then the hex is output in a comment
+preceding the line (possibly with the PC above), so that a listing is still
+valid as input to the assembler.
+</td></tr>
+
+<tr><td class="cmd">
+option list-labels, &lt;on|off|all&gt;
+</td>
+<td class="def">
+Controls the listing of labels, either:
+
+<table>
+<tr><td class="cmd">
+off
+</td>
+<td class="def">
+The default; don't list anything.
+</td></tr>
+
+<tr><td class="cmd">
+on
+</td>
+<td class="def">
+List labels at the end of the listing.  The labels are output commented so that
+the list could be used as input.
+</td></tr>
+
+<tr><td class="cmd">
+all
+</td>
+<td class="def">
+List all labels, including internally generated private labels for macros.
+</td></tr>
+</table>
+
+</td></tr>
+
+<tr><td class="cmd">
+option list-macros, &lt;off|exec|dump|all&gt;
+</td>
+<td class="def">
+Controls the listing of macro invocations, either:
+
+<table>
+<tr><td class="cmd">
+off
+</td>
+<td class="def">
+The default; don't list anything.
+</td></tr>
+
+<tr><td class="cmd">
+exec
+</td>
+<td class="def">
+List invocations of macros.
+</td></tr>
+
+<tr><td class="cmd">
+dump
+</td>
+<td class="def">
+Produce a list of macro definitions at the end of the listing.
+</td></tr>
+
+<tr><td class="cmd">
+all
+</td>
+<td class="def">
+Combine <i>exec</i> and <i>dump</i>.
+</td></tr>
+</table>
+</td></tr>
+
+<tr><td class="cmd">
+option list-rm-blanks, &lt;on|off&gt;
+</td>
+<td class="def">
+Defaults to <i>on</i>.  This option causes multiple blank lines to be collapsed
+down to a single blank line in the listing.
+</td></tr>
+</table>
+
+
+<h1>Z80 CPU</h1>
+
+<h2>Opcodes</h2>
+
+<p>
+The Z80 assembler uses the standard Zilog opcodes, and supports
+undocumented instructions.
+</p>
+
+<p>
+For instructions were the Accumulator can be assumed it can be omitted, and
+EOR can be used the same as XOR:
+</p>
+
+<pre class="codeblock">
+        xor     a,a         ; These are equivalent
+        xor     a
+        eor     a,a
+
+        and     a,b         ; These are equivalent
+        and     b
+</pre>
+
+<p>
+For exchange opcodes with parameters the parameters can be reversed from their
+official form:
+</p>
+
+<pre class="codeblock">
+        ; The official forms
+        ;
+        ex      de,hl
+        ex      af,af'
+        ex      (sp),hl
+        ex      (sp),ix
+        ex      (sp),iy
+
+        ; Also supported
+        ;
+        ex      hl,de
+        ex      af',af
+        ex      hl,(sp)
+        ex      ix,(sp)
+        ex      iy,(sp)
+</pre>
+
+<p>
+Where the high/low register parts of the IX and IY registers are to be used,
+simply use ixl, iyl, ixh and iyh.  Note that the assembler will accept
+illegal pairings involving H and L, but these will be warned about:
+</p>
+
+<pre class="codeblock">
+        ld  ixh,$e5
+        ld  iyl,iyl
+
+        ld  ixh,l           ; This will be turned into "ld ixh,ixl" and a
+                            ; warning will be issued.
+
+        ld  iyh,ixl         ; This will generate an error as the index registers
+                            ; have been mixed.
+</pre>
+
+<p>
+For the hidden bit manipulations that also can copied to a register, these can
+be represented by adding the destination register as an extra parameter, e.g.
+</p>
+
+<pre class="codeblock">
+        srl (iy-1),d
+        set 3,(iy-1),a
+        res 4,(iy-1),b
+</pre>
+
+<p>
+For the hidden IN instruction using the flag register the following are all
+equivalent:
+</p>
+
+<pre class="codeblock">
+        in  (c)
+        in  f,(c)
+</pre>
+
+<p>
+For the hidden OUT instruction using the flag register, $00 or $ff depending
+on where you're reading, the following are all equivalent, where _value_ can
+be any value at all:
+</p>
+
+<pre class="codeblock">
+        out (c)
+        out (c),f
+        out (c),<value>
+</pre>
+
+
+<h2>Options</h2>
+
+The Z80 assembler has no options.
+
+<h1>6502 CPU</h1>
+
+<h2>Opcodes</h2>
+
+The 6502 assembler uses the standard Motorola opcodes.
+
+
+<h2>Options</h2>
+
+The 6502 assembler has the following options.
+
+<table>
+
+<thead><tr><td class="head">6502 Option</td>
+<td class="head">Description</td></tr></thead>
+
+<tr><td class="cmd">
+option zero-page, &lt;on|off|auto&gt;
+</td>
+<td class="def">
+Controls the assumptions made regarding Zero Page address.  Defaults to
+<i>off</i>, and can be the following values:
+
+<table>
+<tr><td class="cmd">
+off
+</td>
+<td class="def">
+The default; all addresses are assumed to be not on the Zero Page, regardless
+of the value used.
+</td></tr>
+
+<tr><td class="cmd">
+on
+</td>
+<td class="def">
+Assumes all addresses are in the Zero Page, raising an error if any address is
+not in the Zero Page.
+</td></tr>
+
+<tr><td class="cmd">
+auto
+</td>
+<td class="def">
+Treats addresses less than 256 as being in the Zero Page automatically.  This
+mode also makes the assembler perform an extra pass to guard against the 
+possibility of the calculation being fooled.
+</td></tr>
+</table>
+
+e.g.
+
+<pre class="codeblock">
+        cpu     6502
+        org     $8000
+
+        lda     $0000,x     ; Produces $bd $00 $00
+        option  +zero-page
+        lda     $0000,x     ; Produces $b5 $00
+        lda     $1234,x     ; Produces an error
+
+        option  zero-page,auto
+        lda     $00,x       ; Produces $b5 $00
+        lda     $8000,x     ; Produces $bd $00 $80
+</pre>
+
+</td></tr>
+</table>
+
+<!--  vim: ai sw=4 ts=8 expandtab spell
+-->
+</body>
+</html>

@@ -4,6 +4,7 @@
 
 macro1:	macro
 	.byte	"Hello World"
+	defw	"Bye World"
 	.text	0, $ff
 	endm
 

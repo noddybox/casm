@@ -1,0 +1,11 @@
+
+	option	output-format,spectrum
+	org 33000,0
+	bank	0
+
+	defb	1
+
+	org 34000,1
+	bank	1
+
+	defb	2
