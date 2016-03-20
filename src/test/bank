@@ -1,5 +1,7 @@
 
-	option	output-format,spectrum
+	; option	output-format,spectrum
+	option	output-bank,code-%u
+	option	output-file,output.tap
 	org 33000,0
 	bank	0
 

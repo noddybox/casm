@@ -751,12 +751,8 @@ holding the character code of the character.
 
 <h3>Output Format</h3>
 
-By default the assembled code is written to a file called `output` as raw
-binary covering the block of memory that the assembly touched.  If memory
-banks have been used then *output* is appended with the memory bank number, so
-that a separate output file is generated for each bank.
-
-The generated output can be controlled with the following options.
+By default the assembled code is written to a file called <b>output</b> as raw
+binary.  The generated output can be controlled with the following options.
 
 <table>
 
@@ -767,7 +763,18 @@ The generated output can be controlled with the following options.
 option output-file, <i>file</i>
 </td>
 <td class="def">
-Send the output to <i>file</i>.
+Send the output to <i>file</i>.  Defaults to <b>output</b>.
+</td></tr>
+
+<tr><td class="cmd">
+option output-bank, <i>printf formatted filename</i>
+</td>
+<td class="def">
+Send the output if multiple banks to use to <i>printf formatted filename</i>.
+It defaults to <b>output.%u</b> and accepts just  one argument in the
+formatting string of an unsigned integer.
+If more or a different format specifier is used the behaviour of the assembler
+will be undefined.  How this is used depends on the output driver.
 </td></tr>
 
 <tr><td class="cmd">
@@ -780,36 +787,52 @@ supported output formats:
 <table>
 
 <tr><td class="cmd">
-raw
+<a href="#rawout">raw</a>
 </td>
 <td class="def">
-A simply raw binary image of the memory.
+A raw binary image.
 </td></tr>
 
 <tr><td class="cmd">
-spectrum
+<a href="#specout">spectrum</a>
 </td>
 <td class="def">
+A Spectrum emulator TAP file.
+</td></tr>
+
+</table>
+
+</td></tr>
+
+</table>
+
+The output formats are described in detail in the following sections.
+
+
+<h3 id="rawout">RAW Output Format</h3>
+
+In this mode the file is created covering the block of memory that the assembly
+touched.  If memory banks have been used then the <b>output-bank</b> setting is
+used to generate the output filename.
+
+
+<h3 id="specout">Spectrum TAP Output Format</h3>
 <p>
-Generates a Spectrum TAP file for an emulator.
+Generates a Spectrum TAP file for an emulator.  A TAP file is a simple binary
+file holding the bytes that the real Spectrum would have written to a tape.
 </p>
 
-The TAP file will be given the same name as the output filename, and its load
-address will be set to the start of the created memory.  If memory banks have
-been used then each bank is output to the TAP file as separate code files.
+<p>The TAP file will be given the same name as the output filename, and the
+internal code block will also be given the same name, unless if memory banks
+have been used then each code file in the TAP file will use the
+<b>output-bank</b> setting is used to generate the filename for each block.
 </p>
 
 <p>
 Remember that TAP files can be concatenated, so the output could be appended to
 another TAP file containing a BASIC loader for example.
 </p>
-</td></tr>
 
-</table>
-
-</td></tr>
-
-</table>
 
 <h3>Listing</h3>
 

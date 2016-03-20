@@ -3,8 +3,8 @@
 ;
 ; Comments
 ;
-		list on
-		list labels,on
+		option +list
+		option list-labels,on
 
 		alias	fred,equ
 
@@ -49,20 +49,18 @@ should_end_10h:
 should_end_100h:
 
 	cpu	z80
-	option	list
 
 	cpu	6502
-	option	list
 
-	option	zp,true
-	option	zp,on
-	option	zp,yes
-	option	zp,false
-	option	zp,off
-	option	zp,no
+	option	zero-page,true
+	option	zero-page,on
+	option	zero-page,yes
+	option	zero-page,false
+	option	zero-page,off
+	option	zero-page,no
 
-	option	+zp
-	option	-zp
+	option	+zero-page
+	option	-zero-page
 
 one	equ	1
 two	fred	ONE * 2

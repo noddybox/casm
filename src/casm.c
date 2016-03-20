@@ -37,10 +37,13 @@
 #include "cmd.h"
 #include "state.h"
 #include "codepage.h"
-#include "output.h"
 #include "stack.h"
 #include "listing.h"
 #include "alias.h"
+
+#include "output.h"
+#include "rawout.h"
+#include "specout.h"
 
 /* ---------------------------------------- PROCESSORS
 */
@@ -375,6 +378,8 @@ static CommandStatus OPTION(const char *label, int argc, char *argv[],
         opt = argv[1];
     }
 
+    /* TODO: There should be someway to make this better
+    */
     if ((entry = ParseTable(opt, ListOptions())))
     {
         return ListSetOption(entry->value, ac, args, q, err, errsize);
@@ -390,6 +395,14 @@ static CommandStatus OPTION(const char *label, int argc, char *argv[],
     else if ((entry = ParseTable(opt, OutputOptions())))
     {
         return OutputSetOption(entry->value, ac, args, q, err, errsize);
+    }
+    else if ((entry = ParseTable(opt, RawOutputOptions())))
+    {
+        return RawOutputSetOption(entry->value, ac, args, q, err, errsize);
+    }
+    else if ((entry = ParseTable(opt, SpecTAPOutputOptions())))
+    {
+        return SpecTAPOutputSetOption(entry->value, ac, args, q, err, errsize);
     }
     else if ((entry = ParseTable(opt, cpu->options())))
     {

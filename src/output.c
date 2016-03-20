@@ -28,6 +28,10 @@
 #include "global.h"
 #include "output.h"
 
+#include "rawout.h"
+#include "specout.h"
+/* TODO #include "zx81out.h" */
+
 
 /* ---------------------------------------- GLOBALS
 */
@@ -35,12 +39,14 @@
 enum option_t
 {
     OPT_OUTPUTFILE,
+    OPT_OUTPUTBANK,
     OPT_OUTPUTFORMAT
 };
 
 static const ValueTable option_set[] =
 {
     {"output-file",     OPT_OUTPUTFILE},
+    {"output-bank",     OPT_OUTPUTBANK},
     {"output-format",   OPT_OUTPUTFORMAT},
     {NULL}
 };
@@ -52,6 +58,7 @@ typedef enum
 } Format;
 
 static char             output[4096] = "output";
+static char             output_bank[4096] = "output.%u";
 static char             error[1024];
 static Format           format = Raw;
 
@@ -212,6 +219,10 @@ CommandStatus OutputSetOption(int opt, int argc, char *argv[],
             CopyStr(output, argv[0], sizeof output);
             break;
 
+        case OPT_OUTPUTBANK:
+            CopyStr(output_bank, argv[0], sizeof output_bank);
+            break;
+
         case OPT_OUTPUTFORMAT:
             CMD_TABLE(argv[0], format_table, val);
             format = val->value;
@@ -244,14 +255,18 @@ int OutputCode(void)
     switch(format)
     {
         case Raw:
-            return OutputRawBinary(bank, count);
+            return RawOutput(output, output_bank, bank, count,
+                             error, sizeof error);
 
         case SpectrumTap:
-            return OutputSpectrumTap(bank, count);
+            return SpecTAPOutput(output, output_bank, bank, count,
+                                 error, sizeof error);
 
         default:
             break;
     }
+
+    return FALSE;
 }
 
 
