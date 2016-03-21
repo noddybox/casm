@@ -19,48 +19,35 @@
 
     -------------------------------------------------------------------------
 
-    Code page handling
+    Commodore T64 tape output
 
 */
 
-#ifndef CASM_CODEPAGE_H
-#define CASM_CODEPAGE_H
+#ifndef CASM_T64OUT_H
+#define CASM_T64OUT_H
 
 #include "parse.h"
+#include "state.h"
 #include "cmd.h"
 
 /* ---------------------------------------- INTERFACES
 */
-typedef enum
-{
-    CP_ASCII,
-    CP_ZX81,
-    CP_SPECTRUM,
-    CP_CBM
-} Codepage;
 
 
-/* Codepage options
+/* RAW Output options
 */
-const ValueTable *CodepageOptions(void);
+const ValueTable *T64OutputOptions(void);
 
-CommandStatus CodepageSetOption(int opt, int argc, char *argv[],
-                                int quoted[], char *error, size_t error_size);
+CommandStatus T64OutputSetOption(int opt, int argc, char *argv[],
+                                 int quoted[], char *error,
+                                 size_t error_size);
 
 
-
-
-/* Converts the passed character into the appropriate codepage value.
-   Returns zero for unknown/unconvertable characters.
+/* Spectrum TAP output of assembly.  Returns TRUE if OK, FALSE for failure.
 */
-int     CodepageConvert(int code);
-
-
-/* Converts from the execution character set into a code from the specified
-   codepage.
-*/
-int     CodeFromNative(Codepage page, int code);
-
+int T64Output(const char *filename, const char *filename_bank,
+              MemoryBank **bank, int count,
+              char *error, size_t error_size);
 
 #endif
 

@@ -33,15 +33,6 @@
 /* ---------------------------------------- TYPES
 */
 
-typedef enum
-{
-    CP_ASCII,
-    CP_ZX81,
-    CP_SPECTRUM,
-    CP_CBM
-} Codepage;
-
-
 typedef struct
 {
     int code;
@@ -247,6 +238,22 @@ int CodepageConvert(int code)
         if (cp_table[cp][f].code == code)
         {
             return cp_table[cp][f].result;
+        }
+    }
+
+    return 0;
+}
+
+
+int CodeFromNative(Codepage page, int code)
+{
+    int f;
+
+    for(f = 0; cp_table[page][f].code; f++)
+    {
+        if (cp_table[page][f].code == code)
+        {
+            return cp_table[page][f].result;
         }
     }
 

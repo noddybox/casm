@@ -20,13 +20,16 @@
 # Makefile for examples
 #
 
-ALL	= spectrum.tap # c64.t64 zx81.p
+ALL	= spectrum.tap c64.t64 # zx81.p
 CASM	= ../casm
 
 all: $(ALL)
 
 spectrum.tap: spectrum.asm
 	$(CASM) spectrum.asm
+
+c64.t64: c64.asm
+	$(CASM) c64.asm
 
 clean:
 	rm -f $(ALL)

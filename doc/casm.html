@@ -800,6 +800,20 @@ A raw binary image.
 A Spectrum emulator TAP file.
 </td></tr>
 
+<tr><td class="cmd">
+<a href="#zx81out">p-file</a>
+</td>
+<td class="def">
+A ZX-81 emulator P file.
+</td></tr>
+
+<tr><td class="cmd">
+<a href="#t64out">t64</a>
+</td>
+<td class="def">
+A Commodore 64 T64 tape file.
+</td></tr>
+
 </table>
 
 </td></tr>
@@ -823,14 +837,33 @@ file holding the bytes that the real Spectrum would have written to a tape.
 </p>
 
 <p>The TAP file will be given the same name as the output filename, and the
-internal code block will also be given the same name, unless if memory banks
-have been used then each code file in the TAP file will use the
-<b>output-bank</b> setting is used to generate the filename for each block.
+internal code block will also be given the same name, unless memory banks
+have been used, in which case each code file in the TAP file will use the
+<b>output-bank</b> setting to generate the filename for each block.
 </p>
 
 <p>
 Remember that TAP files can be concatenated, so the output could be appended to
-another TAP file containing a BASIC loader for example.
+another TAP file containing a BASIC loader, for example.
+</p>
+
+
+<h3 id="zx81out">ZX81 .P Output Format</h3>
+
+
+<h3 id="t64out">C64 T64 Tape Output Format</h3>
+<p>
+Generates a T64 tape file for an emulator.
+</p>
+
+<p>The tape file will be given the same name as the output filename, and the
+internal code block will also be given the same name, unless memory banks
+have been used, in which case then each entry in the tape file will use the
+<b>output-bank</b> setting to generate the filename for each entry.
+</p>
+
+<p>Each entry in the tape file will be marked as a PRG with the start address
+the same as the first assembled byte.
 </p>
 
 

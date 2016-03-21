@@ -53,149 +53,24 @@ static const ValueTable option_set[] =
 
 typedef enum
 {
-    Raw,
-    SpectrumTap
+    RAW,
+    TAP,
+    T64
 } Format;
 
 static char             output[4096] = "output";
 static char             output_bank[4096] = "output.%u";
 static char             error[1024];
-static Format           format = Raw;
+static Format           format = RAW;
 
 static ValueTable       format_table[] =
 {
-    {"raw",             Raw},
-    {"spectrum",        SpectrumTap},
+    {"raw",             RAW},
+    {"spectrum",        TAP},
+    {"t64",             T64},
     {NULL}
 };
 
-
-/* ---------------------------------------- PRIVATE FUNCTIONS
-*/
-static int OutputRawBinary(MemoryBank **bank, int count)
-{
-    char buff[4096];
-    int f;
-
-    for(f = 0; f < count; f++)
-    {
-        FILE *fp;
-        const char *name;
-        const Byte *mem;
-        int min, max;
-
-        if (count == 1)
-        {
-            name = output;
-        }
-        else
-        {
-            snprintf(buff, sizeof buff, "%s.%u", output, bank[f]->number);
-            name = buff;
-        }
-
-        if (!(fp = fopen(name, "wb")))
-        {
-            snprintf(error, sizeof error,"Failed to open %s\n", name);
-            return FALSE;
-        }
-
-        mem = bank[f]->memory;
-        min = bank[f]->min_address_used;
-        max = bank[f]->max_address_used;
-
-        fwrite(mem + min, 1, max - min + 1, fp);
-
-        fclose(fp);
-    }
-
-    return TRUE;
-}
-
-
-static Byte TapByte(FILE *fp, Byte b, Byte chk)
-{
-    chk ^= b;
-    putc(b, fp);
-    return chk;
-}
-
-
-static Byte TapWord(FILE *fp, int w, Byte chk)
-{
-    chk = TapByte(fp, w & 0xff, chk);
-    chk = TapByte(fp, (w & 0xff00) >> 8, chk);
-    return chk;
-}
-
-
-static Byte TapString(FILE *fp, const char *p, int len, Byte chk)
-{
-    while(len--)
-    {
-        chk = TapByte(fp, *p ? *p++ : ' ', chk);
-    }
-
-    return chk;
-}
-
-
-static int OutputSpectrumTap(MemoryBank **bank, int count)
-{
-    FILE *fp = fopen(output, "wb");
-    int f;
-
-    if (!fp)
-    {
-        snprintf(error, sizeof error,"Failed to open %s\n", output);
-        return FALSE;
-    }
-
-    /* Output header
-    */
-    for(f = 0; f < count; f++)
-    {
-        Byte chk = 0;
-        const Byte *mem;
-        int min, max, len;
-
-        mem = bank[f]->memory;
-        min = bank[f]->min_address_used;
-        max = bank[f]->max_address_used;
-        len = max - min + 1;
-
-        TapWord(fp, 19, 0);
-
-        chk = TapByte(fp, 0, chk);
-        chk = TapByte(fp, 3, chk);
-        chk = TapString(fp, output, 10, chk);
-        chk = TapWord(fp, len, chk);
-        chk = TapWord(fp, min, chk);
-        chk = TapWord(fp, 32768, chk);
-
-        TapByte(fp, chk, 0);
-
-        /* Output file data
-        */
-        TapWord(fp, len + 2, 0);
-
-        chk = 0;
-
-        chk = TapByte(fp, 0xff, chk);
-
-        while(min <= max)
-        {
-            chk = TapByte(fp, mem[min], chk);
-            min++;
-        }
-
-        TapByte(fp, chk, 0);
-    }
-
-    fclose(fp);
-
-    return TRUE;
-}
 
 /* ---------------------------------------- INTERFACES
 */
@@ -254,13 +129,17 @@ int OutputCode(void)
 
     switch(format)
     {
-        case Raw:
+        case RAW:
             return RawOutput(output, output_bank, bank, count,
                              error, sizeof error);
 
-        case SpectrumTap:
+        case TAP:
             return SpecTAPOutput(output, output_bank, bank, count,
                                  error, sizeof error);
+
+        case T64:
+            return T64Output(output, output_bank, bank, count,
+                             error, sizeof error);
 
         default:
             break;

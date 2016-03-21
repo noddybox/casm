@@ -40,7 +40,8 @@ SOURCE	=	casm.c		\
 		6502.c		\
 		z80.c		\
 		rawout.c	\
-		specout.c
+		specout.c	\
+		t64out.c
 
 OBJECTS	=	casm.o		\
 		expr.o		\
@@ -58,7 +59,8 @@ OBJECTS	=	casm.o		\
 		6502.o		\
 		z80.o		\
 		rawout.o	\
-		specout.o
+		specout.o	\
+		t64out.o
 
 $(TARGET): $(OBJECTS)
 	$(CC) $(CLAGS) -o $(TARGET) $(OBJECTS)
