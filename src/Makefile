@@ -84,7 +84,7 @@ listing.o: listing.c global.h basetype.h util.h state.h label.h macro.h \
 macro.o: macro.c global.h basetype.h util.h state.h codepage.h parse.h \
   cmd.h varchar.h macro.h
 output.o: output.c global.h basetype.h util.h state.h output.h parse.h \
-  cmd.h rawout.h specout.h
+  cmd.h rawout.h specout.h t64out.h
 parse.o: parse.c global.h basetype.h util.h state.h codepage.h parse.h \
   cmd.h
 rawout.o: rawout.c global.h basetype.h util.h state.h rawout.h parse.h \
@@ -93,6 +93,8 @@ specout.o: specout.c global.h basetype.h util.h state.h specout.h parse.h \
   cmd.h
 stack.o: stack.c global.h basetype.h util.h state.h stack.h
 state.o: state.c global.h basetype.h util.h state.h expr.h
+t64out.o: t64out.c global.h basetype.h util.h state.h codepage.h parse.h \
+  cmd.h t64out.h
 util.o: util.c global.h basetype.h util.h state.h
 varchar.o: varchar.c global.h basetype.h util.h state.h codepage.h \
   parse.h cmd.h varchar.h

@@ -862,9 +862,18 @@ have been used, in which case then each entry in the tape file will use the
 <b>output-bank</b> setting to generate the filename for each entry.
 </p>
 
-<p>Each entry in the tape file will be marked as a PRG with the start address
-the same as the first assembled byte.
+<p>The first (or only) bank will have a small BASIC program inserted as part of
+the generated file.  For this reason the first bank should start near the BASIC
+area (0x820 should be a safe place to start) unless you have a great
+desire for a tape full of zero bytes. This BASIC will simply hold a SYS command
+to start the machine code, e.g.
 </p>
+
+<pre class="codeblock">
+10 SYS 2080
+</pre>
+
+<p>Any remaining blocks will be stored as-is without any basic loader.</p>
 
 
 <h3>Listing</h3>

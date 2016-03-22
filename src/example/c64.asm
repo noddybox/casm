@@ -8,7 +8,7 @@
 	option	output-file,c64.t64
 	option	output-format,t64
 
-	org $6000
+	org $820
 
 	lda	#0
 	clc

@@ -25,6 +25,8 @@ CASM	= ../casm
 
 all: $(ALL)
 
+remake: clean all
+
 spectrum.tap: spectrum.asm
 	$(CASM) spectrum.asm
 

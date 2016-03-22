@@ -24,6 +24,7 @@
 */
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "global.h"
 #include "codepage.h"
@@ -37,6 +38,31 @@
 
 /* ---------------------------------------- PRIVATE FUNCTIONS
 */
+
+static int PokeB(Byte *mem, int addr, Byte b)
+{
+    mem[addr++] = b;
+    return (addr % 0x10000);
+}
+
+
+static int PokeW(Byte *mem, int addr, int w)
+{
+    addr = PokeB(mem, addr, w & 0xff);
+    return PokeB(mem, addr, (w & 0xff00) >> 8);
+}
+
+
+static int PokeS(Byte *mem, int addr, const char *str)
+{
+    while(*str)
+    {
+        addr = PokeB(mem, addr, CodeFromNative(CP_CBM, *str++));
+    }
+
+    return addr;
+}
+
 
 static void WriteByte(FILE *fp, Byte b)
 {
@@ -106,11 +132,11 @@ int T64Output(const char *filename, const char *filename_bank,
 
     /* Write directory header
     */
-    WriteWord(fp, 0x1010);
+    WriteWord(fp, 0x200);
     WriteWord(fp, count);
     WriteWord(fp, count);
     WriteWord(fp, NOT_USED);
-    WriteString(fp, filename, 24, ' ', CP_CBM);
+    WriteString(fp, filename, 24, ' ', CP_ASCII);
 
     /* Offset to tape data
     */
@@ -120,16 +146,53 @@ int T64Output(const char *filename, const char *filename_bank,
     */
     for(f = 0; f < count; f++)
     {
+        int min, max, len;
+
+        min = bank[f]->min_address_used;
+        max = bank[f]->max_address_used;
+
+        /* If this is the first bank, we're going to prepend some BASIC
+        */
+        if (f == 0)
+        {
+            if (min < 0x810)
+            {
+                snprintf(error, error_size, "First bank starts below a safe "
+                                            "area to add BASIC loader");
+
+                return FALSE;
+            }
+
+            min = 0x801;        /* Start of BASIC */
+        }
+
+        len = max - min + 1;
+
         WriteByte(fp, 1);
         WriteByte(fp, 0x82);
-        WriteWord(fp, bank[f]->min_address_used);
-        WriteWord(fp, bank[f]->max_address_used);
+        WriteWord(fp, min);
+        WriteWord(fp, max + 1);
         WriteWord(fp, NOT_USED);
         WriteLong(fp, offset);
         WriteWord(fp, NOT_USED);
         WriteWord(fp, NOT_USED);
 
-        offset += bank[f]->max_address_used - bank[f]->min_address_used + 1;
+        if (count == 1)
+        {
+            WriteString(fp, filename, 16, ' ', CP_CBM);
+        }
+        else
+        {
+            char fn[16];
+
+            snprintf(fn, sizeof fn, filename_bank, bank[f]->number);
+            WriteString(fp, fn, 16, ' ', CP_CBM);
+        }
+
+        /* +2 is to include the 2-byte PRG header
+        offset += len + 2;
+        */
+        offset += len;
     }
 
     /* Write actual contents
@@ -140,11 +203,38 @@ int T64Output(const char *filename, const char *filename_bank,
         int min, max, len;
 
         mem = bank[f]->memory;
+
         min = bank[f]->min_address_used;
         max = bank[f]->max_address_used;
+
+        /* If this is the first bank, we're going to prepend some BASIC.
+           Note that output drivers are allowed to manipulate memory directly.
+        */
+        if (f == 0)
+        {
+            char sys[16];
+            int a = 0x803;
+            int next;
+
+            snprintf(sys, sizeof sys, "%u", min);
+
+            a = PokeW(mem, a, 10);
+            a = PokeB(mem, a, 0x9e);
+            a = PokeS(mem, a, sys);
+            a = PokeB(mem, a, 0x00);
+
+            next = a;
+
+            a = PokeW(mem, a, 0x00);
+
+            PokeW(mem, 0x801, next);
+
+            min = 0x801;
+        }
+
         len = max - min + 1;
 
-        fwrite(mem, len, 1, fp);
+        fwrite(mem + min, len, 1, fp);
     }
 
     fclose(fp);

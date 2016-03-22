@@ -30,6 +30,7 @@
 
 #include "rawout.h"
 #include "specout.h"
+#include "t64out.h"
 /* TODO #include "zx81out.h" */
 
 
