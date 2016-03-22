@@ -34,5 +34,8 @@
 # Custom
 src/casm
 *.com
+*.tap
+*.t64
+*.p
 src/A-Hdrive
 src/output
