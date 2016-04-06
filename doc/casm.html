@@ -163,9 +163,7 @@ banks of RAM can be added by using the <b>bank</b> or <b>org</b> directives.
 Banks are numbered from zero upwards.</p>
 
 
-<h2>Source Code</h2>
-
-<h3>Layout</h3>
+<h2>Source Code Layout</h2>
 
 The source files follow this basic format:
 
@@ -229,7 +227,7 @@ to put the other quote type inside the string.</li>
 </ul>
 
 
-<h3>Recognised directives</h3>
+<h2>Recognised directives</h2>
 
 <p>The following directives are also recognised with an optional period (.) in
 front of them, and are case insensitive.  Directives can also be used to
@@ -412,7 +410,7 @@ word<br>
 
 </table>
 
-<h3>Expressions</h3>
+<h2>Expressions</h2>
 
 <p>In any of the directives above, where a value is defined, an expression can
 be entered.</p>
@@ -604,7 +602,7 @@ Bitwise XOR.
 
 </table>
 
-<h3>Character Sets</h3>
+<h2>Character Sets</h2>
 
 <p>The assembler has built-in support for a few different character sets.
 These can be set by using the options `charset` or `codepage`, i.e.</p>
@@ -636,15 +634,6 @@ The character codes as used on the Sinclair ZX Spectrum.
 </td></tr>
 
 <tr><td class="cmd">
-zx81
-</td>
-<td class="def">
-The character codes as used on the Sinclair ZX-81.  Lower case
-letters are encoded as normal upper case letters and upper case
-letter will be encoded as inverse upper case letters.
-</td></tr>
-
-<tr><td class="cmd">
 cbm
 </td>
 <td class="def">
@@ -652,6 +641,77 @@ PETSCII as used on the Commodore Business Machine's range from the
 PET to the C128.  See <a href="https://en.wikipedia.org/wiki/PETSCII">
 https://en.wikipedia.org/wiki/PETSCII</a> more details.
 </td></tr>
+
+<tr><td class="cmd">
+zx81
+</td>
+<td class="def">
+The character codes as used on the Sinclair ZX81.  Lower case
+letters are encoded as normal upper case letters and upper case
+letter will be encoded as inverse upper case letters.  In addition the following
+characters that have no corresponding ZX81 character are mapped as:
+<table>
+
+<tr><td class="cmd">
+#
+</td>
+<td class="def">
+The British Pound sign.
+</td></tr>
+
+<tr><td class="cmd">
+&apos;
+</td>
+<td class="def">
+Inverse double quotes.
+</td></tr>
+
+<tr><td class="cmd">
+\
+</td>
+<td class="def">
+Inverse slash.
+</td></tr>
+
+<tr><td class="cmd">
+!
+</td>
+<td class="def">
+Inverse question mark.
+</td></tr>
+
+<tr><td class="cmd">
+|
+</td>
+<td class="def">
+Inverse space.
+</td></tr>
+
+<tr><td class="cmd">
+~
+</td>
+<td class="def">
+Inverse minus sign.
+</td></tr>
+
+<tr><td class="cmd">
+{ }
+</td>
+<td class="def">
+Inverse round brackets.
+</td></tr>
+
+<tr><td class="cmd">
+`
+</td>
+<td class="def">
+The newline character.  Note that the newline is actually a HALT opcode used to
+terminate the line.
+</td></tr>
+
+</table>
+</td></tr>
+
 </table>
 
 <p>e.g.</p>
@@ -678,7 +738,7 @@ https://en.wikipedia.org/wiki/PETSCII</a> more details.
 </pre>
 
 
-<h3>Macros</h3>
+<h2>Macros</h2>
 
 <p>
 Macros can be defined in one of two ways; either parameterless or with named
@@ -743,13 +803,14 @@ be replaced by using the following option, e.g.
 </pre>
 
 <p>
-Note that this is enforced when the macro is *used*, not when it is *defined*.
+Note that this is enforced when the macro is <u>used</u> not when it is
+defined.
 Also the character must not be quoted, as that will be parsed as a string
 holding the character code of the character.
 </p>
 
 
-<h3>Output Format</h3>
+<h2>Output Format</h2>
 
 By default the assembled code is written to a file called <b>output</b> as raw
 binary.  The generated output can be controlled with the following options.
@@ -801,10 +862,10 @@ A Spectrum emulator TAP file.
 </td></tr>
 
 <tr><td class="cmd">
-<a href="#zx81out">p-file</a>
+<a href="#zx81out">zx81</a>
 </td>
 <td class="def">
-A ZX-81 emulator P file.
+A ZX81 emulator P file.
 </td></tr>
 
 <tr><td class="cmd">
@@ -850,6 +911,71 @@ another TAP file containing a BASIC loader, for example.
 
 <h3 id="zx81out">ZX81 .P Output Format</h3>
 
+<p>
+Generates a P-file for an emulator.  A ZX81 .P file is simply a dump of memory
+from the system variables onwards.
+</p>
+
+<p>This format does not support memory blocks (the .P file is not a container
+format) and so will only output anything in the first bank used, and using the 
+<b>output-file</b> for the filename.
+</p>
+
+<p>The output file will be created as a BASIC program, containing a REM
+statement holding the machine code, and a command to execute the code.  As
+such the output will fail if the code in Bank 0 does not start at address 16514.
+Your code must also support being executed from this address.
+</p>
+
+<p>Another important thing to note is about the display file.  In the ZX81
+memory map the DFILE can move around depending on the size of the program.
+The output driver will create a display file for you.  The easiest way to
+reference this is to read the DFILE system variable when your program starts.
+</p>
+
+<p>Alternatively you can just as easily set up your own display file once
+your program starts if you have special requirements, e.g. a display file for
+pseudo hi-res.
+</p>
+
+
+<h4>ZX81 .P Output Format options</h4>
+
+<p>The ZX81 output driver supports the following settings that can be set via
+an <b>option</b> command.
+</p>
+
+<table>
+
+<thead><tr><td class="head">Option</td>
+<td class="head">Description</td></tr></thead>
+
+<tr><td class="cmd">
+option zx81-margin, &lt;pal|ntsc&gt;
+</td>
+<td class="def">
+Sets the MARGIN system variable appropriately either for the PAL or NTSC
+TV system.  Defaults to PAL.
+</td></tr>
+
+<tr><td class="cmd">
+option zx81-autorun, &lt;on|off&gt;
+</td>
+<td class="def">
+Whether the ZX81 should auto run the machine code.  Defaults to on.
+</td></tr>
+
+<tr><td class="cmd">
+option zx81-collapse-dfile, &lt;on|off&gt;
+</td>
+<td class="def">
+Whether the display file should be generated collapsed (e.g. for 1K mode).
+Defaults to off.
+</td></tr>
+
+
+</table>
+
 
 <h3 id="t64out">C64 T64 Tape Output Format</h3>
 <p>
@@ -876,7 +1002,7 @@ to start the machine code, e.g.
 <p>Any remaining blocks will be stored as-is without any basic loader.</p>
 
 
-<h3>Listing</h3>
+<h2>Listing</h2>
 
 <p>
 By default no output listing is generated.  This can be controlled by the
@@ -1088,14 +1214,14 @@ equivalent:
 
 <p>
 For the hidden OUT instruction using the flag register, $00 or $ff depending
-on where you're reading, the following are all equivalent, where _value_ can
-be any value at all:
+on where you're reading, the following are all equivalent, where <i>value</i>
+can be any value at all:
 </p>
 
 <pre class="codeblock">
         out (c)
         out (c),f
-        out (c),<value>
+        out (c),<i>value</i>
 </pre>
 
 

@@ -277,17 +277,17 @@ int LabelExpand(const char *expr, int *result)
         {
             found = ParseBase(expr + 1, 16, result, '\0');
         }
-        else if (last == 'h')
+        else if (last == 'h' || last == 'H')
         {
-            found = ParseBase(expr, 16, result, 'h');
+            found = ParseBase(expr, 16, result, last);
         }
         else if (first == '%')
         {
             found = ParseBase(expr, 2, result, '\0');
         }
-        else if (last == 'b')
+        else if (last == 'b' || last == 'B')
         {
-            found = ParseBase(expr, 2, result, 'b');
+            found = ParseBase(expr, 2, result, last);
         }
         else if (first == '\'' && last == '\'' && len == 3)
         {

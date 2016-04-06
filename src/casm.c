@@ -40,10 +40,7 @@
 #include "stack.h"
 #include "listing.h"
 #include "alias.h"
-
 #include "output.h"
-#include "rawout.h"
-#include "specout.h"
 
 /* ---------------------------------------- PROCESSORS
 */
@@ -403,6 +400,14 @@ static CommandStatus OPTION(const char *label, int argc, char *argv[],
     else if ((entry = ParseTable(opt, SpecTAPOutputOptions())))
     {
         return SpecTAPOutputSetOption(entry->value, ac, args, q, err, errsize);
+    }
+    else if ((entry = ParseTable(opt, T64OutputOptions())))
+    {
+        return T64OutputSetOption(entry->value, ac, args, q, err, errsize);
+    }
+    else if ((entry = ParseTable(opt, ZX81OutputOptions())))
+    {
+        return ZX81OutputSetOption(entry->value, ac, args, q, err, errsize);
     }
     else if ((entry = ParseTable(opt, cpu->options())))
     {

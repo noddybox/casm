@@ -43,7 +43,7 @@ CommandStatus T64OutputSetOption(int opt, int argc, char *argv[],
                                  size_t error_size);
 
 
-/* Spectrum TAP output of assembly.  Returns TRUE if OK, FALSE for failure.
+/* C64 T64 tape output of assembly.  Returns TRUE if OK, FALSE for failure.
 */
 int T64Output(const char *filename, const char *filename_bank,
               MemoryBank **bank, int count,

@@ -81,7 +81,7 @@ int SpecTAPOutput(const char *filename, const char *filename_bank,
 
     if (!fp)
     {
-        snprintf(error, error_size, "Failed to create %s\n", filename);
+        snprintf(error, error_size, "Failed to create %s", filename);
         return FALSE;
     }
 

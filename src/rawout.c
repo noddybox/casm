@@ -67,7 +67,7 @@ int RawOutput(const char *filename, const char *filename_bank,
 
         if (!(fp = fopen(name, "wb")))
         {
-            snprintf(error, error_size, "Failed to open %s\n", name);
+            snprintf(error, error_size, "Failed to open %s", name);
             return FALSE;
         }
 

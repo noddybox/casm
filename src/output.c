@@ -28,12 +28,6 @@
 #include "global.h"
 #include "output.h"
 
-#include "rawout.h"
-#include "specout.h"
-#include "t64out.h"
-/* TODO #include "zx81out.h" */
-
-
 /* ---------------------------------------- GLOBALS
 */
 
@@ -56,7 +50,8 @@ typedef enum
 {
     RAW,
     TAP,
-    T64
+    T64,
+    ZX81
 } Format;
 
 static char             output[4096] = "output";
@@ -69,6 +64,7 @@ static ValueTable       format_table[] =
     {"raw",             RAW},
     {"spectrum",        TAP},
     {"t64",             T64},
+    {"zx81",            ZX81},
     {NULL}
 };
 
@@ -141,6 +137,10 @@ int OutputCode(void)
         case T64:
             return T64Output(output, output_bank, bank, count,
                              error, sizeof error);
+
+        case ZX81:
+            return ZX81Output(output, output_bank, bank, count,
+                              error, sizeof error);
 
         default:
             break;
