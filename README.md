@@ -29,10 +29,10 @@ Currently **casm** supports:
 
 * Raw binary output
 * ZX Spectrum TAP file
+* T64 Commodore 64 tape image
+* ZX81 P file
 
 Plans for:
 
-* D64 Commodore 1571 disk image
-* T64 Commodore 64 tape image
 * SNES ROM
 * NES ROM
