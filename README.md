@@ -8,7 +8,8 @@ Simply pass it the file to assemble, i.e.
 
 `casm source.txt`
 
-Full documentation can be found in <a href="doc/casm.html">HTML</a> format.
+Full documentation can be found in
+<a href="https://rawgit.com/noddybox/casm/master/doc/casm.html">HTML</a> format.
 
 ## Processors
 
