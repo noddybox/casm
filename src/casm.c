@@ -52,6 +52,20 @@
 */
 
 
+/* ---------------------------------------- VERSION INFO
+*/
+
+static const char *casm_usage =
+"Version 1.0\n"
+"\n"
+"This program is distributed in the hope that it will be useful,\n"
+"but WITHOUT ANY WARRANTY; without even the implied warranty of\n"
+"MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n"
+"GNU General Public License (Version 3) for more details.\n"
+"\n"
+"usage: casm file\n";
+
+
 /* ---------------------------------------- TYPES
 */
 
@@ -519,7 +533,7 @@ int main(int argc, char *argv[])
 
     if (!argv[1])
     {
-        fprintf(stderr,"usage: casm file\n");
+        fprintf(stderr,"%s\n", casm_usage);
         exit(EXIT_FAILURE);
     }
 
