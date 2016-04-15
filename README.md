@@ -17,6 +17,7 @@ Currently **casm** supports:
 
 * Z80 (the default)
 * 6502
+* Gameboy CPU
 
 Plans for:
 

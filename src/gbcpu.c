@@ -19,7 +19,7 @@
 
     -------------------------------------------------------------------------
 
-    Z80 Assembler
+    GBCPU Assembler
 
 */
 #include <stdlib.h>
@@ -34,7 +34,7 @@
 #include "codepage.h"
 #include "varchar.h"
 
-#include "z80.h"
+#include "gbcpu.h"
 
 
 /* ---------------------------------------- TYPES AND GLOBALS
@@ -49,29 +49,18 @@ typedef enum
     H8,
     L8,
     F8,
-    IXH8,
-    IXL8,
-    IYH8,
-    IYL8,
-    I8,
-    R8,
     AF16,
-    AF16_ALT,
     BC16,
     DE16,
     HL16,
     SP16,
-    IX16,
-    IY16,
     BC_ADDRESS,
     DE_ADDRESS,
     HL_ADDRESS,
     SP_ADDRESS,
-    IX_ADDRESS,
-    IY_ADDRESS,
-    IX_OFFSET,
-    IY_OFFSET,
-    C_PORT,
+    HL_INCREMENT,
+    HL_DECREMENT,
+    FF00_C_INDEX,
     ADDRESS,
     VALUE,
     INVALID_REG
@@ -84,130 +73,29 @@ typedef enum
     Z_FLAG,
     NC_FLAG,
     C_FLAG,
-    PO_FLAG,
-    PE_FLAG,
-    P_FLAG,
-    M_FLAG
 } ProcessorFlag;
 
 
 typedef enum
 {
-    IS_NORMAL_8_BIT     =       0x001,
-    IS_SPECIAL_8_BIT    =       0x002,
-    IS_16_BIT           =       0x004,
-    IS_MEMORY           =       0x008,
-    IS_INDEX_X          =       0x010,
-    IS_INDEX_Y          =       0x020,
-    IS_SP               =       0x040,
-    IS_VALUE            =       0x080,
-    IS_SPECIAL_16_BIT   =       0x100,
-    IS_ALTERNATE        =       0x200,
-    IS_IO_PORT          =       0x400
+    IS_NORMAL_8_BIT     =       0x01,
+    IS_SPECIAL_8_BIT    =       0x02,
+    IS_16_BIT           =       0x04,
+    IS_MEMORY           =       0x08,
+    IS_FF00_C           =       0x10,
+    IS_SP               =       0x20,
+    IS_VALUE            =       0x40,
+    IS_SPECIAL_16_BIT   =       0x80,
 } RegisterType;
 
 #define IsNormal8Bit(t)         ((t) & IS_NORMAL_8_BIT)
 #define IsSpecial8Bit(t)        ((t) & IS_SPECIAL_8_BIT)
 #define Is16Bit(t)              ((t) & IS_16_BIT)
 #define IsMemory(t)             ((t) & IS_MEMORY)
-#define IsIndexX(t)             ((t) & IS_INDEX_X)
-#define IsIndexY(t)             ((t) & IS_INDEX_Y)
-#define IsIndex(t)              (IsIndexX(t) || IsIndexY(t))
 #define IsSP(t)                 ((t) & IS_SP)
 #define IsAddress(t)            (((t) & IS_VALUE) && ((t) & IS_MEMORY))
 #define IsValue(t)              ((t) & IS_VALUE)
 #define IsSimpleValue(t)        ((t) == IS_VALUE)
-#define IsAlternate(t)          ((t) & IS_ALTERNATE)
-
-#define SHIFT_IX                0xdd
-#define SHIFT_IY                0xfd
-
-#define WriteShift(r)                                   \
-do                                                      \
-{                                                       \
-    switch(r)                                           \
-    {                                                   \
-        case IXH8:                                      \
-        case IXL8:                                      \
-        case IX16:                                      \
-        case IX_OFFSET:                                 \
-        case IX_ADDRESS:                                \
-            PCWrite(SHIFT_IX);                          \
-            break;                                      \
-        case IYH8:                                      \
-        case IYL8:                                      \
-        case IY16:                                      \
-        case IY_OFFSET:                                 \
-        case IY_ADDRESS:                                \
-            PCWrite(SHIFT_IY);                          \
-            break;                                      \
-        default:                                        \
-            break;                                      \
-    }                                                   \
-} while(0)
-
-#define WriteEitherShift(r1,r2)                         \
-do                                                      \
-{                                                       \
-    int h_handled = FALSE;                              \
-    switch(r1)                                          \
-    {                                                   \
-        case IXH8:                                      \
-        case IXL8:                                      \
-        case IX16:                                      \
-        case IX_OFFSET:                                 \
-        case IX_ADDRESS:                                \
-            PCWrite(SHIFT_IX);                          \
-            h_handled = TRUE;                           \
-            break;                                      \
-        case IYH8:                                      \
-        case IYL8:                                      \
-        case IY16:                                      \
-        case IY_OFFSET:                                 \
-        case IY_ADDRESS:                                \
-            PCWrite(SHIFT_IY);                          \
-            h_handled = TRUE;                           \
-            break;                                      \
-        default:                                        \
-            break;                                      \
-    }                                                   \
-    if (!h_handled)                                     \
-    switch(r2)                                          \
-    {                                                   \
-        case IXH8:                                      \
-        case IXL8:                                      \
-        case IX16:                                      \
-        case IX_OFFSET:                                 \
-        case IX_ADDRESS:                                \
-            PCWrite(SHIFT_IX);                          \
-            h_handled = TRUE;                           \
-            break;                                      \
-        case IYH8:                                      \
-        case IYL8:                                      \
-        case IY16:                                      \
-        case IY_OFFSET:                                 \
-        case IY_ADDRESS:                                \
-            PCWrite(SHIFT_IY);                          \
-            h_handled = TRUE;                           \
-            break;                                      \
-        default:                                        \
-            break;                                      \
-    }                                                   \
-} while(0)
-
-#define WriteOffset(r,o)                                \
-do                                                      \
-{                                                       \
-    switch(r)                                           \
-    {                                                   \
-        case IX_OFFSET:                                 \
-        case IY_OFFSET:                                 \
-            PCWrite(o);                                 \
-            break;                                      \
-        default:                                        \
-            break;                                      \
-    }                                                   \
-} while(0)
 
 #define CheckRange(arg,num,min,max)                     \
 do                                                      \
@@ -222,16 +110,13 @@ do                                                      \
 
 #define CheckOffset(a,o)        CheckRange(a,0,-128,127)
 
+
 static const int flag_bitmask[] =
 {
     0x00,               /* NZ_FLAG */
     0x01,               /* Z_FLAG  */
     0x02,               /* NC_FLAG */
-    0x03,               /* C_FLAG  */
-    0x04,               /* PO_FLAG */
-    0x05,               /* PE_FLAG */
-    0x06,               /* P_FLAG  */
-    0x07                /* M_FLAG  */
+    0x03                /* C_FLAG  */
 };
 
 
@@ -241,10 +126,6 @@ static const char *flag_text[] =
     "Z",                /* Z_FLAG  */
     "NC",               /* NC_FLAG */
     "C",                /* C_FLAG  */
-    "PO",               /* PO_FLAG */
-    "PE",               /* PE_FLAG */
-    "P",                /* P_FLAG  */
-    "M",                /* M_FLAG  */
     NULL
 };
 
@@ -259,32 +140,21 @@ static const char *register_mode_name[] =
     "H",
     "L",
     "F",
-    "IXH",
-    "IXL",
-    "IYH",
-    "IYL",
-    "I",
-    "R",
     "AF",
-    "AF'",
     "BC",
     "DE",
     "HL",
     "SP",
-    "IX",
-    "IY",
     "(BC)",
     "(DE)",
     "(HL)",
     "(SP)",
-    "(IX)",
-    "(IY)",
-    "(IX+offset)",
-    "(IY+offset)",
+    "(HL+)",
+    "(HL-)",
     "(C)",
     "(address)",
     "value",
-    0
+    "INVALID"
 };
 
 
@@ -298,29 +168,18 @@ static const int register_bitmask[] =
     0x4,        /* H8                  */
     0x5,        /* L8                  */
     0x6,        /* F8                  */
-    0x4,        /* IXH8 - In effect H  */
-    0x5,        /* IXL8 - In effect L  */
-    0x4,        /* IYH8 - In effect H  */
-    0x5,        /* IYL8 - In effect L  */
-    -1,         /* I8                  */
-    -1,         /* R8                  */
     0x3,        /* AF16                */
-    -1,         /* AF16_ALT            */
     0x0,        /* BC16                */
     0x1,        /* DE16                */
     0x2,        /* HL16                */
     0x3,        /* SP16                */
-    0x2,        /* IX16 - In effect HL */
-    0x2,        /* IY16 - In effect HL */
     0x0,        /* BC_ADDRESS          */
     0x0,        /* DE_ADDRESS          */
     0x0,        /* HL_ADDRESS          */
     0x0,        /* SP_ADDRESS          */
-    0x0,        /* IX_ADDRESS          */
-    0x0,        /* IY_ADDRESS          */
-    0x0,        /* IX_OFFSET           */
-    0x0,        /* IY_OFFSET           */
-    0x0,        /* C_PORT              */
+    0x0,        /* HL_INCREMENT        */
+    0x0,        /* HL_DECREMENT        */
+    0x0,        /* FF00_C_INDEX        */
     0x0,        /* ADDRESS             */
     0x0,        /* VALUE               */
 };
@@ -331,7 +190,6 @@ typedef struct
     RegisterMode        mode;
     int                 quote;
     int                 starts_with;
-    int                 take_offset;
     int                 take_value;
     const char          *ident;
     RegisterType        type;
@@ -345,14 +203,12 @@ static RegisterModeTable register_mode_table[] =
         0,
         FALSE,
         FALSE,
-        FALSE,
         "A",
         IS_NORMAL_8_BIT
     },
     {
         B8,
         0,
-        FALSE,
         FALSE,
         FALSE,
         "B",
@@ -363,14 +219,12 @@ static RegisterModeTable register_mode_table[] =
         0,
         FALSE,
         FALSE,
-        FALSE,
         "C",
         IS_NORMAL_8_BIT
     },
     {
         D8,
         0,
-        FALSE,
         FALSE,
         FALSE,
         "D",
@@ -381,14 +235,12 @@ static RegisterModeTable register_mode_table[] =
         0,
         FALSE,
         FALSE,
-        FALSE,
         "E",
         IS_NORMAL_8_BIT
     },
     {
         H8,
         0,
-        FALSE,
         FALSE,
         FALSE,
         "H",
@@ -399,7 +251,6 @@ static RegisterModeTable register_mode_table[] =
         0,
         FALSE,
         FALSE,
-        FALSE,
         "L",
         IS_NORMAL_8_BIT
     },
@@ -408,62 +259,7 @@ static RegisterModeTable register_mode_table[] =
         0,
         FALSE,
         FALSE,
-        FALSE,
         "F",
-        IS_SPECIAL_8_BIT
-    },
-    {
-        IXL8,
-        0,
-        FALSE,
-        FALSE,
-        FALSE,
-        "IXL",
-        IS_NORMAL_8_BIT|IS_INDEX_X
-    },
-    {
-        IXH8,
-        0,
-        FALSE,
-        FALSE,
-        FALSE,
-        "IXH",
-        IS_NORMAL_8_BIT|IS_INDEX_X
-    },
-    {
-        IYL8,
-        0,
-        FALSE,
-        FALSE,
-        FALSE,
-        "IYL",
-        IS_NORMAL_8_BIT|IS_INDEX_Y
-    },
-    {
-        IYH8,
-        0,
-        FALSE,
-        FALSE,
-        FALSE,
-        "IYH",
-        IS_NORMAL_8_BIT|IS_INDEX_Y
-    },
-    {
-        I8,
-        0,
-        FALSE,
-        FALSE,
-        FALSE,
-        "I",
-        IS_SPECIAL_8_BIT
-    },
-    {
-        R8,
-        0,
-        FALSE,
-        FALSE,
-        FALSE,
-        "R",
         IS_SPECIAL_8_BIT
     },
         
@@ -472,23 +268,12 @@ static RegisterModeTable register_mode_table[] =
         0,
         FALSE,
         FALSE,
-        FALSE,
         "AF",
         IS_SPECIAL_16_BIT
     },
     {
-        AF16_ALT,
-        0,
-        FALSE,
-        FALSE,
-        FALSE,
-        "AF'",
-        IS_SPECIAL_16_BIT|IS_ALTERNATE
-    },
-    {
         BC16,
         0,
-        FALSE,
         FALSE,
         FALSE,
         "BC",
@@ -499,7 +284,6 @@ static RegisterModeTable register_mode_table[] =
         0,
         FALSE,
         FALSE,
-        FALSE,
         "DE",
         IS_16_BIT
     },
@@ -508,32 +292,12 @@ static RegisterModeTable register_mode_table[] =
         0,
         FALSE,
         FALSE,
-        FALSE,
         "HL",
         IS_16_BIT
     },
     {
-        IX16,
-        0,
-        FALSE,
-        FALSE,
-        FALSE,
-        "IX",
-        IS_16_BIT|IS_INDEX_X
-    },
-    {
-        IY16,
-        0,
-        FALSE,
-        FALSE,
-        FALSE,
-        "IY",
-        IS_16_BIT|IS_INDEX_Y
-    },
-    {
         SP16,
         0,
-        FALSE,
         FALSE,
         FALSE,
         "SP",
@@ -545,14 +309,12 @@ static RegisterModeTable register_mode_table[] =
         '(',
         FALSE,
         FALSE,
-        FALSE,
         "BC",
         IS_16_BIT|IS_MEMORY
     },
     {
         DE_ADDRESS,
         '(',
-        FALSE,
         FALSE,
         FALSE,
         "DE",
@@ -563,73 +325,65 @@ static RegisterModeTable register_mode_table[] =
         '(',
         FALSE,
         FALSE,
-        FALSE,
         "HL",
         IS_16_BIT|IS_MEMORY
-    },
-    {
-        IX_ADDRESS,
-        '(',
-        FALSE,
-        FALSE,
-        FALSE,
-        "IX",
-        IS_16_BIT|IS_MEMORY|IS_INDEX_X
-    },
-    {
-        IY_ADDRESS,
-        '(',
-        FALSE,
-        FALSE,
-        FALSE,
-        "IY",
-        IS_16_BIT|IS_MEMORY|IS_INDEX_Y
-    },
-    {
-        IX_OFFSET,
-        '(',
-        TRUE,
-        TRUE,
-        FALSE,
-        "IX",
-        IS_16_BIT|IS_MEMORY|IS_INDEX_X
-    },
-    {
-        IY_OFFSET,
-        '(',
-        TRUE,
-        TRUE,
-        FALSE,
-        "IY",
-        IS_16_BIT|IS_MEMORY|IS_INDEX_Y
     },
     {
         SP_ADDRESS,
         '(',
         FALSE,
         FALSE,
-        FALSE,
         "SP",
         IS_SPECIAL_16_BIT|IS_MEMORY|IS_SP
     },
     {
-        C_PORT,
+        HL_INCREMENT,
         '(',
         FALSE,
         FALSE,
+        "HLI",
+        IS_SPECIAL_16_BIT|IS_MEMORY
+    },
+    {
+        HL_INCREMENT,
+        '(',
+        FALSE,
+        FALSE,
+        "HL+",
+        IS_SPECIAL_16_BIT|IS_MEMORY
+    },
+    {
+        HL_DECREMENT,
+        '(',
+        FALSE,
+        FALSE,
+        "HLD",
+        IS_SPECIAL_16_BIT|IS_MEMORY
+    },
+    {
+        HL_DECREMENT,
+        '(',
+        FALSE,
+        FALSE,
+        "HL-",
+        IS_SPECIAL_16_BIT|IS_MEMORY
+    },
+    {
+        FF00_C_INDEX,
+        '(',
+        FALSE,
         FALSE,
         "C",
-        IS_IO_PORT
+        IS_FF00_C
     },
 
     /* These cheat -- basically anything that doesn't match until here is either
-       an address or a value.  No distinction is made between 8/16 bit values.
+       an address or a value.
     */
     {
         ADDRESS,
         '(',
         TRUE,
-        FALSE,
         TRUE,
         "",
         IS_VALUE|IS_MEMORY
@@ -638,7 +392,6 @@ static RegisterModeTable register_mode_table[] =
         VALUE,
         0,
         TRUE,
-        FALSE,
         TRUE,
         "",
         IS_VALUE
@@ -705,7 +458,7 @@ static int CalcRegisterMode(const char *arg, int quote,
                 *type = t->type;
                 *offset = 0;
 
-                if (t->take_offset || t->take_value)
+                if (t->take_value)
                 {
                     size_t l = strlen(t->ident);
 
@@ -713,16 +466,6 @@ static int CalcRegisterMode(const char *arg, int quote,
                     {
                         snprintf(err, errsize, "%s: expression error: %s",
                                                         arg, ExprError());
-                        return FALSE;
-                    }
-                }
-
-                if (t->take_offset)
-                {
-                    if (IsFinalPass() && (*offset < -128 || *offset > 127))
-                    {
-                        snprintf(err, errsize, "%s: outside valid range "
-                                                "for offset", arg);
                         return FALSE;
                     }
                 }
@@ -940,14 +683,15 @@ static CommandStatus LD(const char *label, int argc, char *argv[],
     {
         A8,             BC_ADDRESS,     {0x0a},
         A8,             DE_ADDRESS,     {0x1a},
-        A8,             ADDRESS,        {0x3a, WRITE_WORD_RHS},
+        A8,             ADDRESS,        {0xfa, WRITE_WORD_RHS},
         BC_ADDRESS,     A8,             {0x02},
         DE_ADDRESS,     A8,             {0x12},
-        ADDRESS,        A8,             {0x32, WRITE_WORD_RHS},
-        A8,             I8,             {0xed, 0x57},
-        A8,             R8,             {0xed, 0x5f},
-        I8,             A8,             {0xed, 0x47},
-        R8,             A8,             {0xed, 0x4f}
+        ADDRESS,        A8,             {0xea, WRITE_WORD_LHS},
+        HL_DECREMENT,   A8,             {0x32},
+        A8,             HL_DECREMENT,   {0x3a},
+        HL_INCREMENT,   A8,             {0x22},
+        A8,             HL_INCREMENT,   {0x2a},
+        FF00_C_INDEX,   A8,             {0xe2}
     };
 
     RegisterMode r1, r2;
@@ -966,31 +710,12 @@ static CommandStatus LD(const char *label, int argc, char *argv[],
         return CMD_FAILED;
     }
 
-    if ((IsIndexX(t1) && IsIndexY(t2)) ||
-        (IsIndexY(t1) && IsIndexX(t2)))
-    {
-        snprintf(err, errsize,
-                 "%s: can't have mixed IX/IY registers", argv[0]);
-
-        return CMD_FAILED;
-    }
-
     /* LD r,r'
     */
     if (IsNormal8Bit(t1) && IsNormal8Bit(t2))
     {
         CommandStatus s = CMD_OK;
 
-        if ((IsIndex(t1) || IsIndex(t2)) &&
-                (IsAnyOf(r1, H8, L8, INVALID_REG) ||
-                 IsAnyOf(r2, H8, L8, INVALID_REG)))
-        {
-            snprintf(err, errsize, "%s: H/L will actually be the index "
-                                        "register low/high register", argv[0]);
-            s = CMD_OK_WARNING;
-        }
-
-        WriteEitherShift(r1,r2);
         PCWrite(0x40 | register_bitmask[r1] << 3 | register_bitmask[r2]);
 
         return s;
@@ -1001,47 +726,35 @@ static CommandStatus LD(const char *label, int argc, char *argv[],
     */
     if (IsNormal8Bit(t1) && IsSimpleValue(t2))
     {
-        WriteShift(r1);
         PCWrite(register_bitmask[r1] << 3 | 0x6);
         PCWrite(off2);
-
         return CMD_OK;
     }
 
 
-    /* LD r,(HL)/(IX+d)/(IY+d)
+    /* LD r,(HL)
     */
-    if ((IsNormal8Bit(t1) && !IsIndex(t1))  &&
-                (r2 == HL_ADDRESS || IsIndex(t2)))
+    if (IsNormal8Bit(t1) && r2 == HL_ADDRESS)
     {
-        WriteShift(r2);
         PCWrite(0x46 | register_bitmask[r1] << 3);
-        WriteOffset(r2, off2);
-
         return CMD_OK;
     }
 
 
-    /* LD (HL)/(IX+d)/(IY+d),r
+    /* LD (HL),r
     */
-    if ((IsNormal8Bit(t2) && !IsIndex(t2))  &&
-                (r1 == HL_ADDRESS || IsIndex(t1)))
+    if (IsNormal8Bit(t2) && r1 == HL_ADDRESS)
     {
-        WriteShift(r1);
         PCWrite(0x70 | register_bitmask[r2]);
-        WriteOffset(r1, off1);
-
         return CMD_OK;
     }
 
 
-    /* LD (HL)/(IX+d)/(IY+d),n
+    /* LD (HL),n
     */
-    if ((r1 == HL_ADDRESS || r1 == IX_OFFSET || r1 == IY_OFFSET) && r2 == VALUE)
+    if (r1 == HL_ADDRESS && r2 == VALUE)
     {
-        WriteShift(r1);
         PCWrite(0x36);
-        WriteOffset(r1, off1);
         PCWrite(off2);
         return CMD_OK;
     }
@@ -1051,18 +764,15 @@ static CommandStatus LD(const char *label, int argc, char *argv[],
     */
     if (Is16Bit(t1) && !IsMemory(t1) && r2 == VALUE)
     {
-        WriteShift(r1);
         PCWrite(register_bitmask[r1] << 4 | 0x01);
-        PCWriteWord(off2);
         return CMD_OK;
     }
 
 
-    /* LD HL/IX/IY,(nn)
+    /* LD HL,(nn)
     */
-    if ((r1 == HL16 || r1 == IX16 || r1 == IY16) && r2 == ADDRESS)
+    if (r1 == HL16 && r2 == ADDRESS)
     {
-        WriteShift(r1);
         PCWrite(0x2a);
         PCWriteWord(off2);
         return CMD_OK;
@@ -1080,11 +790,10 @@ static CommandStatus LD(const char *label, int argc, char *argv[],
     }
 
 
-    /* LD (nn),HL/IX/IY
+    /* LD (nn),HL
     */
-    if ((r2 == HL16 || r2 == IX16 || r2 == IY16) && r1 == ADDRESS)
+    if (r2 == HL16 && r1 == ADDRESS)
     {
-        WriteShift(r2);
         PCWrite(0x22);
         PCWriteWord(off1);
         return CMD_OK;
@@ -1102,11 +811,10 @@ static CommandStatus LD(const char *label, int argc, char *argv[],
     }
 
 
-    /* LD SP,HL/IX/IY
+    /* LD SP,HL
     */
-    if ((r2 == HL16 || r2 == IX16 || r2 == IY16) && r1 == SP16)
+    if (r2 == HL16 && r1 == SP16)
     {
-        WriteShift(r2);
         PCWrite(0xf9);
         return CMD_OK;
     }
@@ -1114,6 +822,131 @@ static CommandStatus LD(const char *label, int argc, char *argv[],
 
     /* Custom opcode generation using the codes table
     */
+    if (!WriteRegisterPairModes(codes, NUM_REGISTER_CODES(codes),
+                                r1, r2, off1, off2, err, errsize))
+    {
+        return CMD_FAILED;
+    }
+
+    return CMD_OK;
+}
+
+
+static CommandStatus LDH(const char *label, int argc, char *argv[],       
+                         int quoted[], char *err, size_t errsize)
+{
+    static RegisterPairCodes codes[] =
+    {
+        A8,             ADDRESS,        {0xf0, WRITE_BYTE_RHS},
+        ADDRESS,        A8,             {0xe0, WRITE_BYTE_LHS}
+    };
+
+    RegisterMode r1, r2;
+    RegisterType t1, t2;
+    int off1, off2;
+
+    CMD_ARGC_CHECK(3);
+
+    if (!CalcRegisterMode(argv[1], quoted[1], &r1, &t1, &off1, err, errsize))
+    {
+        return CMD_FAILED;
+    }
+
+    if (!CalcRegisterMode(argv[2], quoted[2], &r2, &t2, &off2, err, errsize))
+    {
+        return CMD_FAILED;
+    }
+
+    if (r1 == ADDRESS)
+    {
+        if (off1 >= 0xff00 && off1 <= 0xffff)
+        {
+            off1 -= 0xff00;
+        }
+
+        CheckRange(argv[1], off1, 0, 255); 
+    }
+
+    if (r2 == ADDRESS)
+    {
+        if (off2 >= 0xff00 && off2 <= 0xffff)
+        {
+            off2 -= 0xff00;
+        }
+
+        CheckRange(argv[2], off2, 0, 255); 
+    }
+
+    if (!WriteRegisterPairModes(codes, NUM_REGISTER_CODES(codes),
+                                r1, r2, off1, off2, err, errsize))
+    {
+        return CMD_FAILED;
+    }
+
+    return CMD_OK;
+}
+
+
+static CommandStatus LDD(const char *label, int argc, char *argv[],       
+                         int quoted[], char *err, size_t errsize)
+{
+    static RegisterPairCodes codes[] =
+    {
+        HL_ADDRESS,     A8,             {0x32},
+        A8,             HL_ADDRESS,     {0x3a}
+    };
+
+    RegisterMode r1, r2;
+    RegisterType t1, t2;
+    int off1, off2;
+
+    CMD_ARGC_CHECK(3);
+
+    if (!CalcRegisterMode(argv[1], quoted[1], &r1, &t1, &off1, err, errsize))
+    {
+        return CMD_FAILED;
+    }
+
+    if (!CalcRegisterMode(argv[2], quoted[2], &r2, &t2, &off2, err, errsize))
+    {
+        return CMD_FAILED;
+    }
+
+    if (!WriteRegisterPairModes(codes, NUM_REGISTER_CODES(codes),
+                                r1, r2, off1, off2, err, errsize))
+    {
+        return CMD_FAILED;
+    }
+
+    return CMD_OK;
+}
+
+
+static CommandStatus LDI(const char *label, int argc, char *argv[],       
+                         int quoted[], char *err, size_t errsize)
+{
+    static RegisterPairCodes codes[] =
+    {
+        HL_ADDRESS,     A8,             {0x22},
+        A8,             HL_ADDRESS,     {0x2a}
+    };
+
+    RegisterMode r1, r2;
+    RegisterType t1, t2;
+    int off1, off2;
+
+    CMD_ARGC_CHECK(3);
+
+    if (!CalcRegisterMode(argv[1], quoted[1], &r1, &t1, &off1, err, errsize))
+    {
+        return CMD_FAILED;
+    }
+
+    if (!CalcRegisterMode(argv[2], quoted[2], &r2, &t2, &off2, err, errsize))
+    {
+        return CMD_FAILED;
+    }
+
     if (!WriteRegisterPairModes(codes, NUM_REGISTER_CODES(codes),
                                 r1, r2, off1, off2, err, errsize))
     {
@@ -1138,19 +971,9 @@ static CommandStatus PUSH(const char *label, int argc, char *argv[],
         return CMD_FAILED;
     }
 
-    /* PUSH HL/IX/IY
-    */
-    if (r1 == HL16 || r1 == IX16 || r1 == IY16)
-    {
-        WriteShift(r1);
-        PCWrite(0xe5);
-        return CMD_OK;
-    }
-
-
     /* PUSH rr
     */
-    if (r1 == AF16 || r1 == BC16 || r1 == DE16)
+    if (r1 == AF16 || r1 == BC16 || r1 == DE16 || r1 == HL16)
     {
         PCWrite(0xc5 | register_bitmask[r1] << 4);
         return CMD_OK;
@@ -1176,19 +999,9 @@ static CommandStatus POP(const char *label, int argc, char *argv[],
         return CMD_FAILED;
     }
 
-    /* POP HL/IX/IY
-    */
-    if (r1 == HL16 || r1 == IX16 || r1 == IY16)
-    {
-        WriteShift(r1);
-        PCWrite(0xe1);
-        return CMD_OK;
-    }
-
-
     /* POP rr
     */
-    if (r1 == AF16 || r1 == BC16 || r1 == DE16)
+    if (r1 == AF16 || r1 == BC16 || r1 == DE16 || r1 == HL16)
     {
         PCWrite(0xc1 | register_bitmask[r1] << 4);
         return CMD_OK;
@@ -1200,58 +1013,13 @@ static CommandStatus POP(const char *label, int argc, char *argv[],
 }
 
 
-static CommandStatus EX(const char *label, int argc, char *argv[],       
-                        int quoted[], char *err, size_t errsize)
-{
-    static RegisterPairCodes codes[] =
-    {
-        DE16,           HL16,           {0xeb},
-        HL16,           DE16,           {0xeb},
-        AF16,           AF16_ALT,       {0x08},
-        AF16_ALT,       AF16,           {0x08},
-        SP_ADDRESS,     HL16,           {0xe3},
-        HL16,           SP_ADDRESS,     {0xe3},
-        SP_ADDRESS,     IX16,           {SHIFT_IX, 0xe3},
-        IX16,           SP_ADDRESS,     {SHIFT_IX, 0xe3},
-        SP_ADDRESS,     IY16,           {SHIFT_IY, 0xe3},
-        IY16,           SP_ADDRESS,     {SHIFT_IY, 0xe3}
-    };
-
-    RegisterMode r1, r2;
-    RegisterType t1, t2;
-    int off1, off2;
-
-    CMD_ARGC_CHECK(3);
-
-    if (!CalcRegisterMode(argv[1], quoted[1], &r1, &t1, &off1, err, errsize))
-    {
-        return CMD_FAILED;
-    }
-
-    if (!CalcRegisterMode(argv[2], quoted[2], &r2, &t2, &off2, err, errsize))
-    {
-        return CMD_FAILED;
-    }
-
-    if (!WriteRegisterPairModes(codes, NUM_REGISTER_CODES(codes),
-                                r1, r2, off1, off2, err, errsize))
-    {
-        return CMD_FAILED;
-    }
-
-    return CMD_OK;
-}
-
-
 static CommandStatus ADD(const char *label, int argc, char *argv[],       
                          int quoted[], char *err, size_t errsize)
 {
     static RegisterPairCodes codes[] =
     {
         A8,             VALUE,          {0xc6, WRITE_BYTE_RHS},
-        A8,             HL_ADDRESS,     {0x86},
-        A8,             IX_OFFSET,      {SHIFT_IX, 0x86, WRITE_BYTE_RHS},
-        A8,             IY_OFFSET,      {SHIFT_IY, 0x86, WRITE_BYTE_RHS},
+        A8,             HL_ADDRESS,     {0x86}
     };
 
     RegisterMode r1, r2;
@@ -1268,7 +1036,6 @@ static CommandStatus ADD(const char *label, int argc, char *argv[],
     */
     if (r1 == A8 && IsNormal8Bit(t2))
     {
-        WriteShift(r2);
         PCWrite(0x80 | register_bitmask[r2]);
         return CMD_OK;
     }
@@ -1277,24 +1044,6 @@ static CommandStatus ADD(const char *label, int argc, char *argv[],
     */
     if (r1 == HL16 && IsAnyOf(r2, BC16, DE16, HL16, SP16, INVALID_REG))
     {
-        PCWrite(0x09 | register_bitmask[r2] << 4);
-        return CMD_OK;
-    }
-
-    /* ADD IX,rr
-    */
-    if (r1 == IX16 && IsAnyOf(r2, BC16, DE16, IX16, SP16, INVALID_REG))
-    {
-        PCWrite(SHIFT_IX);
-        PCWrite(0x09 | register_bitmask[r2] << 4);
-        return CMD_OK;
-    }
-
-    /* ADD IY,rr
-    */
-    if (r1 == IY16 && IsAnyOf(r2, BC16, DE16, IY16, SP16, INVALID_REG))
-    {
-        PCWrite(SHIFT_IY);
         PCWrite(0x09 | register_bitmask[r2] << 4);
         return CMD_OK;
     }
@@ -1315,9 +1064,7 @@ static CommandStatus ADC(const char *label, int argc, char *argv[],
     static RegisterPairCodes codes[] =
     {
         A8,             VALUE,          {0xce, WRITE_BYTE_RHS},
-        A8,             HL_ADDRESS,     {0x8e},
-        A8,             IX_OFFSET,      {SHIFT_IX, 0x8e, WRITE_BYTE_RHS},
-        A8,             IY_OFFSET,      {SHIFT_IY, 0x8e, WRITE_BYTE_RHS},
+        A8,             HL_ADDRESS,     {0x8e}
     };
 
     RegisterMode r1, r2;
@@ -1334,7 +1081,6 @@ static CommandStatus ADC(const char *label, int argc, char *argv[],
     */
     if (r1 == A8 && IsNormal8Bit(t2))
     {
-        WriteShift(r2);
         PCWrite(0x88 | register_bitmask[r2]);
         return CMD_OK;
     }
@@ -1364,9 +1110,7 @@ static CommandStatus SUB(const char *label, int argc, char *argv[],
     static RegisterPairCodes codes[] =
     {
         A8,             VALUE,          {0xd6, WRITE_BYTE_RHS},
-        A8,             HL_ADDRESS,     {0x96},
-        A8,             IX_OFFSET,      {SHIFT_IX, 0x96, WRITE_BYTE_RHS},
-        A8,             IY_OFFSET,      {SHIFT_IY, 0x96, WRITE_BYTE_RHS},
+        A8,             HL_ADDRESS,     {0x96}
     };
 
     RegisterMode r1, r2;
@@ -1383,7 +1127,6 @@ static CommandStatus SUB(const char *label, int argc, char *argv[],
     */
     if (r1 == A8 && IsNormal8Bit(t2))
     {
-        WriteShift(r2);
         PCWrite(0x90 | register_bitmask[r2]);
         return CMD_OK;
     }
@@ -1404,9 +1147,7 @@ static CommandStatus SBC(const char *label, int argc, char *argv[],
     static RegisterPairCodes codes[] =
     {
         A8,             VALUE,          {0xde, WRITE_BYTE_RHS},
-        A8,             HL_ADDRESS,     {0x9e},
-        A8,             IX_OFFSET,      {SHIFT_IX, 0x9e, WRITE_BYTE_RHS},
-        A8,             IY_OFFSET,      {SHIFT_IY, 0x9e, WRITE_BYTE_RHS},
+        A8,             HL_ADDRESS,     {0x9e}
     };
 
     RegisterMode r1, r2;
@@ -1423,7 +1164,6 @@ static CommandStatus SBC(const char *label, int argc, char *argv[],
     */
     if (r1 == A8 && IsNormal8Bit(t2))
     {
-        WriteShift(r2);
         PCWrite(0x98 | register_bitmask[r2]);
         return CMD_OK;
     }
@@ -1453,9 +1193,7 @@ static CommandStatus AND(const char *label, int argc, char *argv[],
     static RegisterPairCodes codes[] =
     {
         A8,             VALUE,          {0xe6, WRITE_BYTE_RHS},
-        A8,             HL_ADDRESS,     {0xa6},
-        A8,             IX_OFFSET,      {SHIFT_IX, 0xa6, WRITE_BYTE_RHS},
-        A8,             IY_OFFSET,      {SHIFT_IY, 0xa6, WRITE_BYTE_RHS},
+        A8,             HL_ADDRESS,     {0xa6}
     };
 
     RegisterMode r1, r2;
@@ -1472,7 +1210,6 @@ static CommandStatus AND(const char *label, int argc, char *argv[],
     */
     if (r1 == A8 && IsNormal8Bit(t2))
     {
-        WriteShift(r2);
         PCWrite(0xa0 | register_bitmask[r2]);
         return CMD_OK;
     }
@@ -1493,9 +1230,7 @@ static CommandStatus OR(const char *label, int argc, char *argv[],
     static RegisterPairCodes codes[] =
     {
         A8,             VALUE,          {0xf6, WRITE_BYTE_RHS},
-        A8,             HL_ADDRESS,     {0xb6},
-        A8,             IX_OFFSET,      {SHIFT_IX, 0xb6, WRITE_BYTE_RHS},
-        A8,             IY_OFFSET,      {SHIFT_IY, 0xb6, WRITE_BYTE_RHS},
+        A8,             HL_ADDRESS,     {0xb6}
     };
 
     RegisterMode r1, r2;
@@ -1512,7 +1247,6 @@ static CommandStatus OR(const char *label, int argc, char *argv[],
     */
     if (r1 == A8 && IsNormal8Bit(t2))
     {
-        WriteShift(r2);
         PCWrite(0xb0 | register_bitmask[r2]);
         return CMD_OK;
     }
@@ -1533,9 +1267,7 @@ static CommandStatus XOR(const char *label, int argc, char *argv[],
     static RegisterPairCodes codes[] =
     {
         A8,             VALUE,          {0xee, WRITE_BYTE_RHS},
-        A8,             HL_ADDRESS,     {0xae},
-        A8,             IX_OFFSET,      {SHIFT_IX, 0xae, WRITE_BYTE_RHS},
-        A8,             IY_OFFSET,      {SHIFT_IY, 0xae, WRITE_BYTE_RHS},
+        A8,             HL_ADDRESS,     {0xae}
     };
 
     RegisterMode r1, r2;
@@ -1552,7 +1284,6 @@ static CommandStatus XOR(const char *label, int argc, char *argv[],
     */
     if (r1 == A8 && IsNormal8Bit(t2))
     {
-        WriteShift(r2);
         PCWrite(0xa8 | register_bitmask[r2]);
         return CMD_OK;
     }
@@ -1573,9 +1304,7 @@ static CommandStatus CP(const char *label, int argc, char *argv[],
     static RegisterPairCodes codes[] =
     {
         A8,             VALUE,          {0xfe, WRITE_BYTE_RHS},
-        A8,             HL_ADDRESS,     {0xbe},
-        A8,             IX_OFFSET,      {SHIFT_IX, 0xbe, WRITE_BYTE_RHS},
-        A8,             IY_OFFSET,      {SHIFT_IY, 0xbe, WRITE_BYTE_RHS},
+        A8,             HL_ADDRESS,     {0xbe}
     };
 
     RegisterMode r1, r2;
@@ -1592,7 +1321,6 @@ static CommandStatus CP(const char *label, int argc, char *argv[],
     */
     if (r1 == A8 && IsNormal8Bit(t2))
     {
-        WriteShift(r2);
         PCWrite(0xb8 | register_bitmask[r2]);
         return CMD_OK;
     }
@@ -1602,34 +1330,6 @@ static CommandStatus CP(const char *label, int argc, char *argv[],
     {
         return CMD_FAILED;
     }
-
-    return CMD_OK;
-}
-
-
-static CommandStatus IM(const char *label, int argc, char *argv[],       
-                        int quoted[], char *err, size_t errsize)
-{
-    static int im[3] = {0x46, 0x56, 0x5e};
-    RegisterMode r1;
-    RegisterType t1;
-    int off1;
-
-    CMD_ARGC_CHECK(2);
-
-    if (!CalcRegisterMode(argv[1], quoted[1], &r1, &t1, &off1, err, errsize))
-    {
-        return CMD_FAILED;
-    }
-
-    if (r1 != VALUE || (off1 < 0 || off1 > 2))
-    {
-        snprintf(err, errsize, "%s: invalid argument %s", argv[0], argv[1]);
-        return CMD_FAILED;
-    }
-
-    PCWrite(0xed);
-    PCWrite(im[off1]);
 
     return CMD_OK;
 }
@@ -1653,18 +1353,15 @@ static CommandStatus INC(const char *label, int argc, char *argv[],
     */
     if (IsNormal8Bit(t1))
     {
-        WriteShift(r1);
         PCWrite(0x04 | register_bitmask[r1] << 3);
         return CMD_OK;
     }
 
-    /* INC (HL)/(IX+d)/(IY+d)
+    /* INC (HL)
     */
-    if (r1 == HL_ADDRESS || r1 == IX_OFFSET || r1 == IY_OFFSET)
+    if (r1 == HL_ADDRESS)
     {
-        WriteShift(r1);
         PCWrite(0x34);
-        WriteOffset(r1, off1);
         return CMD_OK;
     }
 
@@ -1672,7 +1369,6 @@ static CommandStatus INC(const char *label, int argc, char *argv[],
     */
     if (Is16Bit(t1) && !IsMemory(t1))
     {
-        WriteShift(r1);
         PCWrite(0x03 | register_bitmask[r1] << 4);
         return CMD_OK;
     }
@@ -1699,18 +1395,15 @@ static CommandStatus DEC(const char *label, int argc, char *argv[],
     */
     if (IsNormal8Bit(t1))
     {
-        WriteShift(r1);
         PCWrite(0x05 | register_bitmask[r1] << 3);
         return CMD_OK;
     }
 
-    /* DEC (HL)/(IX+d)/(IY+d)
+    /* DEC (HL)
     */
-    if (r1 == HL_ADDRESS || r1 == IX_OFFSET || r1 == IY_OFFSET)
+    if (r1 == HL_ADDRESS)
     {
-        WriteShift(r1);
         PCWrite(0x35);
-        WriteOffset(r1, off1);
         return CMD_OK;
     }
 
@@ -1718,7 +1411,6 @@ static CommandStatus DEC(const char *label, int argc, char *argv[],
     */
     if (Is16Bit(t1) && !IsMemory(t1))
     {
-        WriteShift(r1);
         PCWrite(0x0b | register_bitmask[r1] << 4);
         return CMD_OK;
     }
@@ -1727,9 +1419,8 @@ static CommandStatus DEC(const char *label, int argc, char *argv[],
 }
 
 
-static CommandStatus RLC_RL_RRC_RR_ETC(const char *label,
-                                       int argc, char *argv[],
-                                       int quoted[], char *err, size_t errsize)
+static CommandStatus RLC_RL_SLA_SWAP(const char *label, int argc, char *argv[],
+                                     int quoted[], char *err, size_t errsize)
 {
     RegisterMode r1;
     RegisterType t1;
@@ -1746,27 +1437,11 @@ static CommandStatus RLC_RL_RRC_RR_ETC(const char *label,
     {
         opcode_mask = 0x10;
     }
-    else if (CompareString(argv[0], "RRC"))
-    {
-        opcode_mask = 0x08;
-    }
-    else if (CompareString(argv[0], "RR"))
-    {
-        opcode_mask = 0x18;
-    }
     else if (CompareString(argv[0], "SLA"))
     {
         opcode_mask = 0x20;
     }
-    else if (CompareString(argv[0], "SRA"))
-    {
-        opcode_mask = 0x28;
-    }
-    else if (CompareString(argv[0], "SRL"))
-    {
-        opcode_mask = 0x38;
-    }
-    else if (CompareString(argv[0], "SLL"))
+    else if (CompareString(argv[0], "SWAP"))
     {
         opcode_mask = 0x30;
     }
@@ -1782,47 +1457,19 @@ static CommandStatus RLC_RL_RRC_RR_ETC(const char *label,
     {
         /* OP r
         */
-        if (IsNormal8Bit(t1) && !IsIndex(t1))
+        if (IsNormal8Bit(t1))
         {
             PCWrite(0xcb);
             PCWrite(opcode_mask | register_bitmask[r1]);
             return CMD_OK;
         }
 
-        /* OP (HL)/(IX+d)/(IY+d)
+        /* OP (HL)
         */
-        if (r1 == HL_ADDRESS || r1 == IX_OFFSET || r1 == IY_OFFSET)
+        if (r1 == HL_ADDRESS)
         {
-            WriteShift(r1);
             PCWrite(0xcb);
-            WriteOffset(r1, off1);
             PCWrite(opcode_mask | 0x06);
-            return CMD_OK;
-        }
-    }
-
-    /* Undocumented opcodes
-    */
-    if (argc == 3)
-    {
-        RegisterMode r2;
-        RegisterType t2;
-        int off2;
-
-        if (!CalcRegisterMode(argv[2], quoted[2], &r2, &t2,
-                              &off2, err, errsize))
-        {
-            return CMD_FAILED;
-        }
-
-        /* OP (IX+d)/(IY+d),r
-        */
-        if ((r1 == IX_OFFSET || r1 == IY_OFFSET) && (r2 >= A8 && r2 <= L8))
-        {
-            WriteShift(r1);
-            PCWrite(0xcb);
-            WriteOffset(r1, off1);
-            PCWrite(opcode_mask | register_bitmask[r2]);
             return CMD_OK;
         }
     }
@@ -1877,48 +1524,19 @@ static CommandStatus BIT_SET_RES(const char *label, int argc, char *argv[],
     {
         /* OP b,r
         */
-        if (IsNormal8Bit(t2) && !IsIndex(t2))
+        if (IsNormal8Bit(t2))
         {
             PCWrite(0xcb);
             PCWrite(opcode_mask | off1 << 3 | register_bitmask[r2]);
             return CMD_OK;
         }
 
-        /* OP b,(HL)/(IX+d)/(IY+d)
+        /* OP b,(HL)
         */
-        if (r2 == HL_ADDRESS || r2 == IX_OFFSET || r2 == IY_OFFSET)
+        if (r2 == HL_ADDRESS)
         {
-            WriteShift(r2);
             PCWrite(0xcb);
-            WriteOffset(r2, off2);
             PCWrite(opcode_mask | off1 << 3 | 0x06);
-            return CMD_OK;
-        }
-    }
-
-    /* Undocumented opcodes
-    */
-    if (argc > 3 && (CompareString(argv[0], "SET") ||
-                     CompareString(argv[0], "RES")))
-    {
-        RegisterMode r3;
-        RegisterType t3;
-        int off3;
-
-        if (!CalcRegisterMode(argv[3], quoted[3], &r3, &t3,
-                              &off3, err, errsize))
-        {
-            return CMD_FAILED;
-        }
-
-        /* OP b,(IX+d)/(IY+d),r
-        */
-        if ((r2 == IX_OFFSET || r2 == IY_OFFSET) && (r3 >= A8 && r3 <= L8))
-        {
-            WriteShift(r2);
-            PCWrite(0xcb);
-            WriteOffset(r2, off2);
-            PCWrite(opcode_mask | off1 << 3 | register_bitmask[r3]);
             return CMD_OK;
         }
     }
@@ -1949,9 +1567,8 @@ static CommandStatus JP(const char *label, int argc, char *argv[],
             return CMD_OK;
         }
 
-        if (mode == HL_ADDRESS || mode == IX_ADDRESS || mode == IY_ADDRESS)
+        if (mode == HL_ADDRESS)
         {
-            WriteShift(mode);
             PCWrite(0xe9);
             return CMD_OK;
         }
@@ -2038,39 +1655,6 @@ static CommandStatus JR(const char *label, int argc, char *argv[],
             PCWrite(rel);
             return CMD_OK;
         }
-    }
-
-    return IllegalArgs(argc, argv, quoted, err, errsize);
-}
-
-
-static CommandStatus DJNZ(const char *label, int argc, char *argv[],
-                          int quoted[], char *err, size_t errsize)
-{
-    RegisterMode mode;
-    RegisterType type;
-    int val;
-
-    CMD_ARGC_CHECK(2);
-
-    if (!CalcRegisterMode(argv[1], quoted[1], &mode, &type, &val,
-                          err, errsize))
-    {
-        return CMD_FAILED;
-    }
-
-    if (mode == VALUE)
-    {
-        int rel;
-
-        rel = val - ((PC() + 2) % 0x10000);
-
-        CheckOffset(argv[1], rel);
-
-        PCWrite(0x10);
-        PCWrite(rel);
-
-        return CMD_OK;
     }
 
     return IllegalArgs(argc, argv, quoted, err, errsize);
@@ -2208,100 +1792,6 @@ static CommandStatus RST(const char *label, int argc, char *argv[],
 }
 
 
-static CommandStatus IN(const char *label, int argc, char *argv[],
-                        int quoted[], char *err, size_t errsize)
-{
-    RegisterMode r1, r2;
-    RegisterType t1, t2;
-    int off1, off2;
-    int opcode_mask;
-
-    CMD_ARGC_CHECK(2);
-
-    if (!CalcRegisterMode(argv[1], quoted[1], &r1, &t1, &off1, err, errsize))
-    {
-        return CMD_FAILED;
-    }
-
-    if (r1 == C_PORT && argc == 2)
-    {
-        PCWrite(0xed);
-        PCWrite(0x70);
-        return CMD_OK;
-    }
-
-    CMD_ARGC_CHECK(3);
-
-    if (!CalcRegisterMode(argv[2], quoted[2], &r2, &t2, &off2, err, errsize))
-    {
-        return CMD_FAILED;
-    }
-
-    if (r1 == A8 && r2 == ADDRESS)
-    {
-        CheckRange(argv[2], off2, 0, 255);
-        PCWrite(0xdb);
-        PCWrite(off2);
-        return CMD_OK;
-    }
-
-    if (!IsIndex(t1) && (IsNormal8Bit(t1) || r1 == F8) && r2 == C_PORT)
-    {
-        PCWrite(0xed);
-        PCWrite(0x40 | register_bitmask[r1] << 3);
-        return CMD_OK;
-    }
-
-    return IllegalArgs(argc, argv, quoted, err, errsize);
-}
-
-
-static CommandStatus OUT(const char *label, int argc, char *argv[],
-                         int quoted[], char *err, size_t errsize)
-{
-    RegisterMode r1, r2;
-    RegisterType t1, t2;
-    int off1, off2;
-    int opcode_mask;
-
-    CMD_ARGC_CHECK(3);
-
-    if (!CalcRegisterMode(argv[1], quoted[1], &r1, &t1, &off1, err, errsize))
-    {
-        return CMD_FAILED;
-    }
-
-    if (!CalcRegisterMode(argv[2], quoted[2], &r2, &t2, &off2, err, errsize))
-    {
-        return CMD_FAILED;
-    }
-
-    if (r1 == ADDRESS && r2 == A8)
-    {
-        CheckRange(argv[1], off1, 0, 255);
-        PCWrite(0xd3);
-        PCWrite(off1);
-        return CMD_OK;
-    }
-
-    if (r1 == C_PORT && !IsIndex(t2) && (IsNormal8Bit(t2) || r2 == F8))
-    {
-        PCWrite(0xed);
-        PCWrite(0x41 | register_bitmask[r2] << 3);
-        return CMD_OK;
-    }
-
-    if (r1 == C_PORT && r2 == VALUE)
-    {
-        PCWrite(0xed);
-        PCWrite(0x71);
-        return CMD_OK;
-    }
-
-    return IllegalArgs(argc, argv, quoted, err, errsize);
-}
-
-
 /* ---------------------------------------- OPCODE TABLES
 */
 typedef struct
@@ -2320,9 +1810,11 @@ typedef struct
 static const HandlerTable handler_table[] =
 {
     {"LD",      LD},
+    {"LDH",     LDH},
+    {"LDD",     LDD},
+    {"LDI",     LDI},
     {"PUSH",    PUSH},
     {"POP",     POP},
-    {"EX",      EX},
     {"ADD",     ADD},
     {"ADC",     ADC},
     {"SUB",     SUB},
@@ -2334,26 +1826,18 @@ static const HandlerTable handler_table[] =
     {"CP",      CP},
     {"INC",     INC},
     {"DEC",     DEC},
-    {"IM",      IM},
-    {"RLC",     RLC_RL_RRC_RR_ETC},
-    {"RL",      RLC_RL_RRC_RR_ETC},
-    {"RRC",     RLC_RL_RRC_RR_ETC},
-    {"RR",      RLC_RL_RRC_RR_ETC},
-    {"SLA",     RLC_RL_RRC_RR_ETC},
-    {"SRA",     RLC_RL_RRC_RR_ETC},
-    {"SRL",     RLC_RL_RRC_RR_ETC},
-    {"SLL",     RLC_RL_RRC_RR_ETC},
+    {"RLC",     RLC_RL_SLA_SWAP},
+    {"RL",      RLC_RL_SLA_SWAP},
+    {"SLA",     RLC_RL_SLA_SWAP},
+    {"SWAP",    RLC_RL_SLA_SWAP},
     {"BIT",     BIT_SET_RES},
     {"RES",     BIT_SET_RES},
     {"SET",     BIT_SET_RES},
     {"JP",      JP},
     {"JR",      JR},
-    {"DJNZ",    DJNZ},
     {"CALL",    CALL},
     {"RET",     RET},
     {"RST",     RST},
-    {"IN",      IN},
-    {"OUT",     OUT},
     {NULL}
 };
 
@@ -2365,36 +1849,16 @@ static const OpcodeTable implied_opcodes[] =
     {"EI",      {0xfb}},
     {"HALT",    {0x76}},
     {"HLT",     {0x76}},
-    {"EXX",     {0xd9}},
     {"DAA",     {0x27}},
     {"CPL",     {0x2f}},
     {"SCF",     {0x37}},
     {"CCF",     {0x3f}},
-    {"NEG",     {0xed, 0x44}},
     {"RLCA",    {0x07}},
     {"RRCA",    {0x0f}},
     {"RLA",     {0x17}},
     {"RRA",     {0x1f}},
-    {"CPI",     {0xed, 0xa1}},
-    {"CPIR",    {0xed, 0xb1}},
-    {"CPD",     {0xed, 0xa9}},
-    {"CPDR",    {0xed, 0xb9}},
-    {"INI",     {0xed, 0xa2}},
-    {"INIR",    {0xed, 0xb2}},
-    {"IND",     {0xed, 0xaa}},
-    {"INDR",    {0xed, 0xba}},
-    {"OUTI",    {0xed, 0xa3}},
-    {"OTIR",    {0xed, 0xb3}},
-    {"OUTD",    {0xed, 0xab}},
-    {"OTDR",    {0xed, 0xbb}},
-    {"LDI",     {0xed, 0xa0}},
-    {"LDIR",    {0xed, 0xb0}},
-    {"LDD",     {0xed, 0xa8}},
-    {"LDDR",    {0xed, 0xb8}},
-    {"RRD",     {0xed, 0x67}},
-    {"RLD",     {0xed, 0x6f}},
-    {"RETI",    {0xed, 0x4d}},
-    {"RETN",    {0xed, 0x45}},
+    {"RETI",    {0xd9}},
+    {"STOP",    {0x10}},
     {NULL}
 };
 
@@ -2402,25 +1866,25 @@ static const OpcodeTable implied_opcodes[] =
 /* ---------------------------------------- PUBLIC INTERFACES
 */
 
-void Init_Z80(void)
+void Init_GBCPU(void)
 {
 }
 
 
-const ValueTable *Options_Z80(void)
+const ValueTable *Options_GBCPU(void)
 {
     return NULL;
 }
  
 
-CommandStatus SetOption_Z80(int opt, int argc, char *argv[], int quoted[],
+CommandStatus SetOption_GBCPU(int opt, int argc, char *argv[], int quoted[],
                             char *err, size_t errsize)
 {
     return CMD_OK;
 }
 
 
-CommandStatus Handler_Z80(const char *label, int argc, char *argv[],       
+CommandStatus Handler_GBCPU(const char *label, int argc, char *argv[],       
                            int quoted[], char *err, size_t errsize)
 {
     int f;

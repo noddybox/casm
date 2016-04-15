@@ -19,44 +19,24 @@
 
     -------------------------------------------------------------------------
 
-    Various output type handlers
+    Gameboy Z80-alike Assembler
 
 */
 
-#ifndef CASM_OUTPUT_H
-#define CASM_OUTPUT_H
+#ifndef CASM_GBCPU_H
+#define CASM_GBCPU_H
 
 #include "parse.h"
-#include "cmd.h"
 
-/* Pull in the output drivers
-*/
-#include "rawout.h"
-#include "specout.h"
-#include "t64out.h"
-#include "zx81out.h"
-#include "gbout.h"
+void Init_GBCPU(void);
 
-/* ---------------------------------------- INTERFACES
-*/
+const ValueTable *Options_GBCPU(void);
 
+CommandStatus SetOption_GBCPU(int opt, int argc, char *argv[], int quoted[],
+                              char *err, size_t errsize);
 
-/* Output options
-*/
-const ValueTable *OutputOptions(void);
-
-CommandStatus OutputSetOption(int opt, int argc, char *argv[],
-                              int quoted[], char *error, size_t error_size);
-
-
-/* Outputs the result of assembly.  Returns TRUE if OK, FALSE for failure.
-*/
-int     OutputCode(void);
-
-
-/* Returns a reason for the last failure.
-*/
-const char *OutputError(void);
+CommandStatus Handler_GBCPU(const char *label, int argc, char *argv[],
+                            int quoted[], char *error, size_t error_size);
 
 
 #endif

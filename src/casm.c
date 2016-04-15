@@ -46,6 +46,7 @@
 */
 #include "z80.h"
 #include "6502.h"
+#include "gbcpu.h"
 
 
 /* ---------------------------------------- MACROS
@@ -56,7 +57,7 @@
 */
 
 static const char *casm_usage =
-"Version 1.0\n"
+"Version 1.1 development\n"
 "\n"
 "This program is distributed in the hope that it will be useful,\n"
 "but WITHOUT ANY WARRANTY; without even the implied warranty of\n"
@@ -99,6 +100,12 @@ static const CPU cpu_table[]=
         0x10000,
         LSB_Word,
         Init_6502, Options_6502, SetOption_6502, Handler_6502
+    },
+    {
+        "GAMEBOY",
+        0x10000,
+        LSB_Word,
+        Init_GBCPU, Options_GBCPU, SetOption_GBCPU, Handler_GBCPU
     },
 
     {NULL}
@@ -422,6 +429,10 @@ static CommandStatus OPTION(const char *label, int argc, char *argv[],
     else if ((entry = ParseTable(opt, ZX81OutputOptions())))
     {
         return ZX81OutputSetOption(entry->value, ac, args, q, err, errsize);
+    }
+    else if ((entry = ParseTable(opt, GBOutputOptions())))
+    {
+        return GBOutputSetOption(entry->value, ac, args, q, err, errsize);
     }
     else if ((entry = ParseTable(opt, cpu->options())))
     {

@@ -33,6 +33,7 @@
 
 # Custom
 src/casm
+*.rom
 *.com
 *.tap
 *.t64
