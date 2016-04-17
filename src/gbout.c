@@ -261,6 +261,13 @@ int GBOutput(const char *filename, const char *filename_bank,
 
     mem = bank[0]->memory;
 
+    /* Create the log
+    */
+    for(f = 0; logo[f] != -1; f++)
+    {
+        PokeB(mem, 0x104 + f, logo[f]);
+    }
+
     /* Create the RST handlers
     */
     for(f = 0; f < 8; f++)

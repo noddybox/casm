@@ -819,6 +819,23 @@ static CommandStatus LD(const char *label, int argc, char *argv[],
         return CMD_OK;
     }
 
+    /* LD ($ff00 + n), A
+    */
+    if (r1 == A8 && r2 == ADDRESS && off2 >= 0xff00)
+    {
+        PCWrite(0xf0);
+        PCWrite(off2 - 0xff00);
+        return CMD_OK;
+    }
+
+    /* LD ($ff00 + n), A
+    */
+    if (r1 == ADDRESS && r2 == A8 && off1 >= 0xff00)
+    {
+        PCWrite(0xe0);
+        PCWrite(off1 - 0xff00);
+        return CMD_OK;
+    }
 
     /* Custom opcode generation using the codes table
     */
@@ -1019,7 +1036,8 @@ static CommandStatus ADD(const char *label, int argc, char *argv[],
     static RegisterPairCodes codes[] =
     {
         A8,             VALUE,          {0xc6, WRITE_BYTE_RHS},
-        A8,             HL_ADDRESS,     {0x86}
+        A8,             HL_ADDRESS,     {0x86},
+        SP16,           VALUE,          {0xe8, WRITE_WORD_RHS}
     };
 
     RegisterMode r1, r2;

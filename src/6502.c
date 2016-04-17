@@ -415,6 +415,7 @@ static CommandStatus ADC(const char *label, int argc, char *argv[],
             return CMD_OK;
 
         case ABSOLUTE_INDEX_Y:
+        case ZERO_PAGE_INDEX_Y:
             PCWrite(0x79);
             PCWriteWord(address);
             return CMD_OK;
@@ -472,6 +473,7 @@ static CommandStatus AND(const char *label, int argc, char *argv[],
             return CMD_OK;
 
         case ABSOLUTE_INDEX_Y:
+        case ZERO_PAGE_INDEX_Y:
             PCWrite(0x39);
             PCWriteWord(address);
             return CMD_OK;
@@ -598,6 +600,7 @@ static CommandStatus CMP(const char *label, int argc, char *argv[],
             return CMD_OK;
 
         case ABSOLUTE_INDEX_Y:
+        case ZERO_PAGE_INDEX_Y:
             PCWrite(0xd9);
             PCWriteWord(address);
             return CMD_OK;
@@ -756,6 +759,7 @@ static CommandStatus EOR(const char *label, int argc, char *argv[],
             return CMD_OK;
 
         case ABSOLUTE_INDEX_Y:
+        case ZERO_PAGE_INDEX_Y:
             PCWrite(0x59);
             PCWriteWord(address);
             return CMD_OK;
@@ -899,6 +903,7 @@ static CommandStatus LDA(const char *label, int argc, char *argv[],
             return CMD_OK;
 
         case ABSOLUTE_INDEX_Y:
+        case ZERO_PAGE_INDEX_Y:
             PCWrite(0xb9);
             PCWriteWord(address);
             return CMD_OK;
@@ -1082,6 +1087,7 @@ static CommandStatus ORA(const char *label, int argc, char *argv[],
             return CMD_OK;
 
         case ABSOLUTE_INDEX_Y:
+        case ZERO_PAGE_INDEX_Y:
             PCWrite(0x19);
             PCWriteWord(address);
             return CMD_OK;
@@ -1223,6 +1229,7 @@ static CommandStatus SBC(const char *label, int argc, char *argv[],
             return CMD_OK;
 
         case ABSOLUTE_INDEX_Y:
+        case ZERO_PAGE_INDEX_Y:
             PCWrite(0xf9);
             PCWriteWord(address);
             return CMD_OK;
@@ -1275,6 +1282,7 @@ static CommandStatus STA(const char *label, int argc, char *argv[],
             return CMD_OK;
 
         case ABSOLUTE_INDEX_Y:
+        case ZERO_PAGE_INDEX_Y:
             PCWrite(0x99);
             PCWriteWord(address);
             return CMD_OK;
@@ -1484,7 +1492,7 @@ static const HandlerTable handler_table[] =
 
 void Init_6502(void)
 {
-    option.zp_mode = ZP_OFF;
+    option.zp_mode = ZP_AUTO;
 }
 
 

@@ -162,7 +162,7 @@ static void BuildArgs(Varchar *str, int argc, char *argv[], int quoted[])
 
 static void Output(const char *fmt, ...)
 {
-    if (IsFirstPass() && options.enabled)
+    if (IsFinalPass() && options.enabled)
     {
         va_list va;
 

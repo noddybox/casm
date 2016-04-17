@@ -1,9 +1,7 @@
 	
 	cpu	gameboy
-	option	+list
-	option	list-labels,all
 
-	option	output-file,gb.rom
+	option	output-file,gb.gb
 	option	output-format,gameboy
 
 	option	gameboy-irq,vbl,vbl_code

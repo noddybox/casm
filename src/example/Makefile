@@ -20,7 +20,7 @@
 # Makefile for examples
 #
 
-ALL	= spectrum.tap c64.t64 zx81.p gb.rom
+ALL	= spectrum.tap c64.t64 zx81.p gb.rom vcs.bin
 CASM	= ../casm
 
 all: $(ALL) $(CASM)
@@ -41,6 +41,9 @@ zx81.p: zx81.asm $(CASM)
 
 gb.rom: gb.asm $(CASM)
 	$(CASM) gb.asm
+
+vcs.bin: vcs.asm $(CASM)
+	$(CASM) vcs.asm
 
 clean:
 	rm -f $(ALL)
