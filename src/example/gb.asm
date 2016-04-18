@@ -11,18 +11,22 @@ SCRN	equ	$9800
 OAM	equ	$fe00
 LCDC	equ	$ff40
 STAT	equ	$ff41
+BGRDPAL	equ	$ff47
+OBJ0PAL	equ	$ff48
+OBJ1PAL	equ	$ff49
+CURLINE	equ	$ff44
 
 READY	equ	$ff81
 XPOS	equ	$ff82
 
 VBLANK	macro
-	push	af
-.wait
-	ldh	a,(LCDC)
-	cp	$91
-	jr	nz,wait
-
-	pop	af
+;	push	af
+;.wait
+;	ldh	a,(CURLINE)
+;	cp	144
+;	jr	nz,wait
+;
+;	pop	af
 
 	endm
 
@@ -41,10 +45,16 @@ VBLANK	macro
 
 	; Set LCD so only sprites show
 	;
-	ld	a,$82
+	VBLANK
+
+	ld	a,$81
 	ldh	(LCDC),a
 	ld	a,$10
 	ldh	(STAT),a
+	ld	a,$e4
+	ldh	(BGRDPAL),a
+	ldh	(OBJ0PAL),a
+	ldh	(OBJ1PAL),a
 
 	; Copy to VRAM
 	;
@@ -55,8 +65,8 @@ VBLANK	macro
 	VBLANK
 
 .copy
-	ld	a,(hl+)
-	ld	(de),a
+	ld	a,(de)
+	ld	(hl+),a
 	inc	de
 	dec	a
 	jr	nz,copy
@@ -65,20 +75,22 @@ VBLANK	macro
 	ldh	(READY),a
 
 .idle
+	ei
 	halt
 	nop
 	jr	idle
 
 vbl_code:
 	ldh	a,(READY)
+	or	a
 	jr	z,finish
 
 	ldh	a,(XPOS)
 	inc	a
 	ldh	(XPOS),a
+	ld	(OAM),a
 	ld	(OAM+1),a
 	xor	a
-	ld	(OAM),a
 	ld	(OAM+2),a
 	ld	(OAM+3),a
 
@@ -86,5 +98,12 @@ vbl_code:
 	reti
 
 sprite:
-	defs	16,$ff
+	defb	$ff,00
+	defb	$ff,00
+	defb	$ff,00
+	defb	$ff,00
+	defb	$ff,00
+	defb	$ff,00
+	defb	$ff,00
+	defb	$ff,00
 
