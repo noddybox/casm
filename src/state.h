@@ -87,6 +87,11 @@ int     IsIntermediatePass(void);
 void    SetNeededPasses(int n);
 
 
+/* Get current pass.  Just used for debug.
+*/
+int     GetCurrentPass(void);
+
+
 /* Set the current PC
 */
 void    SetPC(int i);

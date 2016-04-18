@@ -23,6 +23,7 @@
 
 */
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 
 #include "global.h"
@@ -171,6 +172,12 @@ void SetNeededPasses(int n)
     {
         maxpass = n;
     }
+}
+
+
+int GetCurrentPass(void)
+{
+    return pass;
 }
 
 

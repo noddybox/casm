@@ -15,10 +15,6 @@
 
 	option	output-file,vcs.bin
 
-	option	+list
-	option	+list-hex
-	option	+list-pc
-
 VSYNC   equ       $00
 VBLANK  equ       $01
 WSYNC   equ       $02

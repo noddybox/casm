@@ -145,7 +145,7 @@ do                                                                      \
             break;                                                      \
                                                                         \
         case ZP_AUTO:                                                   \
-            if (IsFinalPass() && *address >= 0 && *address <= 255)      \
+            if (*address >= 0 && *address <= 255)                       \
             {                                                           \
                 *mode = ZP_mode;                                        \
             }                                                           \
@@ -834,6 +834,7 @@ static CommandStatus JMP(const char *label, int argc, char *argv[],
     switch(mode)
     {
         case ABSOLUTE:
+        case ZERO_PAGE:
             PCWrite(0x4c);
             PCWriteWord(address);
             return CMD_OK;
@@ -861,6 +862,7 @@ static CommandStatus JSR(const char *label, int argc, char *argv[],
     switch(mode)
     {
         case ABSOLUTE:
+        case ZERO_PAGE:
             PCWrite(0x20);
             PCWriteWord(address);
             return CMD_OK;
@@ -1493,6 +1495,7 @@ static const HandlerTable handler_table[] =
 void Init_6502(void)
 {
     option.zp_mode = ZP_AUTO;
+    SetNeededPasses(3);
 }
 
 
@@ -1513,11 +1516,6 @@ CommandStatus SetOption_6502(int opt, int argc, char *argv[],
             CMD_TABLE(argv[0], zp_table, val);
 
             option.zp_mode = val->value;
-
-            if (option.zp_mode == ZP_AUTO)
-            {
-                SetNeededPasses(3);
-            }
             break;
 
         default:
