@@ -1,22 +1,26 @@
+	;
+	; This example is poor, and leaves lots of junk lymg in memory.
+	; Still, it works enough to test
+	;
 	
 	cpu	gameboy
 
 	option	output-file,gb.gb
 	option	output-format,gameboy
 
-	;option	gameboy-irq,vbl,vbl_code
+	option	gameboy-irq,vbl,vbl_code
 
 VRAM	equ	$8000
 SCRN	equ	$9800
 OAM	equ	$fe00
 LCDC	equ	$ff40
 STAT	equ	$ff41
+ISWITCH	equ	$ffff
 BGRDPAL	equ	$ff47
 OBJ0PAL	equ	$ff48
 OBJ1PAL	equ	$ff49
 CURLINE	equ	$ff44
 
-READY	equ	$ff81
 XPOS	equ	$ff82
 
 VBLANK	macro
@@ -39,30 +43,28 @@ VBLANK	macro
 	org	$150
 
 	di
-	xor	a
-	ldh	(READY),a
 	ld	sp,$fffe
 
-	; Set LCD so only sprites show
+	; Switch of display during setup
 	;
 	VBLANK
+	xor	a
+	ld	(LCDC),a
 
-	ld	a,$81
-	ldh	(LCDC),a
-	ld	a,$10
-	ldh	(STAT),a
+	ld	(XPOS),a
+
 	ld	a,$e4
-	ldh	(BGRDPAL),a
 	ldh	(OBJ0PAL),a
 	ldh	(OBJ1PAL),a
 
-	; Copy to VRAM
+	swap	a
+	ldh	(BGRDPAL),a
+
+	; Copy to VRAM and set up
 	;
 	ld	hl,VRAM
 	ld	de,sprite
 	ld	c,16
-
-	VBLANK
 
 .copy
 	ld	a,(de)
@@ -71,12 +73,6 @@ VBLANK	macro
 	dec	c
 	jr	nz,copy
 
-	ld	a,1
-	ldh	(READY),a
-
-	ei
-
-	VBLANK
 
 	; Set sprite numbers
 	;
@@ -92,9 +88,24 @@ VBLANK	macro
 	ld	(OAM+7),a
 	ld	(OAM+11),a
 
-.idle
-	VBLANK
+	; Set LCD back on
+	;
+	ld	a,$83
+	ldh	(LCDC),a
 
+	; Activate VBL
+	;
+	ld	a,1
+	ldh	(ISWITCH),a
+
+	ei
+
+.idle
+	halt
+	nop
+	jr	idle
+
+vbl_code:
 	ldh	a,(XPOS)
 	inc	a
 	ldh	(XPOS),a
@@ -110,23 +121,6 @@ VBLANK	macro
 	ld	(OAM+8),a
 	ld	(OAM+9),a
 
-	jr	idle
-
-vbl_code:
-	ldh	a,(READY)
-	or	a
-	jr	z,finish
-
-	ldh	a,(XPOS)
-	inc	a
-	ldh	(XPOS),a
-	ld	(OAM),a
-	ld	(OAM+1),a
-	xor	a
-	ld	(OAM+2),a
-	ld	(OAM+3),a
-
-.finish
 	reti
 
 sprite:
@@ -141,3 +135,21 @@ sprite:
 	defb	$ff,$ff
 	defb	$00,00
 
+	;
+	; Assembly checks
+	;
+	stop
+	swap	a
+	swap	b
+	swap	c
+	swap	d
+	swap	e
+	swap	h
+	swap	l
+	swap	(hl)
+	ld	a,(hl+)
+	ld	a,(hli)
+	ldi	a,(hl)
+	ld	a,(hl-)
+	ld	a,(hld)
+	ldd	a,(hl)

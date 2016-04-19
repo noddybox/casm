@@ -140,8 +140,23 @@ along with this program.  If not, see
 http://www.gnu.org/licenses/gpl-3.0.html)</a></p>
 </div>
 
+<h1>Index</h1>
 
-<h1>CASM</h1>
+<p>
+<a href="#casm">CASM</a> - General usage
+</p>
+<p>
+<a href="#z80">Z80</a> - Z80 processor support.
+</p>
+<p>
+<a href="#6502">6502</a> - 6502 processor support.
+</p>
+<p>
+<a href="#gbcpu">Gameboy Z80</a> - The Gameboy Z80 derivative processor.
+</p>
+
+
+<h1 id="casm">CASM</h1>
 
 <h2>Usage</h2>
 
@@ -885,6 +900,13 @@ A ZX81 emulator P file.
 A Commodore 64 T64 tape file.
 </td></tr>
 
+<tr><td class="cmd">
+<a href="#gameboyout">gameboy</a>
+</td>
+<td class="def">
+A Nintendo Gameboy ROM file.
+</td></tr>
+
 </table>
 
 </td></tr>
@@ -1012,6 +1034,75 @@ to start the machine code, e.g.
 <p>Any remaining blocks will be stored as-is without any basic loader.</p>
 
 
+<h3 id="gameboyout">Nintendo Gameboy ROM File Output Format</h3>
+
+<p>
+Generates a ROM file for a Gameboy emulator or hardware.  Note that large ROM
+sizes have not been extensively checked and verified.
+</p>
+
+<p>If a single bank was used during the assembly then a simple 32K ROM is
+assumed, and an error will be shown if the addresses used fall outside the range
+0x150 to 0x7fff. </p>
+
+<p>Similarly if multiple banks are used then it is assumed that the first bank
+is only used in the range 0x150 to 0x3fff, and subsequent banks in the range
+0x4000 to 0x7fff.  This is to fit in with the method the Gameboy uses to page
+memory banks into the upper 16K portion of the normal 32K ROM address space.
+</p>
+
+<p>By default the output driver will try and fill in the ROM size and type in
+the header properly, but these can be overridden using settings.</p>
+
+<h4>Gameboy ROM Output Format options</h4>
+
+<p>The Gameboy output driver supports the following settings that can be set via
+an <b>option</b> command.
+</p>
+
+<table>
+
+<thead><tr><td class="head">Option</td>
+<td class="head">Description</td></tr></thead>
+
+<tr><td class="cmd">
+option gameboy-colour, &lt;on|off&gt;
+</td>
+<td class="def">
+Whether this is a Gameboy Colour cartridge.  Defaults to <i>off</i>.
+Note that <b>gameboy-color</b> can be used as a different spelling for this
+setting.
+</td></tr>
+
+<tr><td class="cmd">
+option gameboy-super, &lt;on|off&gt;
+</td>
+<td class="def">
+Whether this is a Gameboy Super extended cartridge.  Defaults to <i>off</i>.
+</td></tr>
+
+<tr><td class="cmd">
+option gameboy-cart-type, &lt;on|off&gt;
+</td>
+<td class="def">
+Specifies the cartridge type.  Defaults to -1, which means the output driver
+will pick the appropriate type.
+</td></tr>
+
+<tr><td class="cmd">
+option gameboy-irq, <i>irq</i>, <i>address</i>;
+</td>
+<td class="def">
+Specifies an address where an IRQ routine is stored, and requests that the
+IRQ be transferred to that address when it happens.  The IRQ routine must end
+with a <b>reti</b> opcode.<br><br>
+<i>irq</i> can be either <b>vbl</b>, <b>lcd</b>, <b>timer</b>, <b>serial</b>
+or <b>joypad</b>.  If left at the default value of -1 then an IRQ handler is
+installed with just a <b>reti</b> instruction.
+</td></tr>
+
+</table>
+
 <h2>Listing</h2>
 
 <p>
@@ -1138,7 +1229,7 @@ down to a single blank line in the listing.
 </table>
 
 
-<h1>Z80 CPU</h1>
+<h1 id="z80">Z80 CPU</h1>
 
 <h2>Opcodes</h2>
 
@@ -1239,7 +1330,7 @@ can be any value at all:
 
 The Z80 assembler has no options.
 
-<h1>6502 CPU</h1>
+<h1 id="6502">6502 CPU</h1>
 
 <h2>Opcodes</h2>
 
@@ -1307,6 +1398,115 @@ e.g.
 
 </td></tr>
 </table>
+
+<h1 id="gbcpu">Gameboy Z80 derivative CPU</h1>
+
+<h2>Opcodes</h2>
+
+<p>
+The Gameboy assembler uses the standard Z80 opcodes where applicable.
+Note that the Gameboy processor has a reduced number of opcodes, flags
+and no index registers, though it has some additional instructions and
+addressing modes.
+</p>
+
+<p>
+For instructions were the Accumulator can be assumed it can be omitted, and
+EOR can be used the same as XOR:
+</p>
+
+<pre class="codeblock">
+        xor     a,a         ; These are equivalent
+        xor     a
+        eor     a,a
+
+        and     a,b         ; These are equivalent
+        and     b
+</pre>
+
+<p>
+The Gameboy CPU has a special addressing mode used for one opcode, where the
+referenced address is stored as a single byte, and used as an offset into the
+top page (0xff00).  This can be either triggered by using the special opcode, or
+will automatically used whenever an address is accessed in the range 0xff00 to
+0xffff:
+</p>
+
+<pre class="codeblock">
+        ; These all will use the special addressing mode opcode, accessing
+        ; memory location $ff34
+        ;
+label   equ     $ff34
+
+        ldh     a,($34)
+        ldh     a,($ff34)
+        ld      a,($ff34)
+        ld      a,(label)
+
+        ld      (label),a
+        ld      ($ff34),a
+        ldh     ($34),a
+        ldh     ($ff34),a
+</pre>
+
+<p>
+The Gameboy CPU also supports incrementing or decrementing the HL register when
+it is used as an address:
+</p>
+
+<pre class="codeblock">
+        ; All these decrement HL after the value has been used.
+        ;
+        ld      a,(hl-)
+        ld      a,(hld)
+        ldd     a,(hl)
+        ld      (hl-),a
+        ld      (hld),a
+        ldd     (hl),a
+
+        ; All these increment HL after the value has been used.
+        ;
+        ld      a,(hl+)
+        ld      a,(hli)
+        ldi     a,(hl)
+        ld      (hl+),a
+        ld      (hli),a
+        ldi     (hl),a
+</pre>
+
+<p>In addition the Gameboy CPU supports these extra instructions over the Z80:
+</p>
+
+<pre class="codeblock">
+        ; Actually loads using the address $ff00 + C
+        ;
+        ld      a,(c)
+        ld      (c),a
+
+        ; Put the Gameboy into a low-power mode till a control is pressed.
+        ; Note it is accepted practice to put a NOP afterwards.  This may be
+        ; due to the stop replacing DJNZ, which may still be wired to expect
+        ; an argument.  That is just a wild guess though.
+        ;
+        stop
+        nop
+
+        ; Swaps the low/high nibbles of the register
+        ;
+        swap    a
+        swap    b
+        swap    c
+        swap    d
+        swap    e
+        swap    h
+        swap    l
+        swap    (hl)
+</pre>
+
+
+<h2>Options</h2>
+
+The Gameboy CPU assembler has no options.
 
 <!--  vim: ai sw=4 ts=8 expandtab spell
 -->

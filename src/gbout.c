@@ -41,7 +41,6 @@ enum option_t
     OPT_SUPER,
     OPT_CART_RAM,
     OPT_CART_TYPE,
-    OPT_RST,
     OPT_IRQ
 };
 
@@ -51,7 +50,7 @@ static const ValueTable option_set[] =
     {"gameboy-color",           OPT_COLOUR},
     {"gameboy-super",           OPT_SUPER},
     {"gameboy-cart-ram",        OPT_CART_RAM},
-    {"gameboy-cart-type",       OPT_CART_RAM},
+    {"gameboy-cart-type",       OPT_CART_TYPE},
     {"gameboy-irq",             OPT_IRQ},
     {NULL}
 };
@@ -193,8 +192,8 @@ int GBOutput(const char *filename, const char *filename_bank,
     int f;
     int offset;
     int rom_size;
-    unsigned global_csum = 0;
-    unsigned hdr_csum = 0;
+    Word global_csum = 0;
+    Byte hdr_csum = 0;
     Byte *mem;
 
     if (!fp)
@@ -374,35 +373,43 @@ int GBOutput(const char *filename, const char *filename_bank,
 
     /* Header checksum
     */
+    hdr_csum = 0;
+
     for(f = 0x134 ; f < 0x14d; f++)
     {
-        hdr_csum -= mem[f] - 1;
+        hdr_csum = hdr_csum - mem[f] - 1u;
     }
 
     PokeB(mem, 0x14d, hdr_csum);
 
     /* Global checksum
     */
+    global_csum = 0;
+
     if (count == 1)
     {
-        for(f = 0; f < 0x8000; f++)
+        for(f = 0; f < 0x14e; f++)
         {
-            if (f < 0x14e || f > 0x14f)
-            {
-                global_csum += mem[f];
-            }
+            global_csum += mem[f];
+        }
+
+        for(f = 0x150; f < 0x8000; f++)
+        {
+            global_csum += mem[f];
         }
     }
     else
     {
         int r;
 
-        for(f = 0; f < 0x4000; f++)
+        for(f = 0; f < 0x14e; f++)
         {
-            if (f < 0x14e || f > 0x14f)
-            {
-                global_csum += mem[f];
-            }
+            global_csum += mem[f];
+        }
+
+        for(f = 0x150; f < 0x4000; f++)
+        {
+            global_csum += mem[f];
         }
 
         for(r = 1; r < count; r++)
@@ -414,7 +421,8 @@ int GBOutput(const char *filename, const char *filename_bank,
         }
     }
 
-    PokeW(mem, 0x14e, global_csum);
+    PokeB(mem, 0x14e, global_csum >> 8);
+    PokeB(mem, 0x14f, global_csum);
 
     /* Output the ROM contents
     */
