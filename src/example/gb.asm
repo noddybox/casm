@@ -4,7 +4,7 @@
 	option	output-file,gb.gb
 	option	output-format,gameboy
 
-	option	gameboy-irq,vbl,vbl_code
+	;option	gameboy-irq,vbl,vbl_code
 
 VRAM	equ	$8000
 SCRN	equ	$9800
@@ -20,13 +20,13 @@ READY	equ	$ff81
 XPOS	equ	$ff82
 
 VBLANK	macro
-;	push	af
-;.wait
-;	ldh	a,(CURLINE)
-;	cp	144
-;	jr	nz,wait
-;
-;	pop	af
+	push	af
+.wait
+	ldh	a,(CURLINE)
+	cp	144
+	jr	nz,wait
+
+	pop	af
 
 	endm
 
@@ -60,7 +60,7 @@ VBLANK	macro
 	;
 	ld	hl,VRAM
 	ld	de,sprite
-	ld	a,16
+	ld	c,16
 
 	VBLANK
 
@@ -68,16 +68,48 @@ VBLANK	macro
 	ld	a,(de)
 	ld	(hl+),a
 	inc	de
-	dec	a
+	dec	c
 	jr	nz,copy
 
 	ld	a,1
 	ldh	(READY),a
 
-.idle
 	ei
-	halt
-	nop
+
+	VBLANK
+
+	; Set sprite numbers
+	;
+	xor	a
+	ld	(OAM+2),a
+	ld	(OAM+6),a
+	ld	(OAM+10),a
+
+	; Set sprite flags
+	;
+	ld	a,$80
+	ld	(OAM+3),a
+	ld	(OAM+7),a
+	ld	(OAM+11),a
+
+.idle
+	VBLANK
+
+	ldh	a,(XPOS)
+	inc	a
+	ldh	(XPOS),a
+
+	ld	(OAM),a
+	ld	(OAM+1),a
+
+	add	20
+	ld	(OAM+4),a
+	ld	(OAM+5),a
+
+	add	33
+	ld	(OAM+8),a
+	ld	(OAM+9),a
+
 	jr	idle
 
 vbl_code:
@@ -98,12 +130,14 @@ vbl_code:
 	reti
 
 sprite:
-	defb	$ff,00
-	defb	$ff,00
-	defb	$ff,00
-	defb	$ff,00
-	defb	$ff,00
-	defb	$ff,00
-	defb	$ff,00
-	defb	$ff,00
+	defb	$ff,$ff
+	defb	$00,00
+	defb	$ff,$ff
+	defb	$00,00
+	defb	$ff,$ff
+	defb	$00,00
+	defb	$ff,$ff
+	defb	$00,00
+	defb	$ff,$ff
+	defb	$00,00
 

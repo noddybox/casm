@@ -196,6 +196,12 @@ int IsNullOrEmpty(const char *p)
     return empty;
 }
 
+
+void DebugBreakPoint(void)
+{
+    return;
+}
+
 /*
 vim: ai sw=4 ts=8 expandtab
 */

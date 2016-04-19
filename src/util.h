@@ -87,6 +87,11 @@ char    *CopyStr(char *dest, const char *src, size_t size);
 int     IsNullOrEmpty(const char *p);
 
 
+/* Null function that can be used as a handy place to hang a breakpoint.
+*/
+void    DebugBreakPoint(void);
+
+
 #endif
 
 /*

@@ -194,7 +194,7 @@ int GBOutput(const char *filename, const char *filename_bank,
     int offset;
     int rom_size;
     unsigned global_csum = 0;
-    Byte hdr_csum = 0;
+    unsigned hdr_csum = 0;
     Byte *mem;
 
     if (!fp)
@@ -318,6 +318,10 @@ int GBOutput(const char *filename, const char *filename_bank,
     {
         PokeB(mem, 0x146, 3);
     }
+    else
+    {
+        PokeB(mem, 0x146, 0);
+    }
 
     /* Type/ROM size
     */
@@ -353,7 +357,7 @@ int GBOutput(const char *filename, const char *filename_bank,
             break;
     }
 
-    /* To be sold everywhere
+    /* Non-Japanese ROM
     */
     PokeB(mem, 0x14a, 1);
 
@@ -361,18 +365,18 @@ int GBOutput(const char *filename, const char *filename_bank,
     */
     if (option.is_super)
     {
-        PokeB(mem, 0x14a, 0x33);
+        PokeB(mem, 0x14b, 0x33);
     }
     else
     {
-        PokeB(mem, 0x14a, 0);
+        PokeB(mem, 0x14b, 0);
     }
 
     /* Header checksum
     */
     for(f = 0x134 ; f < 0x14d; f++)
     {
-        hdr_csum -= mem[f];
+        hdr_csum -= mem[f] - 1;
     }
 
     PokeB(mem, 0x14d, hdr_csum);
@@ -381,18 +385,24 @@ int GBOutput(const char *filename, const char *filename_bank,
     */
     if (count == 1)
     {
-        for(f = 0x150; f < 0x8000; f++)
+        for(f = 0; f < 0x8000; f++)
         {
-            global_csum += mem[f];
+            if (f < 0x14e || f > 0x14f)
+            {
+                global_csum += mem[f];
+            }
         }
     }
     else
     {
         int r;
 
-        for(f = 0x150; f < 0x4000; f++)
+        for(f = 0; f < 0x4000; f++)
         {
-            global_csum += mem[f];
+            if (f < 0x14e || f > 0x14f)
+            {
+                global_csum += mem[f];
+            }
         }
 
         for(r = 1; r < count; r++)

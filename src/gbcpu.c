@@ -765,6 +765,7 @@ static CommandStatus LD(const char *label, int argc, char *argv[],
     if (Is16Bit(t1) && !IsMemory(t1) && r2 == VALUE)
     {
         PCWrite(register_bitmask[r1] << 4 | 0x01);
+        PCWriteWord(off2);
         return CMD_OK;
     }
 
@@ -1810,6 +1811,21 @@ static CommandStatus RST(const char *label, int argc, char *argv[],
 }
 
 
+static CommandStatus STOP(const char *label, int argc, char *argv[],
+                          int quoted[], char *err, size_t errsize)
+{
+    if (argc == 1)
+    {
+        PCWrite(0x10);
+        PCWrite(0x00);
+        return CMD_OK;
+    }
+
+    return IllegalArgs(argc, argv, quoted, err, errsize);
+}
+
+
+
 /* ---------------------------------------- OPCODE TABLES
 */
 typedef struct
@@ -1856,6 +1872,7 @@ static const HandlerTable handler_table[] =
     {"CALL",    CALL},
     {"RET",     RET},
     {"RST",     RST},
+    {"STOP",    STOP},
     {NULL}
 };
 
@@ -1876,7 +1893,6 @@ static const OpcodeTable implied_opcodes[] =
     {"RLA",     {0x17}},
     {"RRA",     {0x1f}},
     {"RETI",    {0xd9}},
-    {"STOP",    {0x10}},
     {NULL}
 };
 
