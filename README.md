@@ -27,12 +27,13 @@ Plans for:
 
 ## Output Formats
 
-Currently **casm** supports:
+Currently **casm** supports the following output drivers:
 
-* Raw binary output
+* Raw binary output (works for Atari VCS)
 * ZX Spectrum TAP file
 * T64 Commodore 64 tape image
 * ZX81 P file
+* Gameboy ROM
 
 Plans for:
 
