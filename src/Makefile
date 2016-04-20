@@ -38,6 +38,7 @@ SOURCE	=	casm.c		\
 		listing.c	\
 		alias.c		\
 		6502.c		\
+		65c816.c	\
 		z80.c		\
 		gbcpu.c		\
 		rawout.c	\
@@ -60,6 +61,7 @@ OBJECTS	=	casm.o		\
 		listing.o	\
 		alias.o		\
 		6502.o		\
+		65c816.o	\
 		z80.o		\
 		gbcpu.o		\
 		rawout.o	\
@@ -76,6 +78,8 @@ clean:
 
 6502.o: 6502.c global.h basetype.h util.h state.h expr.h label.h parse.h \
  cmd.h codepage.h 6502.h
+65c816.o: 65c816.c global.h basetype.h util.h state.h expr.h label.h \
+ parse.h cmd.h codepage.h 65c816.h
 alias.o: alias.c global.h basetype.h util.h state.h alias.h
 casm.o: casm.c global.h basetype.h util.h state.h expr.h label.h macro.h \
  cmd.h parse.h codepage.h stack.h listing.h alias.h output.h rawout.h \
