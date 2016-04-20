@@ -39,3 +39,8 @@ Plans for:
 
 * SNES ROM
 * NES ROM
+
+## Major Changes in V1.1
+
+* Added Gameboy support
+* Fixed breaking bugs in 6502 generation, especially around zero-page addressing
