@@ -283,7 +283,7 @@ int LabelExpand(const char *expr, int *result)
         }
         else if (first == '%')
         {
-            found = ParseBase(expr, 2, result, '\0');
+            found = ParseBase(expr + 1, 2, result, '\0');
         }
         else if (last == 'b' || last == 'B')
         {

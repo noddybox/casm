@@ -32,7 +32,7 @@ expr1_7	equ	1 + 2 * 3
 expr2_9	equ	{1 + 2} * 3
 
 bin1:	equ	11110101b
-bin2:	equ	11110010b
+bin2:	equ	%11110010
 hex1:	equ	$1234
 hex2	equ	1234h
 hex3:	equ	0x1234
@@ -67,6 +67,14 @@ two	fred	ONE * 2
 
 true1	equ	one == 1
 false1	equ	one != 1
+
+true2	equ	1 == 1 && 2 == 2
+true3	equ	1 == 2 || 2 == 2
+false2	equ	1 == 2 && 2 == 2
+false3	equ	1 == 2 || 2 == 3
+
+and1	equ	0x8123 & 256
+or1	equ	0x8123 | 256
 
 endaddr:end
 

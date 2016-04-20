@@ -55,7 +55,6 @@
 #define TYPE_EQUALITY   17
 #define TYPE_BOOL_AND   18
 #define TYPE_BOOL_OR    19
-#define TYPE_MODULUS    20
 #define TYPE_LT         21
 #define TYPE_GT         22
 #define TYPE_LTEQ       23
@@ -79,14 +78,13 @@
 #define SYM_EQUALITY    "=="
 #define SYM_BOOL_AND    "&&"
 #define SYM_BOOL_OR     "||"
-#define SYM_MODULUS     "%"
 #define SYM_LT          "<"
 #define SYM_GT          ">"
 #define SYM_LTEQ        "<="
 #define SYM_GTEQ        ">="
 #define SYM_INEQUALITY  "!="
 
-#define OPERATOR_CHARS  "{}/*+-~&|^<>=%!"
+#define OPERATOR_CHARS  "{}/*+-~&|^<>=!"
 
 #define IS_OPERATOR_TYPE(a)     ((a)>=TYPE_OPERATOR)
 
@@ -146,7 +144,6 @@ static const Operator   op_info[]=
         {SYM_SHIFTR,    6,      TYPE_SHIFTR,    OpBinary,       TRUE},
         {SYM_MULTIPLY,  5,      TYPE_MULTIPLY,  OpBinary,       TRUE},
         {SYM_DIVIDE,    5,      TYPE_DIVIDE,    OpBinary,       TRUE},
-        {SYM_MODULUS,   5,      TYPE_MODULUS,   OpBinary,       TRUE},
         {SYM_ADD,       4,      TYPE_ADD,       OpBinary,       TRUE},
         {SYM_SUBTRACT,  4,      TYPE_SUBTRACT,  OpBinary,       TRUE},
         {SYM_EQUALITY,  1,      TYPE_EQUALITY,  OpBinary,       TRUE},
@@ -559,10 +556,6 @@ static int EvalPostfix(Stack **stack, int *result)
 
             case TYPE_MULTIPLY:
                 *result=left*right;
-                break;
-
-            case TYPE_MODULUS:
-                *result=left%right;
                 break;
 
             case TYPE_ADD:
