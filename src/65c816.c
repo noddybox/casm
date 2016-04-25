@@ -207,6 +207,50 @@ static void CalcAddressMode(int argc, char *argv[], int quoted[],
     }
 
 
+    /* Absolute Indirect
+    */
+    if (argc == 1 && quoted[1] == '(')
+    {
+        if (!ExprEval(argv[1], address))
+        {
+            snprintf(err, errsize, "%s: expression error:  %s",
+                                        argv[1], ExprError());
+            *mode = ADDR_MODE_ERROR;
+            return;
+        }
+
+        CMD_RANGE_ADDR_MODE(mode,
+                            DIRECT_PAGE_INDIRECT,
+                            ABSOLUTE_INDIRECT,
+                            ADDR_MODE_ERROR,
+                            address);
+
+        return;
+    }
+
+
+    /* Absolute Indirect Long
+    */
+    if (argc == 1 && quoted[1] == '[')
+    {
+        if (!ExprEval(argv[1], address))
+        {
+            snprintf(err, errsize, "%s: expression error:  %s",
+                                        argv[1], ExprError());
+            *mode = ADDR_MODE_ERROR;
+            return;
+        }
+
+        CMD_RANGE_ADDR_MODE(mode,
+                            DIRECT_PAGE_INDIRECT_LONG,
+                            ABSOLUTE_INDIRECT_LONG,
+                            ADDR_MODE_ERROR,
+                            address);
+
+        return;
+    }
+
+
     /* Absolute,[XY]
     */
     if (argc == 3 && !quoted[1])
