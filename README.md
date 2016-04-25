@@ -21,8 +21,7 @@ Currently **casm** supports:
 
 Plans for:
 
-* Gameboy Z80 derarative
-* Ricoh 5A22 (SNES)
+* 65c816/Ricoh 5A22 (SNES)
 * SPC700 (SNES sound chip)
 
 ## Output Formats
