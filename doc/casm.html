@@ -600,7 +600,7 @@ Inequality.  Returns 1 if the arguments are unequal, otherwise zero.
 </td>
 <td class="def">
 Less than/less than or equal/greater than/greater than or equal.  Returns 1
-if the arguments are equal, otherwise zero.
+if the expression is true, otherwise zero.
 </td></tr>
 
 </table>
@@ -1091,11 +1091,11 @@ Whether this is a Gameboy Super extended cartridge.  Defaults to <i>off</i>.
 </td></tr>
 
 <tr><td class="cmd">
-option gameboy-cart-type, &lt;on|off&gt;
+option gameboy-cart-type, <i>number</i>
 </td>
 <td class="def">
 Specifies the cartridge type.  Defaults to -1, which means the output driver
-will pick the appropriate type.
+will try and pick the appropriate type.
 </td></tr>
 
 <tr><td class="cmd">
