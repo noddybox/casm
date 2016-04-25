@@ -37,6 +37,24 @@
 
 /* ---------------------------------------- TYPES AND GLOBALS
 */
+enum option_t
+{
+    OPT_A16,
+    OPT_I16
+};
+
+static const ValueTable options[] =
+{
+    {"a16",     OPT_A16},
+    {"i16",     OPT_I16},
+    {NULL}
+};
+
+static struct
+{
+    int         a16;
+    int         i16;
+} option;
 
 /* Note some addressing modes are indistinguable and will never be returned,
    for example STACK_IMMEDIATE or STACK_PC_LONG.  They are kept here as a
@@ -207,6 +225,50 @@ static void CalcAddressMode(int argc, char *argv[], int quoted[],
     }
 
 
+    /* Absolute Indirect
+    */
+    if (argc == 1 && quoted[1] == '(')
+    {
+        if (!ExprEval(argv[1], address))
+        {
+            snprintf(err, errsize, "%s: expression error:  %s",
+                                        argv[1], ExprError());
+            *mode = ADDR_MODE_ERROR;
+            return;
+        }
+
+        CMD_RANGE_ADDR_MODE(mode,
+                            DIRECT_PAGE_INDIRECT,
+                            ABSOLUTE_INDIRECT,
+                            ADDR_MODE_ERROR,
+                            address);
+
+        return;
+    }
+
+
+    /* Absolute Indirect Long
+    */
+    if (argc == 1 && quoted[1] == '[')
+    {
+        if (!ExprEval(argv[1], address))
+        {
+            snprintf(err, errsize, "%s: expression error:  %s",
+                                        argv[1], ExprError());
+            *mode = ADDR_MODE_ERROR;
+            return;
+        }
+
+        CMD_RANGE_ADDR_MODE(mode,
+                            DIRECT_PAGE_INDIRECT_LONG,
+                            ABSOLUTE_INDIRECT_LONG,
+                            ADDR_MODE_ERROR,
+                            address);
+
+        return;
+    }
+
+
     /* Absolute,[XY]
     */
     if (argc == 3 && !quoted[1])
@@ -331,54 +393,61 @@ static void CalcAddressMode(int argc, char *argv[], int quoted[],
 /* ---------------------------------------- COMMAND HANDLERS
 */
 
-static CommandStatus DUMMY(const char *label, int argc, char *argv[],
-                           int quoted[], char *err, size_t errsize)
+static CommandStatus MX8_16(const char *label, int argc, char *argv[],
+                            int quoted[], char *err, size_t errsize)
 {
-    address_mode_t mode;
-    int address;
-
-    CMD_ADDRESS_MODE(mode, address);
-
-    switch(mode)
+    if (argc == 1)
     {
-        case ACCUMULATOR:
+        if (CompareString(argv[0], "M8") || CompareString(argv[0], ".M8"))
+        {
+            option.a16 = FALSE;
             return CMD_OK;
-
-        case IMPLIED:
+        }
+        else if (CompareString(argv[0], "M16") ||
+                 CompareString(argv[0], ".M16"))
+        {
+            option.a16 = TRUE;
             return CMD_OK;
-
-        case IMMEDIATE:
+        }
+        else if (CompareString(argv[0], "X8") || CompareString(argv[0], ".X8"))
+        {
+            option.i16 = FALSE;
             return CMD_OK;
-
-        case ABSOLUTE:
+        }
+        else if (CompareString(argv[0], "X16") ||
+                 CompareString(argv[0], ".X16"))
+        {
+            option.i16 = TRUE;
             return CMD_OK;
-
-        case ZERO_PAGE:
-            return CMD_OK;
-
-        case ABSOLUTE_INDEX_X:
-            return CMD_OK;
-
-        case ABSOLUTE_INDEX_Y:
-            return CMD_OK;
-
-        case ZERO_PAGE_INDEX_X:
-            return CMD_OK;
-
-        case ZERO_PAGE_INDEX_Y:
-            return CMD_OK;
-
-        case ZERO_PAGE_INDIRECT_X:
-            return CMD_OK;
-
-        case ZERO_PAGE_INDIRECT_Y:
-            return CMD_OK;
-
-        default:
-            snprintf(err, errsize, "%s: unsupported addressing mode %s",
-                                            argv[0], address_mode_name[mode]);
-            return CMD_FAILED;
+        }
     }
+    else if (argc == 3)
+    {
+        if (CompareString(argv[0], "MX") || CompareString(argv[0], ".MX"))
+        {
+            int asize;
+            int isize;
+
+            CMD_EXPR(argv[1], asize);
+            CMD_EXPR(argv[2], isize);
+
+            if ((asize !=8 && asize != 8) || (isize != 8 && isize != 16))
+            {
+                snprintf(err, errsize, "%s: unsupported regsiter sizes %s,%s",
+                                            argv[0], argv[1], argv[2]);
+                return CMD_FAILED;
+            }
+
+            option.a16 = (asize == 16);
+            option.i16 = (isize == 16);
+
+            return CMD_OK;
+        }
+    }
+
+    snprintf(err, errsize, "%s: bad directive", argv[0]);
+
+    return CMD_FAILED;
 }
 
 static CommandStatus ADC(const char *label, int argc, char *argv[],
@@ -1415,10 +1484,22 @@ static const OpcodeTable implied_opcodes[] =
     {"NOP",      0xea},
     {"TXS",      0x9a},
     {"TSX",      0xba},
+
     {"PHA",      0x48},
-    {"PLA",      0x68},
+    {"PHX",      0xda},
+    {"PHY",      0x5a},
+    {"PHB",      0x8b},
+    {"PHD",      0x0b},
+    {"PHK",      0x4b},
     {"PHP",      0x08},
+
+    {"PLA",      0x68},
+    {"PLX",      0xfa},
+    {"PLY",      0x7a},
+    {"PLB",      0xab},
+    {"PLD",      0x2b},
     {"PLP",      0x28},
+
     {"CLC",      0x18},
     {"SEC",      0x38},
     {"CLI",      0x58},
@@ -1443,43 +1524,54 @@ static const OpcodeTable implied_opcodes[] =
 
 static const OpcodeTable branch_opcodes[] =
 {
-    {"BPL",	0x10},
-    {"BMI",	0x30},
-    {"BVC",	0x50},
-    {"BVS",	0x70},
-    {"BCC",	0x90},
-    {"BCS",	0xB0},
-    {"BNE",	0xD0},
-    {"BEQ",	0xF0},
+    {"BPL",     0x10},
+    {"BMI",     0x30},
+    {"BVC",     0x50},
+    {"BVS",     0x70},
+    {"BCC",     0x90},
+    {"BCS",     0xB0},
+    {"BNE",     0xD0},
+    {"BEQ",     0xF0},
     {NULL}
 };
 
 
 static const HandlerTable handler_table[] =
 {
-    {"ADC",	ADC},
-    {"AND",	AND},
-    {"ASL",	ASL},
-    {"BIT",	BIT},
-    {"CMP",	CMP},
-    {"CPX",	CPX},
-    {"CPY",	CPY},
-    {"DEC",	DEC},
-    {"EOR",	EOR},
-    {"INC",	INC},
-    {"JMP",	JMP},
-    {"JSR",	JSR},
-    {"LDA",	LDA},
-    {"LDX",	LDX},
-    {"LDY",	LDY},
-    {"LSR",	LSR},
-    {"ORA",	ORA},
-    {"ROL",	ROL},
-    {"ROR",	ROR},
-    {"SBC",	SBC},
-    {"STA",	STA},
-    {"STX",	STX},
-    {"STY",	STY},
+    {"M8",      MX8_16},
+    {"M16",     MX8_16},
+    {".M8",     MX8_16},
+    {".M16",    MX8_16},
+    {"X8",      MX8_16},
+    {"X16",     MX8_16},
+    {".X8",     MX8_16},
+    {".X16",    MX8_16},
+    {"MX",      MX8_16},
+    {".MX",     MX8_16},
+
+    {"ADC",     ADC},
+    {"AND",     AND},
+    {"ASL",     ASL},
+    {"BIT",     BIT},
+    {"CMP",     CMP},
+    {"CPX",     CPX},
+    {"CPY",     CPY},
+    {"DEC",     DEC},
+    {"EOR",     EOR},
+    {"INC",     INC},
+    {"JMP",     JMP},
+    {"JSR",     JSR},
+    {"LDA",     LDA},
+    {"LDX",     LDX},
+    {"LDY",     LDY},
+    {"LSR",     LSR},
+    {"ORA",     ORA},
+    {"ROL",     ROL},
+    {"ROR",     ROR},
+    {"SBC",     SBC},
+    {"STA",     STA},
+    {"STX",     STX},
+    {"STY",     STY},
     {NULL}
 };
 
@@ -1491,18 +1583,36 @@ static const HandlerTable handler_table[] =
 
 void Init_65c816(void)
 {
+    option.a16 = FALSE;
+    option.i16 = FALSE;
     SetNeededPasses(3);
 }
 
 
 const ValueTable *Options_65c816(void)
 {
-    return NULL;
+    return options;
 }
 
 CommandStatus SetOption_65c816(int opt, int argc, char *argv[],
                              int quoted[], char *err, size_t errsize)
 {
+    CMD_ARGC_CHECK(1);
+
+    switch(opt)
+    {
+        case OPT_A16:
+            option.a16 = ParseTrueFalse(argv[0], FALSE);
+            break;
+
+        case OPT_I16:
+            option.i16 = ParseTrueFalse(argv[0], FALSE);
+            break;
+
+        default:
+            break;
+    }
+
     return CMD_OK;
 }
 

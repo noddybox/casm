@@ -111,13 +111,13 @@ int ParseLine(Line *line, const char *source)
     static const char *quote_start_chars[2] =
     {
         "",
-        "\"'("
+        "\"'(["
     };
 
     static const char *quote_end_chars[2] =
     {
         "",
-        "\"')"
+        "\"')]"
     };
 
     const char *p = NULL;

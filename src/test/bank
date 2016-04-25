@@ -11,3 +11,6 @@
 	bank	1
 
 	defb	2
+
+	org $078000
+	defb	3

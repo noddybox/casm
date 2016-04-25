@@ -292,8 +292,10 @@ org <i>value</i>[, <i>bank</i>]
 </td>
 <td class="def">
 Sets the program counter (PC) to <i>value</i>.  The PC defaults to zero on
-initialisation.  If the optional second argument is passed the current memory
-bank in use is set to <i>bank</i>.
+initialisation.  If the optional second argument is passed the current memory  
+bank in use is set to <i>bank</i>.  Note that it also possible to set the
+bank by passing a 24-bit address.  This was added for convenience when using the
+65c618 processor.
 </td></tr>
 
 <tr><td class="cmd">

@@ -151,6 +151,15 @@ static CommandStatus ORG(const char *label, int argc, char *argv[],
     CMD_ARGC_CHECK(2);
     CMD_EXPR(argv[1], result);
 
+    /* See if a bank was added
+    */
+    if (result > 0xffff)
+    {
+        int bank = (result >> 16);
+        SetAddressBank(bank);
+        result &= 0xffff;
+    }
+
     SetPC(result);
 
     /* If there was a label, set that as well
