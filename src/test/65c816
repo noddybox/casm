@@ -1,0 +1,548 @@
+	cpu 65c816
+
+	org $8000
+
+	clc
+	xce
+
+	mx 16,16
+	rep #$30
+
+	adc ($10,x)
+	adc $32,s
+	adc $10
+	adc [$10]
+	adc #$54
+	adc $9876
+	adc $fedbca
+	adc ($10),y
+	adc ($10)
+	adc ($32,s),y
+	adc $10,x
+	adc [$10],y
+	adc $9876,y
+	adc $9876,x
+	adc $fedcba,x
+	sbc ($10,x)
+	sbc $32,s
+	sbc $10
+	sbc [$10]
+	sbc #$54
+	sbc $9876
+	sbc $fedbca
+	sbc ($10),y
+	sbc ($10)
+	sbc ($32,s),y
+	sbc $10,x
+	sbc [$10],y
+	sbc $9876,y
+	sbc $9876,x
+	sbc $fedcba,x
+	cmp ($10,x)
+	cmp $32,s
+	cmp $10
+	cmp [$10]
+	cmp #$54
+	cmp $9876
+	cmp $fedbca
+	cmp ($10),y
+	cmp ($10)
+	cmp ($32,s),y
+	cmp $10,x
+	cmp [$10],y
+	cmp $9876,y
+	cmp $9876,x
+	cmp $fedcba,x
+	cpx #$54
+	cpx $10
+	cpx $9876
+	cpy #$54
+	cpy $10
+	cpy $9876
+	dec
+	dec $10
+	dec $9876
+	dec $10,x
+	dec $9876,x
+	dex
+	dey
+	inc
+	inc $10
+	inc $9876
+	inc $10,x
+	inc $9876,x
+	inx
+	iny
+	and ($10,x)
+	and $32,s
+	and $10
+	and [$10]
+	and #$54
+	and $9876
+	and $fedbca
+	and ($10),y
+	and ($10)
+	and ($32,s),y
+	and $10,x
+	and [$10],y
+	and $9876,y
+	and $9876,x
+	and $fedcba,x
+	eor ($10,x)
+	eor $32,s
+	eor $10
+	eor [$10]
+	eor #$54
+	eor $9876
+	eor $fedbca
+	eor ($10),y
+	eor ($10)
+	eor ($32,s),y
+	eor $10,x
+	eor [$10],y
+	eor $9876,y
+	eor $9876,x
+	eor $fedcba,x
+	ora ($10,x)
+	ora $32,s
+	ora $10
+	ora [$10]
+	ora #$54
+	ora $9876
+	ora $fedbca
+	ora ($10),y
+	ora ($10)
+	ora ($32,s),y
+	ora $10,x
+	ora [$10],y
+	ora $9876,y
+	ora $9876,x
+	ora $fedcba,x
+	bit $10
+	bit $9876
+	bit $10,x
+	bit $9876,x
+	bit #$54
+	trb $10
+	trb $9876
+	tsb $10
+	tsb $9876
+	asl $10
+	asl
+	asl $9876
+	asl $10,x
+	asl $9876,x
+	lsr $10
+	lsr
+	lsr $9876
+	lsr $10,x
+	lsr $9876,x
+	rol $10
+	rol
+	rol $9876
+	rol $10,x
+	rol $9876,x
+	ror $10
+	ror
+	ror $9876
+	ror $10,x
+	ror $9876,x
+	bcc label1
+	bcs label1
+	beq label1
+	bmi label1
+	bne label1
+	bpl label1
+	bra label1
+	bvc label1
+	bvs label1
+	brl label1
+	brl label2
+
+label1:
+	nop
+	brk
+	.byte	255
+	nop
+	brk
+	.byte	$e5
+
+
+	jmp $1234
+	jmp $fedcba
+	jmp ($1234)
+	jmp ($1234,x)
+	jmp [$1234]
+	jsl $123456
+	jsr $1234
+	jsr ($1234,x)
+	rtl
+	rts
+	brk
+	cop #$12
+	rti
+	clc
+	cld
+	cli
+	clv
+	sec
+	sed
+	sei
+	rep #$12
+	sep #$12
+	lda ($10,x)
+	lda $32,s
+	lda $10
+	lda [$10]
+	lda #$54
+	lda $9876
+	lda $fedbca
+	lda ($10),y
+	lda ($10)
+	lda ($32,s),y
+	lda $10,x
+	lda [$10],y
+	lda $9876,y
+	lda $9876,x
+	lda $fedcba,x
+	ldx #$54
+	ldx $10
+	ldx $9876
+	ldx $10,y
+	ldx $9876,y
+	ldy #$54
+	ldy $10
+	ldy $9876
+	ldy $10,x
+	ldy $9876,x
+	sta ($10,x)
+	sta $32,s
+	sta $10
+	sta [$10]
+	sta $9876
+	sta $fedbca
+	sta ($10),y
+	sta ($10)
+	sta ($32,s),y
+	sta $10,x
+	sta [$10],y
+	sta $9876,y
+	sta $9876,x
+	sta $fedcba,x
+	stx $10
+	stx $9876
+	stx $10,y
+	sty $10
+	sty $9876
+	sty $10,x
+	stz $10
+	stz $10,x
+	stz $9876
+	stz $9876,x
+	mvn #$12,#$34
+	mvp #$12,#$34
+	nop
+	wdm
+	pea #$1234
+	pei $12
+	per label1
+	pha
+	phx
+	phy
+	pla
+	plx
+	ply
+	phb
+	phd
+	phk
+	php
+	plb
+	pld
+	plp
+	stp
+	wai
+	tax
+	tay
+	tsx
+	txa
+	txs
+	txy
+	tya
+	tyx
+	tcd
+	tcs
+	tdc
+	tsc
+	xba
+	xce
+
+
+	mx 8,8
+	sep #$30
+
+	adc ($10,x)
+	adc $32,s
+	adc $10
+	adc [$10]
+	adc #$54
+	adc $9876
+	adc $fedbca
+	adc ($10),y
+	adc ($10)
+	adc ($32,s),y
+	adc $10,x
+	adc [$10],y
+	adc $9876,y
+	adc $9876,x
+	adc $fedcba,x
+	sbc ($10,x)
+	sbc $32,s
+	sbc $10
+	sbc [$10]
+	sbc #$54
+	sbc $9876
+	sbc $fedbca
+	sbc ($10),y
+	sbc ($10)
+	sbc ($32,s),y
+	sbc $10,x
+	sbc [$10],y
+	sbc $9876,y
+	sbc $9876,x
+	sbc $fedcba,x
+	cmp ($10,x)
+	cmp $32,s
+	cmp $10
+	cmp [$10]
+	cmp #$54
+	cmp $9876
+	cmp $fedbca
+	cmp ($10),y
+	cmp ($10)
+	cmp ($32,s),y
+	cmp $10,x
+	cmp [$10],y
+	cmp $9876,y
+	cmp $9876,x
+	cmp $fedcba,x
+	cpx #$54
+	cpx $10
+	cpx $9876
+	cpy #$54
+	cpy $10
+	cpy $9876
+	dec
+	dec $10
+	dec $9876
+	dec $10,x
+	dec $9876,x
+	dex
+	dey
+	inc
+	inc $10
+	inc $9876
+	inc $10,x
+	inc $9876,x
+	inx
+	iny
+	and ($10,x)
+	and $32,s
+	and $10
+	and [$10]
+	and #$54
+	and $9876
+	and $fedbca
+	and ($10),y
+	and ($10)
+	and ($32,s),y
+	and $10,x
+	and [$10],y
+	and $9876,y
+	and $9876,x
+	and $fedcba,x
+	eor ($10,x)
+	eor $32,s
+	eor $10
+	eor [$10]
+	eor #$54
+	eor $9876
+	eor $fedbca
+	eor ($10),y
+	eor ($10)
+	eor ($32,s),y
+	eor $10,x
+	eor [$10],y
+	eor $9876,y
+	eor $9876,x
+	eor $fedcba,x
+	ora ($10,x)
+	ora $32,s
+	ora $10
+	ora [$10]
+	ora #$54
+	ora $9876
+	ora $fedbca
+	ora ($10),y
+	ora ($10)
+	ora ($32,s),y
+	ora $10,x
+	ora [$10],y
+	ora $9876,y
+	ora $9876,x
+	ora $fedcba,x
+	bit $10
+	bit $9876
+	bit $10,x
+	bit $9876,x
+	bit #$54
+	trb $10
+	trb $9876
+	tsb $10
+	tsb $9876
+	asl $10
+	asl
+	asl $9876
+	asl $10,x
+	asl $9876,x
+	lsr $10
+	lsr
+	lsr $9876
+	lsr $10,x
+	lsr $9876,x
+	rol $10
+	rol
+	rol $9876
+	rol $10,x
+	rol $9876,x
+	ror $10
+	ror
+	ror $9876
+	ror $10,x
+	ror $9876,x
+	bcc label2
+	bcs label2
+	beq label2
+	bmi label2
+	bne label2
+	bpl label2
+	bra label2
+	bvc label2
+	bvs label2
+	brl label1
+	brl label2
+
+label2:
+	nop
+	brk
+	.byte	0
+	nop
+	brk
+	.byte	$e5
+
+	jmp $1234
+	jmp $fedcba
+	jmp ($1234)
+	jmp ($1234,x)
+	jmp [$1234]
+	jsl $123456
+	jsr $1234
+	jsr ($1234,x)
+	rtl
+	rts
+	brk
+	cop #$12
+	rti
+	clc
+	cld
+	cli
+	clv
+	sec
+	sed
+	sei
+	rep #$12
+	sep #$12
+	lda ($10,x)
+	lda $32,s
+	lda $10
+	lda [$10]
+	lda #$54
+	lda $9876
+	lda $fedbca
+	lda ($10),y
+	lda ($10)
+	lda ($32,s),y
+	lda $10,x
+	lda [$10],y
+	lda $9876,y
+	lda $9876,x
+	lda $fedcba,x
+	ldx #$54
+	ldx $10
+	ldx $9876
+	ldx $10,y
+	ldx $9876,y
+	ldy #$54
+	ldy $10
+	ldy $9876
+	ldy $10,x
+	ldy $9876,x
+	sta ($10,x)
+	sta $32,s
+	sta $10
+	sta [$10]
+	sta $9876
+	sta $fedbca
+	sta ($10),y
+	sta ($10)
+	sta ($32,s),y
+	sta $10,x
+	sta [$10],y
+	sta $9876,y
+	sta $9876,x
+	sta $fedcba,x
+	stx $10
+	stx $9876
+	stx $10,y
+	sty $10
+	sty $9876
+	sty $10,x
+	stz $10
+	stz $10,x
+	stz $9876
+	stz $9876,x
+	mvn #$12,#$34
+	mvp #$12,#$34
+	nop
+	wdm
+	pea #$1234
+	pei $12
+	per label2
+	pha
+	phx
+	phy
+	pla
+	plx
+	ply
+	phb
+	phd
+	phk
+	php
+	plb
+	pld
+	plp
+	stp
+	wai
+	tax
+	tay
+	tsx
+	txa
+	txs
+	txy
+	tya
+	tyx
+	tcd
+	tcs
+	tdc
+	tsc
+	xba
+	xce

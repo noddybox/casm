@@ -64,6 +64,12 @@ char    *Trim(char *p);
 int     CompareString(const char *a, const char *b);
 
 
+/* Compare a character, but case insensitive.  Returns TRUE for match, otherwise
+   FALSE.
+*/
+int     CompareChar(char a, char b);
+
+
 /* Compare the start of a string 'a' starts with string 'b', but case
    insensitive.  Returns TRUE for match, otherwise FALSE.
 */

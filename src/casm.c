@@ -47,6 +47,7 @@
 #include "z80.h"
 #include "6502.h"
 #include "gbcpu.h"
+#include "65c816.h"
 
 
 /* ---------------------------------------- MACROS
@@ -106,6 +107,12 @@ static const CPU cpu_table[]=
         0x10000,
         LSB_Word,
         Init_GBCPU, Options_GBCPU, SetOption_GBCPU, Handler_GBCPU
+    },
+    {
+        "65c816",
+        0x10000,
+        LSB_Word,
+        Init_65c816, Options_65c816, SetOption_65c816, Handler_65c816
     },
 
     {NULL}

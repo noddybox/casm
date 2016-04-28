@@ -136,6 +136,12 @@ int CompareString(const char *a, const char *b)
 }
 
 
+int CompareChar(char a, char b)
+{
+    return tolower((unsigned char)a) == tolower((unsigned char)b);
+}
+
+
 int CompareStart(const char *a, const char *b)
 {
     while(*a && *b)

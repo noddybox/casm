@@ -85,7 +85,7 @@ typedef enum
     RELATIVE_LONG,                      /* rrrr         */
     STACK_RELATIVE_INDIRECT_INDEX_Y,    /* (sr,S),Y     */
     STACK_RELATIVE,                     /* sr,S         */
-    STACK_IMMEDIATE                     /* #$nnnn       */
+    STACK_IMMEDIATE,                    /* #$nnnn       */
     STACK_DIRECT_PAGE_INDIRECT,         /* ($nn)        */
     STACK_PC_LONG,                      /* #$nnnn       */
     ADDR_MODE_ERROR,
@@ -119,7 +119,7 @@ static const char *address_mode_name[ADDR_MODE_UNKNOWN+1] =
     "Stack Relative",
     "Stack Immediate",
     "Stack Direct Page Indirect",
-    "Stack Program Counter Relative Long:,
+    "Stack Program Counter Relative Long",
     "Address Mode Error",
     "Address Mode Unknown"
 };
@@ -146,11 +146,11 @@ do                                                                      \
 #define CMD_RANGE_ADDR_MODE(mode, dp_mode, norm_mode, long_mode, value) \
 do                                                                      \
 {                                                                       \
-    if (value >= 0 && value <= 0xff)                                    \
+    if (*value >= 0 && *value <= 0xff)                                  \
     {                                                                   \
         *mode = dp_mode;                                                \
     }                                                                   \
-    else if (value > 0xffff)                                            \
+    else if (*value > 0xffff)                                           \
     {                                                                   \
         *mode = long_mode;                                              \
     }                                                                   \
@@ -158,11 +158,74 @@ do                                                                      \
     {                                                                   \
         *mode = norm_mode;                                              \
     }                                                                   \
+    if (*mode == ADDR_MODE_ERROR && IsFinalPass())                      \
+    {                                                                   \
+        snprintf(err, errsize, "%s: value %d out of range of allowable "\
+                                "addressing modes", argv[1], *value);   \
+    }                                                                   \
 } while (0)
 
 
 /* ---------------------------------------- PRIVATE FUNCTIONS
 */
+static void PCWrite24(int val)
+{
+    val = ExprConvert(24, val);
+    PCWrite(val);
+    PCWriteWord(val >> 8);
+}
+
+
+static void PCWrite8_16_A(int val)
+{
+    if (option.a16)
+    {
+        PCWriteWord(val);
+    }
+    else
+    {
+        PCWrite(val);
+    }
+}
+
+
+static void PCWrite8_16_XY(int val)
+{
+    if (option.i16)
+    {
+        PCWriteWord(val);
+    }
+    else
+    {
+        PCWrite(val);
+    }
+}
+
+
+static char *HasIndex(const char *str, char *index_char)
+{
+    char *comma;
+
+    comma = strchr(str, ',');
+    
+    if (comma)
+    {
+        char *a;
+
+        a = DupStr(str);
+        comma = strchr(a, ',');
+
+        *comma++ = 0;
+        *index_char = *comma;
+
+        return a;
+    }
+    else
+    {
+        return NULL;
+    }
+}
+
 static void CalcAddressMode(int argc, char *argv[], int quoted[],
                             char *err, size_t errsize,
                             address_mode_t *mode, int *address)
@@ -170,7 +233,7 @@ static void CalcAddressMode(int argc, char *argv[], int quoted[],
     *mode = ADDR_MODE_UNKNOWN;
     *address = 0;
 
-    /* Implied
+    /* Handle: IMPLIED
     */
     if (argc == 1)
     {
@@ -178,7 +241,7 @@ static void CalcAddressMode(int argc, char *argv[], int quoted[],
         return;
     }
 
-    /* Accumulator
+    /* Handle: ACCUMULATOR
     */
     if (argc == 2 && CompareString(argv[1], "A"))
     {
@@ -186,7 +249,9 @@ static void CalcAddressMode(int argc, char *argv[], int quoted[],
         return;
     }
 
-    /* Immediate
+    /* Handle: IMMEDIATE
+       Handle: STACK_IMMEDIATE
+       Handle: STACK_PC_LONG
     */
     if (argc == 2 && argv[1][0] == '#')
     {
@@ -203,7 +268,9 @@ static void CalcAddressMode(int argc, char *argv[], int quoted[],
     }
 
 
-    /* Absolute
+    /* Handle: ABSOLUTE
+       Handle: ABSOLUTE_LONG
+       Handle: DIRECT_PAGE
     */
     if (argc == 2 && !quoted[1])
     {
@@ -225,21 +292,58 @@ static void CalcAddressMode(int argc, char *argv[], int quoted[],
     }
 
 
-    /* Absolute Indirect
+    /* Handle: ABSOLUTE_INDIRECT
+       Handle: DIRECT_PAGE_INDIRECT
+       Handle: STACK_DIRECT_PAGE_INDIRECT
+       Handle: ABSOLUTE_INDEX_X_INDIRECT
+       Handle: DIRECT_PAGE_INDEX_X_INDIRECT
     */
-    if (argc == 1 && quoted[1] == '(')
+    if (argc == 2 && quoted[1] == '(')
     {
-        if (!ExprEval(argv[1], address))
+        char *new;
+        char index;
+
+        if (!(new = HasIndex(argv[1], &index)))
         {
-            snprintf(err, errsize, "%s: expression error:  %s",
-                                        argv[1], ExprError());
-            *mode = ADDR_MODE_ERROR;
+            if (!ExprEval(argv[1], address))
+            {
+                snprintf(err, errsize, "%s: expression error:  %s",
+                                            argv[1], ExprError());
+                *mode = ADDR_MODE_ERROR;
+                return;
+            }
+
+            CMD_RANGE_ADDR_MODE(mode,
+                                DIRECT_PAGE_INDIRECT,
+                                ABSOLUTE_INDIRECT,
+                                ADDR_MODE_ERROR,
+                                address);
+
             return;
         }
 
+        if (!CompareChar(index, 'x'))
+        {
+            snprintf(err, errsize, "illegal index register '%s'", argv[1]);
+            *mode = ADDR_MODE_ERROR;
+            free(new);
+            return;
+        }
+
+        if (!ExprEval(new, address))
+        {
+            snprintf(err, errsize, "%s: expression error:  %s",
+                                        new, ExprError());
+            *mode = ADDR_MODE_ERROR;
+            free(new);
+            return;
+        }
+
+        free(new);
+
         CMD_RANGE_ADDR_MODE(mode,
-                            DIRECT_PAGE_INDIRECT,
-                            ABSOLUTE_INDIRECT,
+                            DIRECT_PAGE_INDEX_X_INDIRECT,
+                            ABSOLUTE_INDEX_X_INDIRECT,
                             ADDR_MODE_ERROR,
                             address);
 
@@ -247,9 +351,10 @@ static void CalcAddressMode(int argc, char *argv[], int quoted[],
     }
 
 
-    /* Absolute Indirect Long
+    /* Handle: ABSOLUTE_INDIRECT_LONG
+       Handle: DIRECT_PAGE_INDIRECT_LONG
     */
-    if (argc == 1 && quoted[1] == '[')
+    if (argc == 2 && quoted[1] == '[')
     {
         if (!ExprEval(argv[1], address))
         {
@@ -269,7 +374,12 @@ static void CalcAddressMode(int argc, char *argv[], int quoted[],
     }
 
 
-    /* Absolute,[XY]
+    /* Handle: DIRECT_PAGE_INDEX_X
+       Handle: ABSOLUTE_INDEX_X
+       Handle: ABSOLUTE_LONG_INDEX_X
+       Handle: DIRECT_PAGE_INDEX_Y
+       Handle: ABSOLUTE_INDEX_Y
+       Handle: STACK_RELATIVE
     */
     if (argc == 3 && !quoted[1])
     {
@@ -292,10 +402,14 @@ static void CalcAddressMode(int argc, char *argv[], int quoted[],
         else if (CompareString(argv[2], "Y"))
         {
             CMD_RANGE_ADDR_MODE(mode,
-                                DIRECT_PAGE_INDEX_X,
-                                ABSOLUTE_INDEX_X,
-                                ABSOLUTE_LONG_INDEX_X,
+                                DIRECT_PAGE_INDEX_Y,
+                                ABSOLUTE_INDEX_Y,
+                                ADDR_MODE_ERROR,
                                 address);
+        }
+        else if (CompareString(argv[2], "S"))
+        {
+            *mode = STACK_RELATIVE;
         }
         else
         {
@@ -308,13 +422,68 @@ static void CalcAddressMode(int argc, char *argv[], int quoted[],
     }
 
 
-    /* (zp,x) or (ind)
+    /* Handle: DIRECT_PAGE_INDEX_Y_INDIRECT
+       Handle: DIRECT_PAGE_INDEX_Y_INDIRECT_LONG
+       Handle: STACK_RELATIVE_INDIRECT_INDEX_Y
     */
-    if (argc == 2 && quoted[1] == '(')
+    if (argc == 3 && (quoted[1] == '(' || quoted[1] == '['))
     {
-        char *addr;
+        if (!CompareString(argv[2], "y"))
+        {
+            snprintf(err, errsize, "illegal index register '%s' used for "
+                                        "addressing mode", argv[2]);
+            *mode = ADDR_MODE_ERROR;
+            return;
+        }
 
-        if (!CompareEnd(argv[1], ",x"))
+        if (quoted[1] == '(')
+        {
+            char index;
+            char *new;
+
+            if (!(new = HasIndex(argv[1], &index)))
+            {
+                if (!ExprEval(argv[1], address))
+                {
+                    snprintf(err, errsize, "%s: expression error:  %s",
+                                                argv[1], ExprError());
+                    *mode = ADDR_MODE_ERROR;
+                    return;
+                }
+
+                CMD_RANGE_ADDR_MODE(mode,
+                                    DIRECT_PAGE_INDEX_Y_INDIRECT,
+                                    ADDR_MODE_ERROR,
+                                    ADDR_MODE_ERROR,
+                                    address);
+
+                return;
+            }
+
+            if (!CompareChar(index, 's'))
+            {
+                snprintf(err, errsize, "illegal index register '%c'", index);
+                *mode = ADDR_MODE_ERROR;
+                free(new);
+                return;
+            }
+
+            if (!ExprEval(new, address))
+            {
+                snprintf(err, errsize, "%s: expression error:  %s",
+                                            new, ExprError());
+                *mode = ADDR_MODE_ERROR;
+                free(new);
+                return;
+            }
+
+            CMD_RANGE_ADDR_MODE(mode,
+                                STACK_RELATIVE_INDIRECT_INDEX_Y,
+                                ADDR_MODE_ERROR,
+                                ADDR_MODE_ERROR,
+                                address);
+        }
+        else
         {
             if (!ExprEval(argv[1], address))
             {
@@ -324,64 +493,11 @@ static void CalcAddressMode(int argc, char *argv[], int quoted[],
                 return;
             }
 
-            *mode = INDIRECT;
-            return;
-        }
-
-        *mode = ZERO_PAGE_INDIRECT_X;
-
-        addr = DupStr(argv[1]);
-        *strchr(addr, ',') = 0;
-
-        if (!ExprEval(addr, address))
-        {
-            snprintf(err, errsize, "%s: expression error:  %s",
-                                        addr, ExprError());
-            *mode = ADDR_MODE_ERROR;
-            free(addr);
-            return;
-        }
-
-        free(addr);
-
-        if (*address < 0 || *address > 255)
-        {
-            snprintf(err, errsize, "value %d outside of zero page", *address);
-            *mode = ADDR_MODE_ERROR;
-            return;
-        }
-
-        return;
-    }
-
-
-    /* (zp),y
-    */
-    if (argc == 3 && quoted[1] == '(')
-    {
-        *mode = ZERO_PAGE_INDIRECT_Y;
-
-        if (!CompareString(argv[2], "y"))
-        {
-            snprintf(err, errsize, "illegal index register '%s' used for "
-                                        "zero-page indirect", argv[2]);
-            *mode = ADDR_MODE_ERROR;
-            return;
-        }
-
-        if (!ExprEval(argv[1], address))
-        {
-            snprintf(err, errsize, "%s: expression error:  %s",
-                                        argv[1], ExprError());
-            *mode = ADDR_MODE_ERROR;
-            return;
-        }
-
-        if (*address < 0 || *address > 255)
-        {
-            snprintf(err, errsize, "value %d outside of zero page", *address);
-            *mode = ADDR_MODE_ERROR;
-            return;
+            CMD_RANGE_ADDR_MODE(mode,
+                                DIRECT_PAGE_INDEX_Y_INDIRECT_LONG,
+                                ADDR_MODE_ERROR,
+                                ADDR_MODE_ERROR,
+                                address);
         }
 
         return;
@@ -431,7 +547,7 @@ static CommandStatus MX8_16(const char *label, int argc, char *argv[],
             CMD_EXPR(argv[1], asize);
             CMD_EXPR(argv[2], isize);
 
-            if ((asize !=8 && asize != 8) || (isize != 8 && isize != 16))
+            if ((asize !=8 && asize != 16) || (isize != 8 && isize != 16))
             {
                 snprintf(err, errsize, "%s: unsupported regsiter sizes %s,%s",
                                             argv[0], argv[1], argv[2]);
@@ -450,120 +566,107 @@ static CommandStatus MX8_16(const char *label, int argc, char *argv[],
     return CMD_FAILED;
 }
 
+#define COMMON(base)                                                    \
+do {                                                                    \
+    address_mode_t mode;                                                \
+    int address;                                                        \
+                                                                        \
+    CMD_ADDRESS_MODE(mode, address);                                    \
+                                                                        \
+    switch(mode)                                                        \
+    {                                                                   \
+        case DIRECT_PAGE_INDEX_X_INDIRECT:                              \
+            PCWrite(base + 0x01);                                       \
+            PCWrite(address);                                           \
+            return CMD_OK;                                              \
+                                                                        \
+        case STACK_RELATIVE:                                            \
+            PCWrite(base + 0x03);                                       \
+            PCWrite(address);                                           \
+            return CMD_OK;                                              \
+                                                                        \
+        case DIRECT_PAGE:                                               \
+            PCWrite(base + 0x05);                                       \
+            PCWrite(address);                                           \
+            break;                                                      \
+                                                                        \
+        case DIRECT_PAGE_INDIRECT_LONG:                                 \
+            PCWrite(base + 0x07);                                       \
+            PCWrite(address);                                           \
+            return CMD_OK;                                              \
+                                                                        \
+        case IMMEDIATE:                                                 \
+            PCWrite(base + 0x09);                                       \
+            PCWrite8_16_A(address);                                     \
+            return CMD_OK;                                              \
+                                                                        \
+        case ABSOLUTE:                                                  \
+            PCWrite(base + 0x0d);                                       \
+            PCWriteWord(address);                                       \
+            return CMD_OK;                                              \
+                                                                        \
+        case ABSOLUTE_LONG:                                             \
+            PCWrite(base + 0x0f);                                       \
+            PCWrite24(address);                                         \
+            return CMD_OK;                                              \
+                                                                        \
+        case DIRECT_PAGE_INDEX_Y_INDIRECT:                              \
+            PCWrite(base + 0x11);                                       \
+            PCWrite(address);                                           \
+            return CMD_OK;                                              \
+                                                                        \
+        case DIRECT_PAGE_INDIRECT:                                      \
+            PCWrite(base + 0x12);                                       \
+            PCWrite(address);                                           \
+            return CMD_OK;                                              \
+                                                                        \
+        case STACK_RELATIVE_INDIRECT_INDEX_Y:                           \
+            PCWrite(base + 0x13);                                       \
+            PCWrite(address);                                           \
+            return CMD_OK;                                              \
+                                                                        \
+        case DIRECT_PAGE_INDEX_X:                                       \
+            PCWrite(base + 0x15);                                       \
+            PCWrite(address);                                           \
+            return CMD_OK;                                              \
+                                                                        \
+        case DIRECT_PAGE_INDEX_Y_INDIRECT_LONG:                         \
+            PCWrite(base + 0x17);                                       \
+            PCWrite(address);                                           \
+            return CMD_OK;                                              \
+                                                                        \
+        case ABSOLUTE_INDEX_Y:                                          \
+            PCWrite(base + 0x19);                                       \
+            PCWriteWord(address);                                       \
+            return CMD_OK;                                              \
+                                                                        \
+        case ABSOLUTE_INDEX_X:                                          \
+            PCWrite(base + 0x1d);                                       \
+            PCWriteWord(address);                                       \
+            return CMD_OK;                                              \
+                                                                        \
+        case ABSOLUTE_LONG_INDEX_X:                                     \
+            PCWrite(base + 0x1f);                                       \
+            PCWrite24(address);                                         \
+            return CMD_OK;                                              \
+                                                                        \
+        default:                                                        \
+            snprintf(err, errsize, "%s: unsupported addressing mode %s",\
+                                            argv[0], address_mode_name[mode]);\
+            return CMD_FAILED;                                          \
+    }                                                                   \
+} while(0)
+
 static CommandStatus ADC(const char *label, int argc, char *argv[],
                          int quoted[], char *err, size_t errsize)
 {
-    address_mode_t mode;
-    int address;
-
-    CMD_ADDRESS_MODE(mode, address);
-
-    switch(mode)
-    {
-        case IMMEDIATE:
-            PCWrite(0x69);
-            PCWrite(address);
-            return CMD_OK;
-
-        case ABSOLUTE:
-            PCWrite(0x6d);
-            PCWriteWord(address);
-            return CMD_OK;
-
-        case ZERO_PAGE:
-            PCWrite(0x65);
-            PCWrite(address);
-            return CMD_OK;
-
-        case ABSOLUTE_INDEX_X:
-            PCWrite(0x7d);
-            PCWriteWord(address);
-            return CMD_OK;
-
-        case ABSOLUTE_INDEX_Y:
-        case ZERO_PAGE_INDEX_Y:
-            PCWrite(0x79);
-            PCWriteWord(address);
-            return CMD_OK;
-
-        case ZERO_PAGE_INDEX_X:
-            PCWrite(0x75);
-            PCWrite(address);
-            return CMD_OK;
-
-        case ZERO_PAGE_INDIRECT_X:
-            PCWrite(0x61);
-            PCWrite(address);
-            return CMD_OK;
-
-        case ZERO_PAGE_INDIRECT_Y:
-            PCWrite(0x71);
-            PCWrite(address);
-            return CMD_OK;
-
-        default:
-            snprintf(err, errsize, "%s: unsupported addressing mode %s",
-                                            argv[0], address_mode_name[mode]);
-            return CMD_FAILED;
-    }
+    COMMON(0x60);
 }
 
 static CommandStatus AND(const char *label, int argc, char *argv[],
                          int quoted[], char *err, size_t errsize)
 {
-    address_mode_t mode;
-    int address;
-
-    CMD_ADDRESS_MODE(mode, address);
-
-    switch(mode)
-    {
-        case IMMEDIATE:
-            PCWrite(0x29);
-            PCWrite(address);
-            return CMD_OK;
-
-        case ABSOLUTE:
-            PCWrite(0x2d);
-            PCWriteWord(address);
-            return CMD_OK;
-
-        case ZERO_PAGE:
-            PCWrite(0x25);
-            PCWrite(address);
-            return CMD_OK;
-
-        case ABSOLUTE_INDEX_X:
-            PCWrite(0x3d);
-            PCWriteWord(address);
-            return CMD_OK;
-
-        case ABSOLUTE_INDEX_Y:
-        case ZERO_PAGE_INDEX_Y:
-            PCWrite(0x39);
-            PCWriteWord(address);
-            return CMD_OK;
-
-        case ZERO_PAGE_INDEX_X:
-            PCWrite(0x35);
-            PCWrite(address);
-            return CMD_OK;
-
-        case ZERO_PAGE_INDIRECT_X:
-            PCWrite(0x21);
-            PCWrite(address);
-            return CMD_OK;
-
-        case ZERO_PAGE_INDIRECT_Y:
-            PCWrite(0x31);
-            PCWrite(address);
-            return CMD_OK;
-
-        default:
-            snprintf(err, errsize, "%s: unsupported addressing mode %s",
-                                            argv[0], address_mode_name[mode]);
-            return CMD_FAILED;
-    }
+    COMMON(0x20);
 }
 
 static CommandStatus ASL(const char *label, int argc, char *argv[],
@@ -576,6 +679,11 @@ static CommandStatus ASL(const char *label, int argc, char *argv[],
 
     switch(mode)
     {
+        case DIRECT_PAGE:
+            PCWrite(0x06);
+            PCWrite(address);
+            return CMD_OK;
+
         case IMPLIED:
         case ACCUMULATOR:
             PCWrite(0x0a);
@@ -586,19 +694,14 @@ static CommandStatus ASL(const char *label, int argc, char *argv[],
             PCWriteWord(address);
             return CMD_OK;
 
-        case ZERO_PAGE:
-            PCWrite(0x06);
+        case DIRECT_PAGE_INDEX_X:
+            PCWrite(0x16);
             PCWrite(address);
             return CMD_OK;
 
         case ABSOLUTE_INDEX_X:
             PCWrite(0x1e);
             PCWriteWord(address);
-            return CMD_OK;
-
-        case ZERO_PAGE_INDEX_X:
-            PCWrite(0x16);
-            PCWrite(address);
             return CMD_OK;
 
         default:
@@ -618,14 +721,83 @@ static CommandStatus BIT(const char *label, int argc, char *argv[],
 
     switch(mode)
     {
+        case DIRECT_PAGE:
+            PCWrite(0x24);
+            PCWrite(address);
+            return CMD_OK;
+
         case ABSOLUTE:
             PCWrite(0x2c);
             PCWriteWord(address);
             return CMD_OK;
 
-        case ZERO_PAGE:
-            PCWrite(0x24);
+        case DIRECT_PAGE_INDEX_X:
+            PCWrite(0x34);
+            PCWriteWord(address);
+            return CMD_OK;
+
+        case ABSOLUTE_INDEX_X:
+            PCWrite(0x3c);
+            PCWriteWord(address);
+            return CMD_OK;
+
+        case IMMEDIATE:
+            PCWrite(0x89);
+            PCWrite8_16_A(address);
+            return CMD_OK;
+
+        default:
+            snprintf(err, errsize, "%s: unsupported addressing mode %s",
+                                            argv[0], address_mode_name[mode]);
+            return CMD_FAILED;
+    }
+}
+
+static CommandStatus TRB(const char *label, int argc, char *argv[],
+                         int quoted[], char *err, size_t errsize)
+{
+    address_mode_t mode;
+    int address;
+
+    CMD_ADDRESS_MODE(mode, address);
+
+    switch(mode)
+    {
+        case DIRECT_PAGE:
+            PCWrite(0x14);
             PCWrite(address);
+            return CMD_OK;
+
+        case ABSOLUTE:
+            PCWrite(0x1c);
+            PCWriteWord(address);
+            return CMD_OK;
+
+        default:
+            snprintf(err, errsize, "%s: unsupported addressing mode %s",
+                                            argv[0], address_mode_name[mode]);
+            return CMD_FAILED;
+    }
+}
+
+static CommandStatus TSB(const char *label, int argc, char *argv[],
+                         int quoted[], char *err, size_t errsize)
+{
+    address_mode_t mode;
+    int address;
+
+    CMD_ADDRESS_MODE(mode, address);
+
+    switch(mode)
+    {
+        case DIRECT_PAGE:
+            PCWrite(0x04);
+            PCWrite(address);
+            return CMD_OK;
+
+        case ABSOLUTE:
+            PCWrite(0x0c);
+            PCWriteWord(address);
             return CMD_OK;
 
         default:
@@ -638,59 +810,7 @@ static CommandStatus BIT(const char *label, int argc, char *argv[],
 static CommandStatus CMP(const char *label, int argc, char *argv[],
                          int quoted[], char *err, size_t errsize)
 {
-    address_mode_t mode;
-    int address;
-
-    CMD_ADDRESS_MODE(mode, address);
-
-    switch(mode)
-    {
-        case IMMEDIATE:
-            PCWrite(0xc9);
-            PCWrite(address);
-            return CMD_OK;
-
-        case ABSOLUTE:
-            PCWrite(0xcd);
-            PCWriteWord(address);
-            return CMD_OK;
-
-        case ZERO_PAGE:
-            PCWrite(0xc5);
-            PCWrite(address);
-            return CMD_OK;
-
-        case ABSOLUTE_INDEX_X:
-            PCWrite(0xdd);
-            PCWriteWord(address);
-            return CMD_OK;
-
-        case ABSOLUTE_INDEX_Y:
-        case ZERO_PAGE_INDEX_Y:
-            PCWrite(0xd9);
-            PCWriteWord(address);
-            return CMD_OK;
-
-        case ZERO_PAGE_INDEX_X:
-            PCWrite(0xd5);
-            PCWrite(address);
-            return CMD_OK;
-
-        case ZERO_PAGE_INDIRECT_X:
-            PCWrite(0xc1);
-            PCWrite(address);
-            return CMD_OK;
-
-        case ZERO_PAGE_INDIRECT_Y:
-            PCWrite(0xd1);
-            PCWrite(address);
-            return CMD_OK;
-
-        default:
-            snprintf(err, errsize, "%s: unsupported addressing mode %s",
-                                            argv[0], address_mode_name[mode]);
-            return CMD_FAILED;
-    }
+    COMMON(0xc0);
 }
 
 static CommandStatus CPX(const char *label, int argc, char *argv[],
@@ -705,7 +825,7 @@ static CommandStatus CPX(const char *label, int argc, char *argv[],
     {
         case IMMEDIATE:
             PCWrite(0xe0);
-            PCWrite(address);
+            PCWrite8_16_XY(address);
             return CMD_OK;
 
         case ABSOLUTE:
@@ -713,7 +833,7 @@ static CommandStatus CPX(const char *label, int argc, char *argv[],
             PCWriteWord(address);
             return CMD_OK;
 
-        case ZERO_PAGE:
+        case DIRECT_PAGE:
             PCWrite(0xe4);
             PCWrite(address);
             return CMD_OK;
@@ -737,7 +857,7 @@ static CommandStatus CPY(const char *label, int argc, char *argv[],
     {
         case IMMEDIATE:
             PCWrite(0xc0);
-            PCWrite(address);
+            PCWrite8_16_XY(address);
             return CMD_OK;
 
         case ABSOLUTE:
@@ -745,7 +865,7 @@ static CommandStatus CPY(const char *label, int argc, char *argv[],
             PCWriteWord(address);
             return CMD_OK;
 
-        case ZERO_PAGE:
+        case DIRECT_PAGE:
             PCWrite(0xc4);
             PCWrite(address);
             return CMD_OK;
@@ -767,24 +887,29 @@ static CommandStatus DEC(const char *label, int argc, char *argv[],
 
     switch(mode)
     {
+        case IMPLIED:
+        case ACCUMULATOR:
+            PCWrite(0x3a);
+            return CMD_OK;
+
+        case DIRECT_PAGE:
+            PCWrite(0xc6);
+            PCWrite(address);
+            return CMD_OK;
+
         case ABSOLUTE:
             PCWrite(0xce);
             PCWriteWord(address);
             return CMD_OK;
 
-        case ZERO_PAGE:
-            PCWrite(0xc6);
+        case DIRECT_PAGE_INDEX_X:
+            PCWrite(0xd6);
             PCWrite(address);
             return CMD_OK;
 
         case ABSOLUTE_INDEX_X:
-            PCWrite(0xde);
+            PCWrite(0xce);
             PCWriteWord(address);
-            return CMD_OK;
-
-        case ZERO_PAGE_INDEX_X:
-            PCWrite(0xd6);
-            PCWrite(address);
             return CMD_OK;
 
         default:
@@ -797,59 +922,7 @@ static CommandStatus DEC(const char *label, int argc, char *argv[],
 static CommandStatus EOR(const char *label, int argc, char *argv[],
                          int quoted[], char *err, size_t errsize)
 {
-    address_mode_t mode;
-    int address;
-
-    CMD_ADDRESS_MODE(mode, address);
-
-    switch(mode)
-    {
-        case IMMEDIATE:
-            PCWrite(0x49);
-            PCWrite(address);
-            return CMD_OK;
-
-        case ABSOLUTE:
-            PCWrite(0x4d);
-            PCWriteWord(address);
-            return CMD_OK;
-
-        case ZERO_PAGE:
-            PCWrite(0x45);
-            PCWrite(address);
-            return CMD_OK;
-
-        case ABSOLUTE_INDEX_X:
-            PCWrite(0x5d);
-            PCWriteWord(address);
-            return CMD_OK;
-
-        case ABSOLUTE_INDEX_Y:
-        case ZERO_PAGE_INDEX_Y:
-            PCWrite(0x59);
-            PCWriteWord(address);
-            return CMD_OK;
-
-        case ZERO_PAGE_INDEX_X:
-            PCWrite(0x55);
-            PCWrite(address);
-            return CMD_OK;
-
-        case ZERO_PAGE_INDIRECT_X:
-            PCWrite(0x41);
-            PCWrite(address);
-            return CMD_OK;
-
-        case ZERO_PAGE_INDIRECT_Y:
-            PCWrite(0x51);
-            PCWrite(address);
-            return CMD_OK;
-
-        default:
-            snprintf(err, errsize, "%s: unsupported addressing mode %s",
-                                            argv[0], address_mode_name[mode]);
-            return CMD_FAILED;
-    }
+    COMMON(0x40);
 }
 
 static CommandStatus INC(const char *label, int argc, char *argv[],
@@ -862,24 +935,29 @@ static CommandStatus INC(const char *label, int argc, char *argv[],
 
     switch(mode)
     {
+        case IMPLIED:
+        case ACCUMULATOR:
+            PCWrite(0x1a);
+            return CMD_OK;
+
+        case DIRECT_PAGE:
+            PCWrite(0xe6);
+            PCWrite(address);
+            return CMD_OK;
+
         case ABSOLUTE:
             PCWrite(0xee);
             PCWriteWord(address);
             return CMD_OK;
 
-        case ZERO_PAGE:
-            PCWrite(0xe6);
+        case DIRECT_PAGE_INDEX_X:
+            PCWrite(0xf6);
             PCWrite(address);
             return CMD_OK;
 
         case ABSOLUTE_INDEX_X:
             PCWrite(0xfe);
             PCWriteWord(address);
-            return CMD_OK;
-
-        case ZERO_PAGE_INDEX_X:
-            PCWrite(0xf6);
-            PCWrite(address);
             return CMD_OK;
 
         default:
@@ -899,15 +977,54 @@ static CommandStatus JMP(const char *label, int argc, char *argv[],
 
     switch(mode)
     {
+        case DIRECT_PAGE:
         case ABSOLUTE:
-        case ZERO_PAGE:
             PCWrite(0x4c);
             PCWriteWord(address);
             return CMD_OK;
 
-        case INDIRECT:
+        case ABSOLUTE_LONG:
+            PCWrite(0x5c);
+            PCWrite24(address);
+            return CMD_OK;
+
+        case ABSOLUTE_INDIRECT:
             PCWrite(0x6c);
             PCWriteWord(address);
+            return CMD_OK;
+
+        case ABSOLUTE_INDEX_X_INDIRECT:
+            PCWrite(0x7c);
+            PCWriteWord(address);
+            return CMD_OK;
+
+        case ABSOLUTE_INDIRECT_LONG:
+            PCWrite(0xdc);
+            PCWriteWord(address);
+            return CMD_OK;
+
+        default:
+            snprintf(err, errsize, "%s: unsupported addressing mode %s",
+                                            argv[0], address_mode_name[mode]);
+            return CMD_FAILED;
+    }
+}
+
+static CommandStatus JSL(const char *label, int argc, char *argv[],
+                         int quoted[], char *err, size_t errsize)
+{
+    address_mode_t mode;
+    int address;
+
+    CMD_ADDRESS_MODE(mode, address);
+
+    switch(mode)
+    {
+        case DIRECT_PAGE:
+        case ABSOLUTE:
+        case ABSOLUTE_LONG:
+            PCWrite(0x22);
+            PCWrite24(address);
             return CMD_OK;
 
         default:
@@ -928,8 +1045,13 @@ static CommandStatus JSR(const char *label, int argc, char *argv[],
     switch(mode)
     {
         case ABSOLUTE:
-        case ZERO_PAGE:
+        case DIRECT_PAGE:
             PCWrite(0x20);
+            PCWriteWord(address);
+            return CMD_OK;
+
+        case ABSOLUTE_INDEX_X_INDIRECT:
+            PCWrite(0xfc);
             PCWriteWord(address);
             return CMD_OK;
 
@@ -943,59 +1065,7 @@ static CommandStatus JSR(const char *label, int argc, char *argv[],
 static CommandStatus LDA(const char *label, int argc, char *argv[],
                          int quoted[], char *err, size_t errsize)
 {
-    address_mode_t mode;
-    int address;
-
-    CMD_ADDRESS_MODE(mode, address);
-
-    switch(mode)
-    {
-        case IMMEDIATE:
-            PCWrite(0xa9);
-            PCWrite(address);
-            return CMD_OK;
-
-        case ABSOLUTE:
-            PCWrite(0xad);
-            PCWriteWord(address);
-            return CMD_OK;
-
-        case ZERO_PAGE:
-            PCWrite(0xa5);
-            PCWrite(address);
-            return CMD_OK;
-
-        case ABSOLUTE_INDEX_X:
-            PCWrite(0xbd);
-            PCWriteWord(address);
-            return CMD_OK;
-
-        case ABSOLUTE_INDEX_Y:
-        case ZERO_PAGE_INDEX_Y:
-            PCWrite(0xb9);
-            PCWriteWord(address);
-            return CMD_OK;
-
-        case ZERO_PAGE_INDEX_X:
-            PCWrite(0xb5);
-            PCWrite(address);
-            return CMD_OK;
-
-        case ZERO_PAGE_INDIRECT_X:
-            PCWrite(0xa1);
-            PCWrite(address);
-            return CMD_OK;
-
-        case ZERO_PAGE_INDIRECT_Y:
-            PCWrite(0xb1);
-            PCWrite(address);
-            return CMD_OK;
-
-        default:
-            snprintf(err, errsize, "%s: unsupported addressing mode %s",
-                                            argv[0], address_mode_name[mode]);
-            return CMD_FAILED;
-    }
+    COMMON(0xa0);
 }
 
 static CommandStatus LDX(const char *label, int argc, char *argv[],
@@ -1010,6 +1080,11 @@ static CommandStatus LDX(const char *label, int argc, char *argv[],
     {
         case IMMEDIATE:
             PCWrite(0xa2);
+            PCWrite8_16_XY(address);
+            return CMD_OK;
+
+        case DIRECT_PAGE:
+            PCWrite(0xa6);
             PCWrite(address);
             return CMD_OK;
 
@@ -1018,19 +1093,14 @@ static CommandStatus LDX(const char *label, int argc, char *argv[],
             PCWriteWord(address);
             return CMD_OK;
 
-        case ZERO_PAGE:
-            PCWrite(0xa6);
+        case DIRECT_PAGE_INDEX_Y:
+            PCWrite(0xb6);
             PCWrite(address);
             return CMD_OK;
 
         case ABSOLUTE_INDEX_Y:
             PCWrite(0xbe);
             PCWriteWord(address);
-            return CMD_OK;
-
-        case ZERO_PAGE_INDEX_Y:
-            PCWrite(0xb6);
-            PCWrite(address);
             return CMD_OK;
 
         default:
@@ -1052,6 +1122,11 @@ static CommandStatus LDY(const char *label, int argc, char *argv[],
     {
         case IMMEDIATE:
             PCWrite(0xa0);
+            PCWrite8_16_XY(address);
+            return CMD_OK;
+
+        case DIRECT_PAGE:
+            PCWrite(0xa4);
             PCWrite(address);
             return CMD_OK;
 
@@ -1060,19 +1135,14 @@ static CommandStatus LDY(const char *label, int argc, char *argv[],
             PCWriteWord(address);
             return CMD_OK;
 
-        case ZERO_PAGE:
-            PCWrite(0xa4);
+        case DIRECT_PAGE_INDEX_X:
+            PCWrite(0xb4);
             PCWrite(address);
             return CMD_OK;
 
         case ABSOLUTE_INDEX_X:
             PCWrite(0xbc);
             PCWriteWord(address);
-            return CMD_OK;
-
-        case ZERO_PAGE_INDEX_X:
-            PCWrite(0xb4);
-            PCWrite(address);
             return CMD_OK;
 
         default:
@@ -1092,6 +1162,11 @@ static CommandStatus LSR(const char *label, int argc, char *argv[],
 
     switch(mode)
     {
+        case DIRECT_PAGE:
+            PCWrite(0x46);
+            PCWrite(address);
+            return CMD_OK;
+
         case IMPLIED:
         case ACCUMULATOR:
             PCWrite(0x4a);
@@ -1102,19 +1177,14 @@ static CommandStatus LSR(const char *label, int argc, char *argv[],
             PCWriteWord(address);
             return CMD_OK;
 
-        case ZERO_PAGE:
-            PCWrite(0x46);
+        case DIRECT_PAGE_INDEX_X:
+            PCWrite(0x56);
             PCWrite(address);
             return CMD_OK;
 
         case ABSOLUTE_INDEX_X:
             PCWrite(0x5e);
             PCWriteWord(address);
-            return CMD_OK;
-
-        case ZERO_PAGE_INDEX_X:
-            PCWrite(0x56);
-            PCWrite(address);
             return CMD_OK;
 
         default:
@@ -1127,59 +1197,7 @@ static CommandStatus LSR(const char *label, int argc, char *argv[],
 static CommandStatus ORA(const char *label, int argc, char *argv[],
                          int quoted[], char *err, size_t errsize)
 {
-    address_mode_t mode;
-    int address;
-
-    CMD_ADDRESS_MODE(mode, address);
-
-    switch(mode)
-    {
-        case IMMEDIATE:
-            PCWrite(0x09);
-            PCWrite(address);
-            return CMD_OK;
-
-        case ABSOLUTE:
-            PCWrite(0x0d);
-            PCWriteWord(address);
-            return CMD_OK;
-
-        case ZERO_PAGE:
-            PCWrite(0x05);
-            PCWrite(address);
-            return CMD_OK;
-
-        case ABSOLUTE_INDEX_X:
-            PCWrite(0x1d);
-            PCWriteWord(address);
-            return CMD_OK;
-
-        case ABSOLUTE_INDEX_Y:
-        case ZERO_PAGE_INDEX_Y:
-            PCWrite(0x19);
-            PCWriteWord(address);
-            return CMD_OK;
-
-        case ZERO_PAGE_INDEX_X:
-            PCWrite(0x15);
-            PCWrite(address);
-            return CMD_OK;
-
-        case ZERO_PAGE_INDIRECT_X:
-            PCWrite(0x01);
-            PCWrite(address);
-            return CMD_OK;
-
-        case ZERO_PAGE_INDIRECT_Y:
-            PCWrite(0x11);
-            PCWrite(address);
-            return CMD_OK;
-
-        default:
-            snprintf(err, errsize, "%s: unsupported addressing mode %s",
-                                            argv[0], address_mode_name[mode]);
-            return CMD_FAILED;
-    }
+    COMMON(0x00);
 }
 
 static CommandStatus ROL(const char *label, int argc, char *argv[],
@@ -1192,6 +1210,11 @@ static CommandStatus ROL(const char *label, int argc, char *argv[],
 
     switch(mode)
     {
+        case DIRECT_PAGE:
+            PCWrite(0x26);
+            PCWrite(address);
+            return CMD_OK;
+
         case IMPLIED:
         case ACCUMULATOR:
             PCWrite(0x2a);
@@ -1202,19 +1225,14 @@ static CommandStatus ROL(const char *label, int argc, char *argv[],
             PCWriteWord(address);
             return CMD_OK;
 
-        case ZERO_PAGE:
-            PCWrite(0x26);
+        case DIRECT_PAGE_INDEX_X:
+            PCWrite(0x36);
             PCWrite(address);
             return CMD_OK;
 
         case ABSOLUTE_INDEX_X:
             PCWrite(0x3e);
             PCWriteWord(address);
-            return CMD_OK;
-
-        case ZERO_PAGE_INDEX_X:
-            PCWrite(0x36);
-            PCWrite(address);
             return CMD_OK;
 
         default:
@@ -1234,6 +1252,11 @@ static CommandStatus ROR(const char *label, int argc, char *argv[],
 
     switch(mode)
     {
+        case DIRECT_PAGE:
+            PCWrite(0x66);
+            PCWrite(address);
+            return CMD_OK;
+
         case IMPLIED:
         case ACCUMULATOR:
             PCWrite(0x6a);
@@ -1244,19 +1267,14 @@ static CommandStatus ROR(const char *label, int argc, char *argv[],
             PCWriteWord(address);
             return CMD_OK;
 
-        case ZERO_PAGE:
-            PCWrite(0x66);
+        case DIRECT_PAGE_INDEX_X:
+            PCWrite(0x76);
             PCWrite(address);
             return CMD_OK;
 
         case ABSOLUTE_INDEX_X:
             PCWrite(0x7e);
             PCWriteWord(address);
-            return CMD_OK;
-
-        case ZERO_PAGE_INDEX_X:
-            PCWrite(0x76);
-            PCWrite(address);
             return CMD_OK;
 
         default:
@@ -1269,112 +1287,13 @@ static CommandStatus ROR(const char *label, int argc, char *argv[],
 static CommandStatus SBC(const char *label, int argc, char *argv[],
                          int quoted[], char *err, size_t errsize)
 {
-    address_mode_t mode;
-    int address;
-
-    CMD_ADDRESS_MODE(mode, address);
-
-    switch(mode)
-    {
-        case IMMEDIATE:
-            PCWrite(0xe9);
-            PCWrite(address);
-            return CMD_OK;
-
-        case ABSOLUTE:
-            PCWrite(0xed);
-            PCWriteWord(address);
-            return CMD_OK;
-
-        case ZERO_PAGE:
-            PCWrite(0xe5);
-            PCWrite(address);
-            return CMD_OK;
-
-        case ABSOLUTE_INDEX_X:
-            PCWrite(0xfd);
-            PCWriteWord(address);
-            return CMD_OK;
-
-        case ABSOLUTE_INDEX_Y:
-        case ZERO_PAGE_INDEX_Y:
-            PCWrite(0xf9);
-            PCWriteWord(address);
-            return CMD_OK;
-
-        case ZERO_PAGE_INDEX_X:
-            PCWrite(0xf5);
-            PCWrite(address);
-            return CMD_OK;
-
-        case ZERO_PAGE_INDIRECT_X:
-            PCWrite(0xe1);
-            PCWrite(address);
-            return CMD_OK;
-
-        case ZERO_PAGE_INDIRECT_Y:
-            PCWrite(0xf1);
-            PCWrite(address);
-            return CMD_OK;
-
-        default:
-            snprintf(err, errsize, "%s: unsupported addressing mode %s",
-                                            argv[0], address_mode_name[mode]);
-            return CMD_FAILED;
-    }
+    COMMON(0xe0);
 }
 
 static CommandStatus STA(const char *label, int argc, char *argv[],
                          int quoted[], char *err, size_t errsize)
 {
-    address_mode_t mode;
-    int address;
-
-    CMD_ADDRESS_MODE(mode, address);
-
-    switch(mode)
-    {
-        case ABSOLUTE:
-            PCWrite(0x8d);
-            PCWriteWord(address);
-            return CMD_OK;
-
-        case ZERO_PAGE:
-            PCWrite(0x85);
-            PCWrite(address);
-            return CMD_OK;
-
-        case ABSOLUTE_INDEX_X:
-            PCWrite(0x9d);
-            PCWriteWord(address);
-            return CMD_OK;
-
-        case ABSOLUTE_INDEX_Y:
-        case ZERO_PAGE_INDEX_Y:
-            PCWrite(0x99);
-            PCWriteWord(address);
-            return CMD_OK;
-
-        case ZERO_PAGE_INDEX_X:
-            PCWrite(0x95);
-            PCWrite(address);
-            return CMD_OK;
-
-        case ZERO_PAGE_INDIRECT_X:
-            PCWrite(0x81);
-            PCWrite(address);
-            return CMD_OK;
-
-        case ZERO_PAGE_INDIRECT_Y:
-            PCWrite(0x91);
-            PCWrite(address);
-            return CMD_OK;
-
-        default:
-            snprintf(err, errsize, "%s: unsupported addressing mode %s",
-                                            argv[0], address_mode_name[mode]);
-            return CMD_FAILED;
-    }
+    COMMON(0x80);
 }
 
 static CommandStatus STX(const char *label, int argc, char *argv[],
@@ -1387,29 +1306,17 @@ static CommandStatus STX(const char *label, int argc, char *argv[],
 
     switch(mode)
     {
+        case DIRECT_PAGE:
+            PCWrite(0x86);
+            PCWrite(address);
+            return CMD_OK;
+
         case ABSOLUTE:
             PCWrite(0x8e);
             PCWriteWord(address);
             return CMD_OK;
 
-        case ZERO_PAGE:
-            PCWrite(0x86);
-            PCWrite(address);
-            return CMD_OK;
-
-        case ABSOLUTE_INDEX_Y:
-            if (address < 0 || address > 255)
-            {
-                snprintf(err, errsize, "%s: value %d outside of zero page",
-                                                            argv[0], address);
-                return CMD_FAILED;
-            }
-
-            PCWrite(0x96);
-            PCWrite(address);
-            return CMD_OK;
-
-        case ZERO_PAGE_INDEX_Y:
+        case DIRECT_PAGE_INDEX_Y:
             PCWrite(0x96);
             PCWrite(address);
             return CMD_OK;
@@ -1431,31 +1338,252 @@ static CommandStatus STY(const char *label, int argc, char *argv[],
 
     switch(mode)
     {
+        case DIRECT_PAGE:
+            PCWrite(0x84);
+            PCWrite(address);
+            return CMD_OK;
+
         case ABSOLUTE:
             PCWrite(0x8c);
             PCWriteWord(address);
             return CMD_OK;
 
-        case ZERO_PAGE:
-            PCWrite(0x84);
+        case DIRECT_PAGE_INDEX_X:
+            PCWrite(0x94);
             PCWrite(address);
+            return CMD_OK;
+
+        default:
+            snprintf(err, errsize, "%s: unsupported addressing mode %s",
+                                            argv[0], address_mode_name[mode]);
+            return CMD_FAILED;
+    }
+}
+
+static CommandStatus STZ(const char *label, int argc, char *argv[],
+                         int quoted[], char *err, size_t errsize)
+{
+    address_mode_t mode;
+    int address;
+
+    CMD_ADDRESS_MODE(mode, address);
+
+    switch(mode)
+    {
+        case DIRECT_PAGE:
+            PCWrite(0x64);
+            PCWrite(address);
+            return CMD_OK;
+
+        case DIRECT_PAGE_INDEX_X:
+            PCWrite(0x74);
+            PCWrite(address);
+            return CMD_OK;
+
+        case ABSOLUTE:
+            PCWrite(0x9c);
+            PCWriteWord(address);
             return CMD_OK;
 
         case ABSOLUTE_INDEX_X:
-            if (address < 0 || address > 255)
-            {
-                snprintf(err, errsize, "%s: value %d outside of zero page",
-                                                            argv[0], address);
-                return CMD_FAILED;
-            }
+            PCWrite(0x9e);
+            PCWriteWord(address);
+            return CMD_OK;
 
-            PCWrite(0x94);
+        default:
+            snprintf(err, errsize, "%s: unsupported addressing mode %s",
+                                            argv[0], address_mode_name[mode]);
+            return CMD_FAILED;
+    }
+}
+
+static CommandStatus COP(const char *label, int argc, char *argv[],
+                         int quoted[], char *err, size_t errsize)
+{
+    address_mode_t mode;
+    int address;
+
+    CMD_ADDRESS_MODE(mode, address);
+
+    switch(mode)
+    {
+        case DIRECT_PAGE:
+        case IMMEDIATE:
+            PCWrite(0x02);
             PCWrite(address);
             return CMD_OK;
 
-        case ZERO_PAGE_INDEX_X:
-            PCWrite(0x94);
+        default:
+            snprintf(err, errsize, "%s: unsupported addressing mode %s",
+                                            argv[0], address_mode_name[mode]);
+            return CMD_FAILED;
+    }
+}
+
+static CommandStatus REP(const char *label, int argc, char *argv[],
+                         int quoted[], char *err, size_t errsize)
+{
+    address_mode_t mode;
+    int address;
+
+    CMD_ADDRESS_MODE(mode, address);
+
+    switch(mode)
+    {
+        case DIRECT_PAGE:
+        case IMMEDIATE:
+            PCWrite(0xc2);
             PCWrite(address);
+            return CMD_OK;
+
+        default:
+            snprintf(err, errsize, "%s: unsupported addressing mode %s",
+                                            argv[0], address_mode_name[mode]);
+            return CMD_FAILED;
+    }
+}
+
+static CommandStatus SEP(const char *label, int argc, char *argv[],
+                         int quoted[], char *err, size_t errsize)
+{
+    address_mode_t mode;
+    int address;
+
+    CMD_ADDRESS_MODE(mode, address);
+
+    switch(mode)
+    {
+        case DIRECT_PAGE:
+        case IMMEDIATE:
+            PCWrite(0xe2);
+            PCWrite(address);
+            return CMD_OK;
+
+        default:
+            snprintf(err, errsize, "%s: unsupported addressing mode %s",
+                                            argv[0], address_mode_name[mode]);
+            return CMD_FAILED;
+    }
+}
+
+static CommandStatus MVN_MVP(const char *label, int argc, char *argv[],
+                             int quoted[], char *err, size_t errsize)
+{
+    /* This opcode uses two distinct arguments, rather than a single addressing
+       mode
+    */
+    address_mode_t mode1;
+    address_mode_t mode2;
+    int address1;
+    int address2;
+
+    CMD_ARGC_CHECK(3);
+
+    CalcAddressMode(2, argv, quoted, err, errsize, &mode1, &address1);
+
+    if (mode1 == ADDR_MODE_UNKNOWN)
+    {
+        snprintf(err, errsize, "%s: couldn't work out "
+                                        "addressing mode", argv[0]);
+        return CMD_FAILED;
+    }
+                                                                        \
+    CalcAddressMode(2, argv + 1, quoted + 1, err, errsize, &mode2, &address2);
+
+    if (mode2 == ADDR_MODE_UNKNOWN)
+    {
+        snprintf(err, errsize, "%s: couldn't work out "
+                                        "addressing mode", argv[0]);
+        return CMD_FAILED;
+    }
+                                                                        \
+    if (mode1 == ADDR_MODE_ERROR || mode2 == ADDR_MODE_ERROR)
+    {
+        return CMD_FAILED;
+    }
+
+    if (mode1 == IMMEDIATE && mode2 == IMMEDIATE)
+    {
+        if (CompareString(argv[0], "MVN"))
+        {
+            PCWrite(0x54);
+        }
+        else
+        {
+            PCWrite(0x44);
+        }
+
+        PCWrite(address1);
+        PCWrite(address2);
+        return CMD_OK;
+    }
+
+    snprintf(err, errsize, "%s: unsupported addressing mode(s) %s, %s",
+                                    argv[0], argv[1], argv[2]);
+    return CMD_FAILED;
+}
+
+static CommandStatus PEA(const char *label, int argc, char *argv[],
+                         int quoted[], char *err, size_t errsize)
+{
+    address_mode_t mode;
+    int address;
+
+    CMD_ADDRESS_MODE(mode, address);
+
+    switch(mode)
+    {
+        case DIRECT_PAGE:
+        case IMMEDIATE:
+        case ABSOLUTE:
+            PCWrite(0xf4);
+            PCWriteWord(address);
+            return CMD_OK;
+
+        default:
+            snprintf(err, errsize, "%s: unsupported addressing mode %s",
+                                            argv[0], address_mode_name[mode]);
+            return CMD_FAILED;
+    }
+}
+
+static CommandStatus PEI(const char *label, int argc, char *argv[],
+                         int quoted[], char *err, size_t errsize)
+{
+    address_mode_t mode;
+    int address;
+
+    CMD_ADDRESS_MODE(mode, address);
+
+    switch(mode)
+    {
+        case DIRECT_PAGE:
+            PCWrite(0xd4);
+            PCWrite(address);
+            return CMD_OK;
+
+        default:
+            snprintf(err, errsize, "%s: unsupported addressing mode %s",
+                                            argv[0], address_mode_name[mode]);
+            return CMD_FAILED;
+    }
+}
+
+static CommandStatus PER(const char *label, int argc, char *argv[],
+                         int quoted[], char *err, size_t errsize)
+{
+    address_mode_t mode;
+    int address;
+
+    CMD_ADDRESS_MODE(mode, address);
+
+    switch(mode)
+    {
+        case DIRECT_PAGE:
+        case IMMEDIATE:
+        case ABSOLUTE:
+            PCWrite(0x62);
+            PCWriteWord(address);
             return CMD_OK;
 
         default:
@@ -1481,43 +1609,60 @@ typedef struct
 
 static const OpcodeTable implied_opcodes[] =
 {
-    {"NOP",      0xea},
-    {"TXS",      0x9a},
-    {"TSX",      0xba},
+    {"NOP",     0xea},
 
-    {"PHA",      0x48},
-    {"PHX",      0xda},
-    {"PHY",      0x5a},
-    {"PHB",      0x8b},
-    {"PHD",      0x0b},
-    {"PHK",      0x4b},
-    {"PHP",      0x08},
+    {"TAX",     0xaa},
+    {"TXA",     0x8a},
+    {"TAY",     0xa8},
+    {"TYA",     0x98},
+    {"TXS",     0x9a},
+    {"TSX",     0xba},
+    {"TXA",     0x8a},
+    {"TXY",     0x9b},
+    {"TYX",     0xbb},
 
-    {"PLA",      0x68},
-    {"PLX",      0xfa},
-    {"PLY",      0x7a},
-    {"PLB",      0xab},
-    {"PLD",      0x2b},
-    {"PLP",      0x28},
+    {"TCD",     0x5b},
+    {"TCS",     0x1b},
+    {"TDC",     0x7b},
+    {"TSC",     0x3b},
 
-    {"CLC",      0x18},
-    {"SEC",      0x38},
-    {"CLI",      0x58},
-    {"SEI",      0x78},
-    {"CLV",      0xb8},
-    {"CLD",      0xd8},
-    {"SED",      0xf8},
-    {"BRK",      0x00},
-    {"TAX",      0xaa},
-    {"TXA",      0x8a},
-    {"DEX",      0xca},
-    {"INX",      0xe8},
-    {"TAY",      0xa8},
-    {"TYA",      0x98},
-    {"DEY",      0x88},
-    {"INY",      0xc8},
-    {"RTI",      0x40},
-    {"RTS",      0x60},
+    {"XBA",     0xeb},
+    {"XCE",     0xfb},
+
+    {"DEX",     0xca},
+    {"DEY",     0x88},
+    {"INX",     0xe8},
+    {"INY",     0xc8},
+
+    {"PHA",     0x48},
+    {"PHX",     0xda},
+    {"PHY",     0x5a},
+    {"PHB",     0x8b},
+    {"PHD",     0x0b},
+    {"PHK",     0x4b},
+    {"PHP",     0x08},
+
+    {"PLA",     0x68},
+    {"PLX",     0xfa},
+    {"PLY",     0x7a},
+    {"PLB",     0xab},
+    {"PLD",     0x2b},
+    {"PLP",     0x28},
+
+    {"CLC",     0x18},
+    {"SEC",     0x38},
+    {"CLI",     0x58},
+    {"SEI",     0x78},
+    {"CLV",     0xb8},
+    {"CLD",     0xd8},
+    {"SED",     0xf8},
+    {"BRK",     0x00},
+    {"RTI",     0x40},
+    {"RTL",     0x6b},
+    {"RTS",     0x60},
+    {"WDM",     0x42},
+    {"STP",     0xdb},
+    {"WAI",     0xcb},
     {NULL}
 };
 
@@ -1532,6 +1677,14 @@ static const OpcodeTable branch_opcodes[] =
     {"BCS",     0xB0},
     {"BNE",     0xD0},
     {"BEQ",     0xF0},
+    {"BRA",     0x80},
+    {NULL}
+};
+
+
+static const OpcodeTable long_branch_opcodes[] =
+{
+    {"BRL",     0x82},
     {NULL}
 };
 
@@ -1553,6 +1706,8 @@ static const HandlerTable handler_table[] =
     {"AND",     AND},
     {"ASL",     ASL},
     {"BIT",     BIT},
+    {"TRB",     TRB},
+    {"TSB",     TSB},
     {"CMP",     CMP},
     {"CPX",     CPX},
     {"CPY",     CPY},
@@ -1560,6 +1715,7 @@ static const HandlerTable handler_table[] =
     {"EOR",     EOR},
     {"INC",     INC},
     {"JMP",     JMP},
+    {"JSL",     JSL},
     {"JSR",     JSR},
     {"LDA",     LDA},
     {"LDX",     LDX},
@@ -1572,6 +1728,15 @@ static const HandlerTable handler_table[] =
     {"STA",     STA},
     {"STX",     STX},
     {"STY",     STY},
+    {"STZ",     STZ},
+    {"COP",     COP},
+    {"REP",     REP},
+    {"SEP",     SEP},
+    {"MVN",     MVN_MVP},
+    {"MVP",     MVN_MVP},
+    {"PEA",     PEA},
+    {"PER",     PER},
+    {"PEI",     PEI},
     {NULL}
 };
 
@@ -1655,6 +1820,32 @@ CommandStatus Handler_65c816(const char *label, int argc, char *argv[],
 
             PCWrite(branch_opcodes[f].code);
             PCWrite(offset);
+
+            return CMD_OK;
+        }
+    }
+
+    for(f = 0; long_branch_opcodes[f].op; f++)
+    {
+        if (CompareString(argv[0], long_branch_opcodes[f].op))
+        {
+            int offset;
+
+            CMD_ARGC_CHECK(2);
+
+            CMD_EXPR(argv[1], offset);
+
+            offset = offset - (PC() + 3);
+
+            if (IsFinalPass() && (offset < -32768 || offset > 32767))
+            {
+                snprintf(err, errsize, "%s: Branch offset (%d) too big",
+                                            argv[1], offset);
+                return CMD_FAILED;
+            }
+
+            PCWrite(long_branch_opcodes[f].code);
+            PCWriteWord(offset);
 
             return CMD_OK;
         }
