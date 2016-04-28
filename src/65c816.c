@@ -588,7 +588,7 @@ do {                                                                    \
         case DIRECT_PAGE:                                               \
             PCWrite(base + 0x05);                                       \
             PCWrite(address);                                           \
-            break;                                                      \
+            return CMD_OK;                                              \
                                                                         \
         case DIRECT_PAGE_INDIRECT_LONG:                                 \
             PCWrite(base + 0x07);                                       \
