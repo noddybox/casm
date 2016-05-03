@@ -733,7 +733,7 @@ static CommandStatus BIT(const char *label, int argc, char *argv[],
 
         case DIRECT_PAGE_INDEX_X:
             PCWrite(0x34);
-            PCWriteWord(address);
+            PCWrite(address);
             return CMD_OK;
 
         case ABSOLUTE_INDEX_X:
@@ -1593,6 +1593,39 @@ static CommandStatus PER(const char *label, int argc, char *argv[],
     }
 }
 
+static CommandStatus OP_SIGNATURE(const char *label, int argc, char *argv[],
+                                  int quoted[], char *err, size_t errsize)
+{
+    address_mode_t mode;
+    int address;
+    int opcode;
+
+    CMD_ADDRESS_MODE(mode, address);
+
+    if (CompareString(argv[0], "WDM"))
+    {
+        opcode = 0x42;
+    }
+    else
+    {
+        opcode = 0x00;
+    }
+
+    switch(mode)
+    {
+        case IMMEDIATE:
+        case ACCUMULATOR:
+            PCWrite(opcode);
+            PCWrite(0x00);
+            return CMD_OK;
+
+        default:
+            PCWrite(opcode);
+            PCWrite(address);
+            return CMD_OK;
+    }
+}
+
 /* ---------------------------------------- OPCODE TABLES
 */
 typedef struct
@@ -1656,11 +1689,9 @@ static const OpcodeTable implied_opcodes[] =
     {"CLV",     0xb8},
     {"CLD",     0xd8},
     {"SED",     0xf8},
-    {"BRK",     0x00},
     {"RTI",     0x40},
     {"RTL",     0x6b},
     {"RTS",     0x60},
-    {"WDM",     0x42},
     {"STP",     0xdb},
     {"WAI",     0xcb},
     {NULL}
@@ -1737,6 +1768,10 @@ static const HandlerTable handler_table[] =
     {"PEA",     PEA},
     {"PER",     PER},
     {"PEI",     PEI},
+
+    {"WDM",     OP_SIGNATURE},
+    {"BRK",     OP_SIGNATURE},
+
     {NULL}
 };
 

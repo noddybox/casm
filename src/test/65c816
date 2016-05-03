@@ -1,58 +1,58 @@
-	cpu 65c816
-
+	cpu 65C816
+	
 	org $8000
-
+	
 	clc
 	xce
-
+	
 	mx 16,16
 	rep #$30
-
-	adc ($10,x)
-	adc $32,s
+	
+	adc ($10,X)
+	adc $32,S
 	adc $10
 	adc [$10]
 	adc #$54
 	adc $9876
-	adc $fedbca
-	adc ($10),y
+	adc $FEDBCA
+	adc ($10),Y
 	adc ($10)
-	adc ($32,s),y
-	adc $10,x
-	adc [$10],y
-	adc $9876,y
-	adc $9876,x
-	adc $fedcba,x
-	sbc ($10,x)
-	sbc $32,s
+	adc ($32,S),Y
+	adc $10,X
+	adc [$10],Y
+	adc $9876,Y
+	adc $9876,X
+	adc $FEDCBA,X
+	sbc ($10,X)
+	sbc $32,S
 	sbc $10
 	sbc [$10]
 	sbc #$54
 	sbc $9876
-	sbc $fedbca
-	sbc ($10),y
+	sbc $FEDBCA
+	sbc ($10),Y
 	sbc ($10)
-	sbc ($32,s),y
-	sbc $10,x
-	sbc [$10],y
-	sbc $9876,y
-	sbc $9876,x
-	sbc $fedcba,x
-	cmp ($10,x)
-	cmp $32,s
+	sbc ($32,S),Y
+	sbc $10,X
+	sbc [$10],Y
+	sbc $9876,Y
+	sbc $9876,X
+	sbc $FEDCBA,X
+	cmp ($10,X)
+	cmp $32,S
 	cmp $10
 	cmp [$10]
 	cmp #$54
 	cmp $9876
-	cmp $fedbca
-	cmp ($10),y
+	cmp $FEDBCA
+	cmp ($10),Y
 	cmp ($10)
-	cmp ($32,s),y
-	cmp $10,x
-	cmp [$10],y
-	cmp $9876,y
-	cmp $9876,x
-	cmp $fedcba,x
+	cmp ($32,S),Y
+	cmp $10,X
+	cmp [$10],Y
+	cmp $9876,Y
+	cmp $9876,X
+	cmp $FEDCBA,X
 	cpx #$54
 	cpx $10
 	cpx $9876
@@ -62,66 +62,66 @@
 	dec
 	dec $10
 	dec $9876
-	dec $10,x
-	dec $9876,x
+	dec $10,X
+	dec $9876,X
 	dex
 	dey
 	inc
 	inc $10
 	inc $9876
-	inc $10,x
-	inc $9876,x
+	inc $10,X
+	inc $9876,X
 	inx
 	iny
-	and ($10,x)
-	and $32,s
+	and ($10,X)
+	and $32,S
 	and $10
 	and [$10]
 	and #$54
 	and $9876
-	and $fedbca
-	and ($10),y
+	and $FEDBCA
+	and ($10),Y
 	and ($10)
-	and ($32,s),y
-	and $10,x
-	and [$10],y
-	and $9876,y
-	and $9876,x
-	and $fedcba,x
-	eor ($10,x)
-	eor $32,s
+	and ($32,S),Y
+	and $10,X
+	and [$10],Y
+	and $9876,Y
+	and $9876,X
+	and $FEDCBA,X
+	eor ($10,X)
+	eor $32,S
 	eor $10
 	eor [$10]
 	eor #$54
 	eor $9876
-	eor $fedbca
-	eor ($10),y
+	eor $FEDBCA
+	eor ($10),Y
 	eor ($10)
-	eor ($32,s),y
-	eor $10,x
-	eor [$10],y
-	eor $9876,y
-	eor $9876,x
-	eor $fedcba,x
-	ora ($10,x)
-	ora $32,s
+	eor ($32,S),Y
+	eor $10,X
+	eor [$10],Y
+	eor $9876,Y
+	eor $9876,X
+	eor $FEDCBA,X
+	ora ($10,X)
+	ora $32,S
 	ora $10
 	ora [$10]
 	ora #$54
 	ora $9876
-	ora $fedbca
-	ora ($10),y
+	ora $FEDBCA
+	ora ($10),Y
 	ora ($10)
-	ora ($32,s),y
-	ora $10,x
-	ora [$10],y
-	ora $9876,y
-	ora $9876,x
-	ora $fedcba,x
+	ora ($32,S),Y
+	ora $10,X
+	ora [$10],Y
+	ora $9876,Y
+	ora $9876,X
+	ora $FEDCBA,X
 	bit $10
 	bit $9876
-	bit $10,x
-	bit $9876,x
+	bit $10,X
+	bit $9876,X
 	bit #$54
 	trb $10
 	trb $9876
@@ -130,52 +130,50 @@
 	asl $10
 	asl
 	asl $9876
-	asl $10,x
-	asl $9876,x
+	asl $10,X
+	asl $9876,X
 	lsr $10
 	lsr
 	lsr $9876
-	lsr $10,x
-	lsr $9876,x
+	lsr $10,X
+	lsr $9876,X
 	rol $10
 	rol
 	rol $9876
-	rol $10,x
-	rol $9876,x
+	rol $10,X
+	rol $9876,X
 	ror $10
 	ror
 	ror $9876
-	ror $10,x
-	ror $9876,x
-	bcc label1
-	bcs label1
-	beq label1
-	bmi label1
-	bne label1
-	bpl label1
-	bra label1
-	bvc label1
-	bvs label1
-	brl label1
-	brl label2
-
+	ror $10,X
+	ror $9876,X
+	bcc LABEL1
+	bcs LABEL1
+	beq LABEL1
+	bmi LABEL1
+	bne LABEL1
+	bpl LABEL1
+	bra LABEL1
+	bvc LABEL1
+	bvs LABEL1
+	brl LABEL1
+	brl LABEL2
+	
 label1:
 	nop
-	brk
-	.byte	255
+	brk 255
 	nop
 	brk
-	.byte	$e5
-
-
+	
+	
 	jmp $1234
-	jmp $fedcba
+	jmp $FEDCBA
 	jmp ($1234)
-	jmp ($1234,x)
+	jmp ($1234,X)
 	jmp [$1234]
 	jsl $123456
 	jsr $1234
-	jsr ($1234,x)
+	jsr ($1234,X)
 	rtl
 	rts
 	brk
@@ -188,64 +186,62 @@ label1:
 	sec
 	sed
 	sei
-	rep #$12
-	sep #$12
-	lda ($10,x)
-	lda $32,s
+	lda ($10,X)
+	lda $32,S
 	lda $10
 	lda [$10]
 	lda #$54
 	lda $9876
-	lda $fedbca
-	lda ($10),y
+	lda $FEDBCA
+	lda ($10),Y
 	lda ($10)
-	lda ($32,s),y
-	lda $10,x
-	lda [$10],y
-	lda $9876,y
-	lda $9876,x
-	lda $fedcba,x
+	lda ($32,S),Y
+	lda $10,X
+	lda [$10],Y
+	lda $9876,Y
+	lda $9876,X
+	lda $FEDCBA,X
 	ldx #$54
 	ldx $10
 	ldx $9876
-	ldx $10,y
-	ldx $9876,y
+	ldx $10,Y
+	ldx $9876,Y
 	ldy #$54
 	ldy $10
 	ldy $9876
-	ldy $10,x
-	ldy $9876,x
-	sta ($10,x)
-	sta $32,s
+	ldy $10,X
+	ldy $9876,X
+	sta ($10,X)
+	sta $32,S
 	sta $10
 	sta [$10]
 	sta $9876
-	sta $fedbca
-	sta ($10),y
+	sta $FEDBCA
+	sta ($10),Y
 	sta ($10)
-	sta ($32,s),y
-	sta $10,x
-	sta [$10],y
-	sta $9876,y
-	sta $9876,x
-	sta $fedcba,x
+	sta ($32,S),Y
+	sta $10,X
+	sta [$10],Y
+	sta $9876,Y
+	sta $9876,X
+	sta $FEDCBA,X
 	stx $10
 	stx $9876
-	stx $10,y
+	stx $10,Y
 	sty $10
 	sty $9876
-	sty $10,x
+	sty $10,X
 	stz $10
-	stz $10,x
+	stz $10,X
 	stz $9876
-	stz $9876,x
+	stz $9876,X
 	mvn #$12,#$34
 	mvp #$12,#$34
 	nop
 	wdm
 	pea #$1234
 	pei $12
-	per label1
+	per LABEL1
 	pha
 	phx
 	phy
@@ -275,56 +271,56 @@ label1:
 	tsc
 	xba
 	xce
-
-
+	
+	
 	mx 8,8
 	sep #$30
-
-	adc ($10,x)
-	adc $32,s
+	
+	adc ($10,X)
+	adc $32,S
 	adc $10
 	adc [$10]
 	adc #$54
 	adc $9876
-	adc $fedbca
-	adc ($10),y
+	adc $FEDBCA
+	adc ($10),Y
 	adc ($10)
-	adc ($32,s),y
-	adc $10,x
-	adc [$10],y
-	adc $9876,y
-	adc $9876,x
-	adc $fedcba,x
-	sbc ($10,x)
-	sbc $32,s
+	adc ($32,S),Y
+	adc $10,X
+	adc [$10],Y
+	adc $9876,Y
+	adc $9876,X
+	adc $FEDCBA,X
+	sbc ($10,X)
+	sbc $32,S
 	sbc $10
 	sbc [$10]
 	sbc #$54
 	sbc $9876
-	sbc $fedbca
-	sbc ($10),y
+	sbc $FEDBCA
+	sbc ($10),Y
 	sbc ($10)
-	sbc ($32,s),y
-	sbc $10,x
-	sbc [$10],y
-	sbc $9876,y
-	sbc $9876,x
-	sbc $fedcba,x
-	cmp ($10,x)
-	cmp $32,s
+	sbc ($32,S),Y
+	sbc $10,X
+	sbc [$10],Y
+	sbc $9876,Y
+	sbc $9876,X
+	sbc $FEDCBA,X
+	cmp ($10,X)
+	cmp $32,S
 	cmp $10
 	cmp [$10]
 	cmp #$54
 	cmp $9876
-	cmp $fedbca
-	cmp ($10),y
+	cmp $FEDBCA
+	cmp ($10),Y
 	cmp ($10)
-	cmp ($32,s),y
-	cmp $10,x
-	cmp [$10],y
-	cmp $9876,y
-	cmp $9876,x
-	cmp $fedcba,x
+	cmp ($32,S),Y
+	cmp $10,X
+	cmp [$10],Y
+	cmp $9876,Y
+	cmp $9876,X
+	cmp $FEDCBA,X
 	cpx #$54
 	cpx $10
 	cpx $9876
@@ -334,66 +330,66 @@ label1:
 	dec
 	dec $10
 	dec $9876
-	dec $10,x
-	dec $9876,x
+	dec $10,X
+	dec $9876,X
 	dex
 	dey
 	inc
 	inc $10
 	inc $9876
-	inc $10,x
-	inc $9876,x
+	inc $10,X
+	inc $9876,X
 	inx
 	iny
-	and ($10,x)
-	and $32,s
+	and ($10,X)
+	and $32,S
 	and $10
 	and [$10]
 	and #$54
 	and $9876
-	and $fedbca
-	and ($10),y
+	and $FEDBCA
+	and ($10),Y
 	and ($10)
-	and ($32,s),y
-	and $10,x
-	and [$10],y
-	and $9876,y
-	and $9876,x
-	and $fedcba,x
-	eor ($10,x)
-	eor $32,s
+	and ($32,S),Y
+	and $10,X
+	and [$10],Y
+	and $9876,Y
+	and $9876,X
+	and $FEDCBA,X
+	eor ($10,X)
+	eor $32,S
 	eor $10
 	eor [$10]
 	eor #$54
 	eor $9876
-	eor $fedbca
-	eor ($10),y
+	eor $FEDBCA
+	eor ($10),Y
 	eor ($10)
-	eor ($32,s),y
-	eor $10,x
-	eor [$10],y
-	eor $9876,y
-	eor $9876,x
-	eor $fedcba,x
-	ora ($10,x)
-	ora $32,s
+	eor ($32,S),Y
+	eor $10,X
+	eor [$10],Y
+	eor $9876,Y
+	eor $9876,X
+	eor $FEDCBA,X
+	ora ($10,X)
+	ora $32,S
 	ora $10
 	ora [$10]
 	ora #$54
 	ora $9876
-	ora $fedbca
-	ora ($10),y
+	ora $FEDBCA
+	ora ($10),Y
 	ora ($10)
-	ora ($32,s),y
-	ora $10,x
-	ora [$10],y
-	ora $9876,y
-	ora $9876,x
-	ora $fedcba,x
+	ora ($32,S),Y
+	ora $10,X
+	ora [$10],Y
+	ora $9876,Y
+	ora $9876,X
+	ora $FEDCBA,X
 	bit $10
 	bit $9876
-	bit $10,x
-	bit $9876,x
+	bit $10,X
+	bit $9876,X
 	bit #$54
 	trb $10
 	trb $9876
@@ -402,51 +398,51 @@ label1:
 	asl $10
 	asl
 	asl $9876
-	asl $10,x
-	asl $9876,x
+	asl $10,X
+	asl $9876,X
 	lsr $10
 	lsr
 	lsr $9876
-	lsr $10,x
-	lsr $9876,x
+	lsr $10,X
+	lsr $9876,X
 	rol $10
 	rol
 	rol $9876
-	rol $10,x
-	rol $9876,x
+	rol $10,X
+	rol $9876,X
 	ror $10
 	ror
 	ror $9876
-	ror $10,x
-	ror $9876,x
-	bcc label2
-	bcs label2
-	beq label2
-	bmi label2
-	bne label2
-	bpl label2
-	bra label2
-	bvc label2
-	bvs label2
-	brl label1
-	brl label2
-
+	ror $10,X
+	ror $9876,X
+	bcc LABEL2
+	bcs LABEL2
+	beq LABEL2
+	bmi LABEL2
+	bne LABEL2
+	bpl LABEL2
+	bra LABEL2
+	bvc LABEL2
+	bvs LABEL2
+	brl LABEL1
+	brl LABEL2
+	
 label2:
 	nop
 	brk
-	.byte	0
+	.byte 0
 	nop
 	brk
-	.byte	$e5
-
+	.byte $E5
+	
 	jmp $1234
-	jmp $fedcba
+	jmp $FEDCBA
 	jmp ($1234)
-	jmp ($1234,x)
+	jmp ($1234,X)
 	jmp [$1234]
 	jsl $123456
 	jsr $1234
-	jsr ($1234,x)
+	jsr ($1234,X)
 	rtl
 	rts
 	brk
@@ -459,64 +455,62 @@ label2:
 	sec
 	sed
 	sei
-	rep #$12
-	sep #$12
-	lda ($10,x)
-	lda $32,s
+	lda ($10,X)
+	lda $32,S
 	lda $10
 	lda [$10]
 	lda #$54
 	lda $9876
-	lda $fedbca
-	lda ($10),y
+	lda $FEDBCA
+	lda ($10),Y
 	lda ($10)
-	lda ($32,s),y
-	lda $10,x
-	lda [$10],y
-	lda $9876,y
-	lda $9876,x
-	lda $fedcba,x
+	lda ($32,S),Y
+	lda $10,X
+	lda [$10],Y
+	lda $9876,Y
+	lda $9876,X
+	lda $FEDCBA,X
 	ldx #$54
 	ldx $10
 	ldx $9876
-	ldx $10,y
-	ldx $9876,y
+	ldx $10,Y
+	ldx $9876,Y
 	ldy #$54
 	ldy $10
 	ldy $9876
-	ldy $10,x
-	ldy $9876,x
-	sta ($10,x)
-	sta $32,s
+	ldy $10,X
+	ldy $9876,X
+	sta ($10,X)
+	sta $32,S
 	sta $10
 	sta [$10]
 	sta $9876
-	sta $fedbca
-	sta ($10),y
+	sta $FEDBCA
+	sta ($10),Y
 	sta ($10)
-	sta ($32,s),y
-	sta $10,x
-	sta [$10],y
-	sta $9876,y
-	sta $9876,x
-	sta $fedcba,x
+	sta ($32,S),Y
+	sta $10,X
+	sta [$10],Y
+	sta $9876,Y
+	sta $9876,X
+	sta $FEDCBA,X
 	stx $10
 	stx $9876
-	stx $10,y
+	stx $10,Y
 	sty $10
 	sty $9876
-	sty $10,x
+	sty $10,X
 	stz $10
-	stz $10,x
+	stz $10,X
 	stz $9876
-	stz $9876,x
+	stz $9876,X
 	mvn #$12,#$34
 	mvp #$12,#$34
 	nop
 	wdm
 	pea #$1234
 	pei $12
-	per label2
+	per LABEL2
 	pha
 	phx
 	phy
