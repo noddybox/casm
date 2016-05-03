@@ -18,10 +18,10 @@ Currently **casm** supports:
 * Z80 (the default)
 * 6502
 * Gameboy CPU
+* 65c816/Ricoh 5A22 (SNES)
 
 Plans for:
 
-* 65c816/Ricoh 5A22 (SNES)
 * SPC700 (SNES sound chip)
 
 ## Output Formats
