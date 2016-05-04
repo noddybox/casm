@@ -133,6 +133,16 @@ static int PokeS(Byte *mem, int addr, const char *str, int maxlen, char pad)
     return addr;
 }
 
+static unsigned CalcChecksum(Byte *p, int len, unsigned csum)
+{
+    while(len-- > 0)
+    {
+        csum += *p++;
+    }
+
+    return csum & 0xffff;
+}
+
 
 /* ---------------------------------------- INTERFACES
 */
@@ -198,6 +208,7 @@ int SNESOutput(const char *filename, const char *filename_bank,
     int base;
     int len;
     int f;
+    unsigned csum;
 
     /* If the ROM type is LOROM then we assume each bank holds 32Kb.  Otherwise
        each bank is a full 64Kb.
@@ -275,7 +286,17 @@ int SNESOutput(const char *filename, const char *filename_bank,
 
     PokeB(mem, 0xffd8, option.ram_size);
 
-    /* TODO: Need checksums? */
+    /* Calculate checksum
+    */
+    csum = 0;
+
+    for(f = 0; f < count; f++)
+    {
+        csum = CalcChecksum(bank[f]->memory + base, len, csum);
+    }
+
+    PokeW(mem, 0xffde, csum);
+    PokeW(mem, 0xffdc, 0xffffu - csum);
 
     /* Output ROM contents
     */
