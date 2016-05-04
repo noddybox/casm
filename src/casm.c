@@ -86,6 +86,16 @@ typedef struct
 } CPU;
 
 
+/* Defines a static value table handler
+*/
+typedef struct
+{
+    const ValueTable    *table;
+    CommandStatus       (*handler)(int o, int ac, char *av[],
+                                   int q[], char *e, size_t es);
+} ValTableHandler;
+
+
 /* ---------------------------------------- GLOBALS
 */
 static const CPU cpu_table[]=
@@ -123,6 +133,10 @@ static const CPU cpu_table[]=
 static const CPU *cpu = cpu_table;
 
 
+static ValTableHandler  *valtable_handler;
+static int              valtable_count;
+
+
 /* ---------------------------------------- PROTOS
 */
 static void             CheckLimits(void);
@@ -131,6 +145,45 @@ static void             InitProcessors(void);
 
 static void             RunPass(const char *name, FILE *, int depth);
 static void             ProduceOutput(void);
+
+
+/* ---------------------------------------- STATIC VALUE TABLE HANDLING
+*/
+static void PushValTableHandler(const ValueTable *t, 
+                                CommandStatus (*h)(int o, int ac, char *av[],
+                                                   int q[], char *e, size_t es))
+{
+    if (t)
+    {
+        valtable_handler = Realloc(valtable_handler,
+                                   (sizeof *valtable_handler) *
+                                        (++valtable_count));
+
+        valtable_handler[valtable_count - 1].table = t;
+        valtable_handler[valtable_count - 1].handler = h;
+    }
+}
+
+
+static CommandStatus CheckValTableHandlers(const char *opt, int ac,
+                                           char *args[], int q[],
+                                           char *err, size_t errsize)
+{
+    const ValueTable *entry;
+    int f;
+
+    for(f = 0; f < valtable_count; f++)
+    {
+        if ((entry = ParseTable(opt, valtable_handler[f].table)))
+        {
+            return valtable_handler[f].handler
+                (entry->value, ac, args, q, err, errsize);
+        }
+    }
+
+    return CMD_NOT_KNOWN;
+}
+
 
 
 /* ---------------------------------------- INTERNAL COMMAND HANDLING
@@ -384,6 +437,7 @@ static CommandStatus OPTION(const char *label, int argc, char *argv[],
     char **args;
     int ac;
     char *opt;
+    CommandStatus status = CMD_NOT_KNOWN;
 
     if (*argv[1] == '+' || *argv[1] == '-')
     {
@@ -412,51 +466,25 @@ static CommandStatus OPTION(const char *label, int argc, char *argv[],
         opt = argv[1];
     }
 
-    /* TODO: There should be someway to make this better
-    */
-    if ((entry = ParseTable(opt, ListOptions())))
+    status = CheckValTableHandlers(opt, ac, args, q, err, errsize);
+
+    if (status == CMD_NOT_KNOWN)
     {
-        return ListSetOption(entry->value, ac, args, q, err, errsize);
-    }
-    else if ((entry = ParseTable(opt, MacroOptions())))
-    {
-        return MacroSetOption(entry->value, ac, args, q, err, errsize);
-    }
-    else if ((entry = ParseTable(opt, CodepageOptions())))
-    {
-        return CodepageSetOption(entry->value, ac, args, q, err, errsize);
-    }
-    else if ((entry = ParseTable(opt, OutputOptions())))
-    {
-        return OutputSetOption(entry->value, ac, args, q, err, errsize);
-    }
-    else if ((entry = ParseTable(opt, RawOutputOptions())))
-    {
-        return RawOutputSetOption(entry->value, ac, args, q, err, errsize);
-    }
-    else if ((entry = ParseTable(opt, SpecTAPOutputOptions())))
-    {
-        return SpecTAPOutputSetOption(entry->value, ac, args, q, err, errsize);
-    }
-    else if ((entry = ParseTable(opt, T64OutputOptions())))
-    {
-        return T64OutputSetOption(entry->value, ac, args, q, err, errsize);
-    }
-    else if ((entry = ParseTable(opt, ZX81OutputOptions())))
-    {
-        return ZX81OutputSetOption(entry->value, ac, args, q, err, errsize);
-    }
-    else if ((entry = ParseTable(opt, GBOutputOptions())))
-    {
-        return GBOutputSetOption(entry->value, ac, args, q, err, errsize);
-    }
-    else if ((entry = ParseTable(opt, cpu->options())))
-    {
-        return cpu->set_option(entry->value, ac, args, q, err, errsize);
+        if ((entry = ParseTable(opt, cpu->options())))
+        {
+            status = cpu->set_option(entry->value, ac, args, q, err, errsize);
+        }
     }
 
-    snprintf(err, errsize, "%s: unknown option %s", argv[0], opt);
-    return CMD_FAILED;
+    if (status == CMD_NOT_KNOWN)
+    {
+        snprintf(err, errsize, "%s: unknown option %s", argv[0], opt);
+        return CMD_FAILED;
+    }
+    else
+    {
+        return status;
+    }
 }
 
 
@@ -575,6 +603,17 @@ int main(int argc, char *argv[])
         fprintf(stderr,"Failed to read from %s\n", argv[1]);
         return EXIT_FAILURE;
     }
+
+    PushValTableHandler(ListOptions(), ListSetOption);
+    PushValTableHandler(MacroOptions(), MacroSetOption);
+    PushValTableHandler(CodepageOptions(), CodepageSetOption);
+    PushValTableHandler(OutputOptions(), OutputSetOption);
+    PushValTableHandler(RawOutputOptions(), RawOutputSetOption);
+    PushValTableHandler(SpecTAPOutputOptions(), SpecTAPOutputSetOption);
+    PushValTableHandler(T64OutputOptions(), T64OutputSetOption);
+    PushValTableHandler(ZX81OutputOptions(), ZX81OutputSetOption);
+    PushValTableHandler(GBOutputOptions(), GBOutputSetOption);
+    PushValTableHandler(SNESOutputOptions(), SNESOutputSetOption);
 
     ClearState();
 

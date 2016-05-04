@@ -19,46 +19,35 @@
 
     -------------------------------------------------------------------------
 
-    Various output type handlers
+    Gameboy ROM output
 
 */
 
-#ifndef CASM_OUTPUT_H
-#define CASM_OUTPUT_H
+#ifndef CASM_SNESOUT_H
+#define CASM_SNESOUT_H
 
 #include "parse.h"
+#include "state.h"
 #include "cmd.h"
-
-/* Pull in the output drivers
-*/
-#include "rawout.h"
-#include "specout.h"
-#include "t64out.h"
-#include "zx81out.h"
-#include "gbout.h"
-#include "snesout.h"
 
 /* ---------------------------------------- INTERFACES
 */
 
 
-/* Output options
+/* SNES Output options
 */
-const ValueTable *OutputOptions(void);
+const ValueTable *SNESOutputOptions(void);
 
-CommandStatus OutputSetOption(int opt, int argc, char *argv[],
-                              int quoted[], char *error, size_t error_size);
+CommandStatus SNESOutputSetOption(int opt, int argc, char *argv[],
+                                  int quoted[], char *error,
+                                  size_t error_size);
 
 
-/* Outputs the result of assembly.  Returns TRUE if OK, FALSE for failure.
+/* SNES ROM output of assembly.  Returns TRUE if OK, FALSE for failure.
 */
-int     OutputCode(void);
-
-
-/* Returns a reason for the last failure.
-*/
-const char *OutputError(void);
-
+int SNESOutput(const char *filename, const char *filename_bank,
+               MemoryBank **bank, int count,
+               char *error, size_t error_size);
 
 #endif
 

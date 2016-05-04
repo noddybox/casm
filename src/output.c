@@ -52,7 +52,8 @@ typedef enum
     TAP,
     T64,
     ZX81,
-    GAMEBOY
+    GAMEBOY,
+    SNES
 } Format;
 
 static char             output[4096] = "output";
@@ -67,6 +68,7 @@ static ValueTable       format_table[] =
     {"t64",             T64},
     {"zx81",            ZX81},
     {"gameboy",         GAMEBOY},
+    {"snes",            SNES},
     {NULL}
 };
 
@@ -147,6 +149,10 @@ int OutputCode(void)
         case GAMEBOY:
             return GBOutput(output, output_bank, bank, count,
                             error, sizeof error);
+
+        case SNES:
+            return SNESOutput(output, output_bank, bank, count,
+                              error, sizeof error);
 
         default:
             break;
