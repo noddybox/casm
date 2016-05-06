@@ -290,13 +290,15 @@ int SNESOutput(const char *filename, const char *filename_bank,
     */
     csum = 0;
 
+    PokeW(mem, 0xffdc, 0xffff);
+
     for(f = 0; f < count; f++)
     {
         csum = CalcChecksum(bank[f]->memory + base, len, csum);
     }
 
     PokeW(mem, 0xffde, csum);
-    PokeW(mem, 0xffdc, 0xffffu - csum);
+    PokeW(mem, 0xffdc, csum ^ 0xffff);
 
     /* Output ROM contents
     */
