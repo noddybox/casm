@@ -57,8 +57,57 @@ static char             namespace[MAX_LABEL_SIZE + 1];
 static Stack            *stack;
 
 
-/* ---------------------------------------- PRIVATE FUNCTIONS INTERFACES
+/* ---------------------------------------- PRIVATE FUNCTIONS
 */
+
+static void WriteNumber(FILE *fp, int num)
+{
+    fprintf(fp, "%.11d", num);
+}
+
+
+static int ReadNumber(FILE *fp)
+{
+    char buff[12];
+    int f;
+
+    for(f= 0 ;f < 11; f++)
+    {
+        buff[f] = getc(fp);
+    }
+
+    buff[f] = 0;
+
+    return atoi(buff);
+}
+
+
+static void WriteName(FILE *fp, const char *name)
+{
+    fputs(name, fp);
+    putc(0, fp);
+}
+
+
+static char *ReadName(FILE *fp, char *name)
+{
+    int l = MAX_LABEL_SIZE;
+    int c;
+    char *p;
+
+    p = name;
+
+    while((c = getc(fp)) && (l--))
+    {
+        *p++ = c;
+    }
+
+    *p = 0;
+
+    return name;
+}
+
+
 static Label *FindLocal(const char *p, GlobalLabel *in)
 {
     int f;
@@ -464,6 +513,62 @@ void LabelDump(FILE *fp, int dump_private)
         g = g->next;
     }
 }
+
+
+void LabelWriteBlob(FILE *fp)
+{
+    GlobalLabel *g = head;
+    int count;
+    int f;
+
+    count = 0;
+
+    while(g)
+    {
+        if (g->label.name[0] != '_')
+        {
+            count++;
+        }
+
+        g = g->next;
+    }
+
+    WriteNumber(fp, count);
+
+    g = head;
+
+    while(g)
+    {
+        if (g->label.name[0] != '_')
+        {
+            WriteName(fp, g->label.name);
+            WriteNumber(fp, g->label.value);
+        }
+
+        g = g->next;
+    }
+}
+
+
+void LabelReadBlob(FILE *fp)
+{
+    int count;
+    int f;
+
+    count = ReadNumber(fp);
+
+    for(f = 0; f < count; f++)
+    {
+        char name[MAX_LABEL_SIZE + 1];
+        int value;
+
+        ReadName(fp, name);
+        value = ReadNumber(fp);
+
+        LabelSet(name, value, GLOBAL_LABEL);
+    }
+}
+
 
 /*
 vim: ai sw=4 ts=8 expandtab

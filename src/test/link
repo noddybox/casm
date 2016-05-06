@@ -1,0 +1,6 @@
+	option  output-file,"link.out"
+	option	+list
+	option	list-labels,all
+
+	import	"lib2.lib"
+	import	"lib1.lib"

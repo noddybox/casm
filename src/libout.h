@@ -19,47 +19,47 @@
 
     -------------------------------------------------------------------------
 
-    Various output type handlers
+    LIB binary file output
 
 */
 
-#ifndef CASM_OUTPUT_H
-#define CASM_OUTPUT_H
+#ifndef CASM_LIBOUT_H
+#define CASM_LIBOUT_H
 
 #include "parse.h"
+#include "state.h"
 #include "cmd.h"
 
-/* Pull in the output drivers
-*/
-#include "rawout.h"
-#include "specout.h"
-#include "t64out.h"
-#include "zx81out.h"
-#include "gbout.h"
-#include "snesout.h"
-#include "libout.h"
+typedef enum
+{
+    LibLoadAll,
+    LibLoadLabels,
+    LibLoadMemory
+} LibLoadOption;
 
 /* ---------------------------------------- INTERFACES
 */
 
 
-/* Output options
+/* LIB Output options
 */
-const ValueTable *OutputOptions(void);
+const ValueTable *LibOutputOptions(void);
 
-CommandStatus OutputSetOption(int opt, int argc, char *argv[],
-                              int quoted[], char *error, size_t error_size);
+CommandStatus LibOutputSetOption(int opt, int argc, char *argv[],
+                                 int quoted[], char *error, size_t error_size);
 
 
-/* Outputs the result of assembly.  Returns TRUE if OK, FALSE for failure.
+/* LIB output of assembly.  Returns TRUE if OK, FALSE for failure.
 */
-int     OutputCode(void);
+int LibOutput(const char *filename, const char *filename_bank,
+              MemoryBank **bank, int count,
+              char *error, size_t error_size);
 
 
-/* Returns a reason for the last failure.
+/* Load a libray.  Returns TRUE if OK, FALSE for failure and updates error.
 */
-const char *OutputError(void);
-
+int LibLoad(const char *filename, LibLoadOption opt,
+            char *error, size_t error_size);
 
 #endif
 

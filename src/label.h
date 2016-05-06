@@ -116,6 +116,16 @@ void            LabelResetNamespace(void);
 void            LabelDump(FILE *fp, int dump_private);
 
 
+/* Dump a binary blob of information containing all the labels
+*/
+void            LabelWriteBlob(FILE *fp);
+
+
+/* Read a binary blob of information containing all the labels
+*/
+void            LabelReadBlob(FILE *fp);
+
+
 #endif
 
 /*

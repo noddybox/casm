@@ -46,7 +46,8 @@ SOURCE	=	casm.c		\
 		t64out.c	\
 		zx81out.c	\
 		gbout.c		\
-		snesout.c
+		snesout.c	\
+		libout.c
 
 OBJECTS	=	casm.o		\
 		expr.o		\
@@ -70,7 +71,8 @@ OBJECTS	=	casm.o		\
 		t64out.o	\
 		zx81out.o	\
 		gbout.o		\
-		snesout.o
+		snesout.o	\
+		libout.o
 
 $(TARGET): $(OBJECTS)
 	$(CC) $(CLAGS) -o $(TARGET) $(OBJECTS)
@@ -85,7 +87,8 @@ clean:
 alias.o: alias.c global.h basetype.h util.h state.h alias.h
 casm.o: casm.c global.h basetype.h util.h state.h expr.h label.h macro.h \
  cmd.h parse.h codepage.h stack.h listing.h alias.h output.h rawout.h \
- specout.h t64out.h zx81out.h gbout.h z80.h 6502.h gbcpu.h 65c816.h
+ specout.h t64out.h zx81out.h gbout.h snesout.h libout.h z80.h 6502.h \
+ gbcpu.h 65c816.h
 codepage.o: codepage.c global.h basetype.h util.h state.h codepage.h \
  parse.h cmd.h
 expr.o: expr.c global.h basetype.h util.h state.h expr.h label.h
@@ -95,12 +98,14 @@ gbout.o: gbout.c global.h basetype.h util.h state.h expr.h codepage.h \
  parse.h cmd.h gbout.h
 label.o: label.c global.h basetype.h util.h state.h codepage.h parse.h \
  cmd.h stack.h label.h
+libout.o: libout.c global.h basetype.h util.h state.h libout.h parse.h \
+ cmd.h
 listing.o: listing.c global.h basetype.h util.h state.h label.h macro.h \
  cmd.h parse.h expr.h varchar.h listing.h
 macro.o: macro.c global.h basetype.h util.h state.h codepage.h parse.h \
  cmd.h varchar.h macro.h
 output.o: output.c global.h basetype.h util.h state.h output.h parse.h \
- cmd.h rawout.h specout.h t64out.h zx81out.h gbout.h
+ cmd.h rawout.h specout.h t64out.h zx81out.h gbout.h snesout.h libout.h
 parse.o: parse.c global.h basetype.h util.h state.h codepage.h parse.h \
  cmd.h
 rawout.o: rawout.c global.h basetype.h util.h state.h rawout.h parse.h \

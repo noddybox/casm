@@ -506,6 +506,16 @@ static CommandStatus NULLCMD(const char *label, int argc, char *argv[],
 }
 
 
+static CommandStatus IMPORT(const char *label, int argc, char *argv[],
+                            int quoted[], char *err, size_t errsize)
+{
+    CMD_ARGC_CHECK(2);
+
+    return LibLoad(argv[1], LibLoadAll, err, errsize) ? CMD_OK : CMD_FAILED;
+}
+
+
+
 static struct
 {
     const char *cmd;
@@ -558,6 +568,8 @@ static struct
     {".alias", ALIAS},
     {"nullcmd", NULLCMD},
     {".nullcmd", NULLCMD},
+    {"import", IMPORT},
+    {".import", IMPORT},
     {NULL}
 };
 

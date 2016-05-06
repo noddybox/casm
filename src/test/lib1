@@ -1,0 +1,14 @@
+        option  output-file,lib1.lib
+	option  output-format,lib
+
+	org	$8000
+
+start_lib1:
+	ld	hl,$1234
+	call	$bb5a
+end_lib1:
+
+data1:
+	db	"I'm data from lib1"
+
+var_lib1 equ	$ffff
