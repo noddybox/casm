@@ -919,6 +919,13 @@ A Commodore 64 T64 tape file.
 A Nintendo Gameboy ROM file.
 </td></tr>
 
+<tr><td class="cmd">
+<a href="#snesout">snes</a>
+</td>
+<td class="def">
+A SNES ROM file.
+</td></tr>
+
 </table>
 
 </td></tr>
@@ -1111,6 +1118,84 @@ with a <b>reti</b> opcode.<br><br>
 <i>irq</i> can be either <b>vbl</b>, <b>lcd</b>, <b>timer</b>, <b>serial</b>
 or <b>joypad</b>.  If left at the default value of -1 then an IRQ handler is
 installed with just a <b>reti</b> instruction.
+</td></tr>
+
+</table>
+
+<h3 id="snesout">SNES ROM File Output Format</h3>
+
+<p>
+Generates a ROM file for a SNES emulator or hardware.  Note that large ROM
+sizes have not been extensively checked and verified.
+</p>
+
+<p>If a single bank was used during the assembly then a simple 32K ROM is
+assumed, and an error will be shown if the addresses used fall outside the range
+0x150 to 0x7fff. </p>
+
+<p>Similarly if multiple banks are used then it is assumed that the first bank
+is only used in the range 0x150 to 0x3fff, and subsequent banks in the range
+0x4000 to 0x7fff.  This is to fit in with the method the Gameboy uses to page
+memory banks into the upper 16K portion of the normal 32K ROM address space.
+</p>
+
+<p>By default the output driver will try and fill in the ROM size and type in
+the header properly, but these can be overridden using settings.</p>
+
+<h4>SNES ROM Output Format options</h4>
+
+<p>The SNES output driver supports the following settings that can be set via
+an <b>option</b> command.
+</p>
+
+<table>
+
+<thead><tr><td class="head">Option</td>
+<td class="head">Description</td></tr></thead>
+
+<tr><td class="cmd">
+option snes-name, <i>name</i>
+</td>
+<td class="def">
+Sets the name of the cartridge.  Defaults to "NONAME" if not set.
+</td></tr>
+
+<tr><td class="cmd">
+option snes-rom-type, &lt;lorom|hirom|lorom-fast|hirom-fast&gt;
+</td>
+<td class="def">
+Defines the memory mapping used for this cartridge.  A detailed explanation
+is beyond this document, but note that when lorom is used then just the upper
+32K of each bank is used to generate the ROM.  This is to make life easier,
+as the real physical mapping would make the lower 32K of a ROM bank 
+mapped into the upper 32K address space.  This way no hoops have to be jumped
+through.
+</td></tr>
+
+<tr><td class="cmd">
+option snes-irq, <i>irq</i>, <i>address</i>
+</td>
+<td class="def">
+Specifies an address where an IRQ routine is stored, and sets the appropriate
+vectors in emulation and native mode. <i>irq</i> can either by <b>vbl</b> for
+the vertical blanking interrupt and <b>irq</b> which is used for the scan-line
+interrupt.  Note that an error is generated if a <b>vbl</b> routine is not
+supplied.
+</td></tr>
+
+<tr><td class="cmd">
+option snes-ram-size, <i>size</i>
+</td>
+<td class="def">
+Sets the RAM size in the ROM header.
+</td></tr>
+
+<tr><td class="cmd">
+option snes-rom-size, <i>size</i>
+</td>
+<td class="def">
+Sets the ROM size in the ROM header, overriding the calculated value the output
+driver would generate.
 </td></tr>
 
 </table>
