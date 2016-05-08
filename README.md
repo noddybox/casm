@@ -33,13 +33,14 @@ Currently **casm** supports the following output drivers:
 * T64 Commodore 64 tape image
 * ZX81 P file
 * Gameboy ROM
+* SNES ROM
+* A simple library format for larger projects.
 
 Plans for:
 
-* SNES ROM
 * NES ROM
 
-## Major Changes in V1.1
+## Major Changes in V1.2
 
-* Added Gameboy support
-* Fixed breaking bugs in 6502 generation, especially around zero-page addressing
+* Added basic SNES support for processor and output.
+* Added a library format for linking together of files in a larger project.
