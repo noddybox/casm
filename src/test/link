@@ -3,4 +3,4 @@
 	option	list-labels,all
 
 	import	"lib2.lib"
-	import	"lib1.lib"
+	import	"lib1.lib",labels

@@ -149,7 +149,11 @@ int LibLoad(const char *filename, LibLoadOption opt,
         int min;
         int len;
         int old_pc;
+        unsigned old_bank;
         Byte *p;
+
+        old_bank = Bank();
+        old_pc = PC();
 
         bank = ReadNumber(fp);
         min = ReadNumber(fp);
@@ -159,20 +163,25 @@ int LibLoad(const char *filename, LibLoadOption opt,
 
         fread(buff, 1, len, fp);
 
-        old_pc = PC();
-
         SetPC(min);
         p = buff;
 
-        while(len-- > 0)
+        if (opt != LibLoadLabels)
         {
-            PCWrite(*p++);
+            while(len-- > 0)
+            {
+                PCWrite(*p++);
+            }
         }
 
         SetPC(old_pc);
+        SetAddressBank(old_bank);
     }
 
-    LabelReadBlob(fp);
+    if (opt != LibLoadMemory)
+    {
+        LabelReadBlob(fp);
+    }
 
     fclose(fp);
 

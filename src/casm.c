@@ -511,7 +511,23 @@ static CommandStatus IMPORT(const char *label, int argc, char *argv[],
 {
     CMD_ARGC_CHECK(2);
 
-    return LibLoad(argv[1], LibLoadAll, err, errsize) ? CMD_OK : CMD_FAILED;
+    if (argc == 3)
+    {
+        if (CompareString(argv[2], "labels"))
+        {
+            return LibLoad(argv[1], LibLoadLabels, err, errsize) ?
+                                                        CMD_OK : CMD_FAILED;
+        }
+        else
+        {
+            snprintf(err, errsize, "%s: unknown argument %s", argv[0], argv[2]);
+            return CMD_FAILED;
+        }
+    }
+    else
+    {
+        return LibLoad(argv[1], LibLoadAll, err, errsize) ? CMD_OK : CMD_FAILED;
+    }
 }
 
 

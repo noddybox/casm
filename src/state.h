@@ -62,6 +62,11 @@ void    ClearState(void);
 void    SetAddressBank(unsigned bank);
 
 
+/* Get the current bank
+*/
+unsigned Bank(void);
+
+
 /* Move onto the next pass
 */
 void    NextPass(void);

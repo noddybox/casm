@@ -188,6 +188,12 @@ void SetAddressBank(unsigned b)
 }
 
 
+unsigned Bank(void)
+{
+    return currbank;
+}
+
+
 void SetWordMode(WordMode mode)
 {
     wmode = mode;
