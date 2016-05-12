@@ -40,6 +40,7 @@ SOURCE	=	casm.c		\
 		6502.c		\
 		65c816.c	\
 		z80.c		\
+		spc700.c	\
 		gbcpu.c		\
 		rawout.c	\
 		specout.c	\
@@ -65,6 +66,7 @@ OBJECTS	=	casm.o		\
 		6502.o		\
 		65c816.o	\
 		z80.o		\
+		spc700.o	\
 		gbcpu.o		\
 		rawout.o	\
 		specout.o	\
@@ -88,7 +90,7 @@ alias.o: alias.c global.h basetype.h util.h state.h alias.h
 casm.o: casm.c global.h basetype.h util.h state.h expr.h label.h macro.h \
  cmd.h parse.h codepage.h stack.h listing.h alias.h output.h rawout.h \
  specout.h t64out.h zx81out.h gbout.h snesout.h libout.h z80.h 6502.h \
- gbcpu.h 65c816.h
+ gbcpu.h 65c816.h spc700.h
 codepage.o: codepage.c global.h basetype.h util.h state.h codepage.h \
  parse.h cmd.h
 expr.o: expr.c global.h basetype.h util.h state.h expr.h label.h
@@ -99,7 +101,7 @@ gbout.o: gbout.c global.h basetype.h util.h state.h expr.h codepage.h \
 label.o: label.c global.h basetype.h util.h state.h codepage.h parse.h \
  cmd.h stack.h label.h
 libout.o: libout.c global.h basetype.h util.h state.h libout.h parse.h \
- cmd.h
+ cmd.h label.h
 listing.o: listing.c global.h basetype.h util.h state.h label.h macro.h \
  cmd.h parse.h expr.h varchar.h listing.h
 macro.o: macro.c global.h basetype.h util.h state.h codepage.h parse.h \
@@ -112,6 +114,8 @@ rawout.o: rawout.c global.h basetype.h util.h state.h rawout.h parse.h \
  cmd.h
 snesout.o: snesout.c global.h basetype.h util.h state.h expr.h codepage.h \
  parse.h cmd.h snesout.h
+spc700.o: spc700.c global.h basetype.h util.h state.h expr.h label.h \
+ parse.h cmd.h codepage.h spc700.h
 specout.o: specout.c global.h basetype.h util.h state.h specout.h parse.h \
  cmd.h
 stack.o: stack.c global.h basetype.h util.h state.h stack.h

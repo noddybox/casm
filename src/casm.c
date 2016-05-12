@@ -48,6 +48,7 @@
 #include "6502.h"
 #include "gbcpu.h"
 #include "65c816.h"
+#include "spc700.h"
 
 
 /* ---------------------------------------- MACROS
@@ -76,7 +77,7 @@ static const char *casm_usage =
 typedef struct
 {
     const char          *name;
-    int                 mem_size;
+    int                 address_space;
     WordMode            word_mode;
     void                (*init)(void);
     const ValueTable    *(*options)(void);
@@ -123,6 +124,12 @@ static const CPU cpu_table[]=
         0x10000,
         LSB_Word,
         Init_65c816, Options_65c816, SetOption_65c816, Handler_65c816
+    },
+    {
+        "spc700",
+        0x10000,
+        LSB_Word,
+        Init_SPC700, Options_SPC700, SetOption_SPC700, Handler_SPC700
     },
 
     {NULL}
@@ -416,6 +423,7 @@ static CommandStatus ARCH(const char *label, int argc, char *argv[],
         {
             cpu = cpu_table + f;
             SetWordMode(cpu->word_mode);
+            SetAddressSpace(cpu->address_space);
             return CMD_OK;
         }
     }
@@ -509,25 +517,22 @@ static CommandStatus NULLCMD(const char *label, int argc, char *argv[],
 static CommandStatus IMPORT(const char *label, int argc, char *argv[],
                             int quoted[], char *err, size_t errsize)
 {
+    LibLoadOption opt = LibLoadAll;
+    int offset = 0;
+
     CMD_ARGC_CHECK(2);
 
-    if (argc == 3)
+    if (argc >= 3 && CompareString(argv[2], "labels"))
     {
-        if (CompareString(argv[2], "labels"))
-        {
-            return LibLoad(argv[1], LibLoadLabels, err, errsize) ?
-                                                        CMD_OK : CMD_FAILED;
-        }
-        else
-        {
-            snprintf(err, errsize, "%s: unknown argument %s", argv[0], argv[2]);
-            return CMD_FAILED;
-        }
+        opt = LibLoadLabels;
     }
-    else
+
+    if (argc >= 4)
     {
-        return LibLoad(argv[1], LibLoadAll, err, errsize) ? CMD_OK : CMD_FAILED;
+        CMD_EXPR(argv[3], offset);
     }
+
+    return LibLoad(argv[1], opt, offset,  err, errsize) ? CMD_OK : CMD_FAILED;
 }
 
 
@@ -711,6 +716,7 @@ static void InitProcessors(void)
     }
 
     SetWordMode(cpu->word_mode);
+    SetAddressSpace(cpu->address_space);
 }
 
 

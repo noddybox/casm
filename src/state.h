@@ -107,6 +107,11 @@ void    SetPC(int i);
 void    SetWordMode(WordMode mode);
 
 
+/* Set the size of address space
+*/
+void    SetAddressSpace(int size);
+
+
 /* Get the current PC
 */
 int     PC(void);

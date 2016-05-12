@@ -2,5 +2,5 @@
 	option	+list
 	option	list-labels,all
 
-	import	"lib2.lib"
-	import	"lib1.lib",labels
+	import	"lib2.lib",all,-$1000
+	import	"lib1.lib",all,$1000

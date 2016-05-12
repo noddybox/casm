@@ -550,7 +550,7 @@ void LabelWriteBlob(FILE *fp)
 }
 
 
-void LabelReadBlob(FILE *fp)
+void LabelReadBlob(FILE *fp, int offset)
 {
     int count;
     int f;
@@ -565,7 +565,7 @@ void LabelReadBlob(FILE *fp)
         ReadName(fp, name);
         value = ReadNumber(fp);
 
-        LabelSet(name, value, GLOBAL_LABEL);
+        LabelSet(name, value + offset, GLOBAL_LABEL);
     }
 }
 

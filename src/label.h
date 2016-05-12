@@ -121,9 +121,10 @@ void            LabelDump(FILE *fp, int dump_private);
 void            LabelWriteBlob(FILE *fp);
 
 
-/* Read a binary blob of information containing all the labels
+/* Read a binary blob of information containing all the labels, adjusting values
+   by the passed offset.
 */
-void            LabelReadBlob(FILE *fp);
+void            LabelReadBlob(FILE *fp, int offset);
 
 
 #endif

@@ -58,7 +58,7 @@ int LibOutput(const char *filename, const char *filename_bank,
 
 /* Load a libray.  Returns TRUE if OK, FALSE for failure and updates error.
 */
-int LibLoad(const char *filename, LibLoadOption opt,
+int LibLoad(const char *filename, LibLoadOption opt, int offset,
             char *error, size_t error_size);
 
 #endif

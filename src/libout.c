@@ -117,7 +117,7 @@ int LibOutput(const char *filename, const char *filename_bank,
 }
 
 
-int LibLoad(const char *filename, LibLoadOption opt,
+int LibLoad(const char *filename, LibLoadOption opt, int offset,
             char *error, size_t error_size)
 {
     char magic[CASM_LIBRARY_MAGIC_LEN + 1] = {0};
@@ -163,7 +163,7 @@ int LibLoad(const char *filename, LibLoadOption opt,
 
         fread(buff, 1, len, fp);
 
-        SetPC(min);
+        SetPC((min + offset));
         p = buff;
 
         if (opt != LibLoadLabels)
@@ -180,7 +180,7 @@ int LibLoad(const char *filename, LibLoadOption opt,
 
     if (opt != LibLoadMemory)
     {
-        LabelReadBlob(fp);
+        LabelReadBlob(fp, offset);
     }
 
     fclose(fp);

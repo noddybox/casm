@@ -40,6 +40,7 @@ static int      pass = 1;
 static int      maxpass = 2;
 static int      pc = 0;
 static int      num_banks = 0;
+static int      address_space = 0;
 static unsigned currbank = 0;
 static WordMode wmode = LSB_Word;
 
@@ -200,9 +201,25 @@ void SetWordMode(WordMode mode)
 }
 
 
+void SetAddressSpace(int size)
+{
+    address_space = size;
+}
+
+
 void SetPC(int i)
 {
     pc = i;
+
+    if (address_space > 0)
+    {
+        while (pc < 0)
+        {
+            pc += address_space;
+        }
+
+        pc = pc % address_space;
+    }
 }
 
 
