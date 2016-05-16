@@ -1,0 +1,252 @@
+		processor	spc700
+
+inm	equ	$e5
+labs	equ	$ffe5
+dp	equ	$80
+
+  MOV    A, #inm
+  MOV    A, (X)
+  MOV    A, (X)+
+  MOV    A, dp
+  MOV    A, dp+X
+  MOV    A, labs
+  MOV    A, labs+X
+  MOV    A, labs+Y
+  MOV    A, (dp+X)
+  MOV    A, (dp)+Y
+  MOV    X, #inm
+  MOV    X, dp
+  MOV    X, dp+Y
+  MOV    X, labs
+  MOV    Y, #inm
+  MOV    Y, dp
+  MOV    Y, dp+X
+  MOV    Y, labs
+  MOV    (X),A
+  MOV    (X)+,A
+  MOV    dp,A
+  MOV    dp+X,A
+  MOV    labs,A
+  MOV    labs+X,A
+  MOV    labs+Y,A
+  MOV    (dp+X),A
+  MOV    (dp)+Y,A
+  MOV    dp,X
+  MOV    dp+Y,X
+  MOV    labs,X
+  MOV    dp,Y
+  MOV    dp+X,Y
+  MOV    labs,Y
+  MOV    A, X
+  MOV    A, Y
+  MOV    X, A
+  MOV    Y, A
+  MOV    X, SP
+  MOV    SP, X
+  MOV    dp,dp
+  MOV    dp,#inm
+  ADC    A,#inm
+  ADC    A,(X)
+  ADC    A,dp
+  ADC    A,dp+X
+  ADC    A,labs
+  ADC    A,labs+X
+  ADC    A,labs+Y
+  ADC    A,(dp+X)
+  ADC    A,(dp)+Y
+  ADC    (X),(Y)
+  ADC    dp,dp
+  ADC    dp,#inm
+  SBC    A,#inm
+  SBC    A,(X)
+  SBC    A,dp
+  SBC    A,dp+X
+  SBC    A,labs
+  SBC    A,labs+X
+  SBC    A,labs+Y
+  SBC    A,(dp+X)
+  SBC    A,(dp)+Y
+  SBC    (X),(Y)
+  SBC    dp,dp
+  SBC    dp,#inm
+  CMP    A,#inm
+  CMP    A,(X)
+  CMP    A,dp
+  CMP    A,dp+X
+  CMP    A,labs
+  CMP    A,labs+X
+  CMP    A,labs+Y
+  CMP    A,(dp+X)
+  CMP    A,(dp)+Y
+  CMP    (X),(Y)
+  CMP    dp,dp
+  CMP    dp,#inm
+  CMP    X,#inm
+  CMP    X,dp
+  CMP    X,labs
+  CMP    Y,#inm
+  CMP    Y,dp
+  CMP    Y,labs
+  AND    A,#inm
+  AND    A,(X)
+  AND    A,dp
+  AND    A,dp+X
+  AND    A,labs
+  AND    A,labs+X
+  AND    A,labs+Y
+  AND    A,(dp+X)
+  AND    A,(dp)+Y
+  AND    (X),(Y)
+  AND    dp,dp
+  AND    dp,#inm
+  OR     A,#inm
+  OR     A,(X)
+  OR     A,dp
+  OR     A,dp+X
+  OR     A,labs
+  OR     A,labs+X
+  OR     A,labs+Y
+  OR     A,(dp+X)
+  OR     A,(dp)+Y
+  OR     (X),(Y)
+  OR     dp,dp
+  OR     dp,#inm
+  EOR    A,#inm
+  EOR    A,(X)
+  EOR    A,dp
+  EOR    A,dp+X
+  EOR    A,labs
+  EOR    A,labs+X
+  EOR    A,labs+Y
+  EOR    A,(dp+X)
+  EOR    A,(dp)+Y
+  EOR    (X),(Y)
+  EOR    dp,dp
+  EOR    dp,#inm
+  INC      A
+  INC      dp
+  INC     dp+X
+  INC     labs
+  INC      X
+  INC      Y
+  DEC      A
+  DEC      dp
+  DEC     dp+X
+  DEC     labs
+  DEC      X
+  DEC      Y
+  ASL      A
+  ASL      dp
+  ASL     dp+X
+  ASL     labs
+  LSR      A
+  LSR      dp
+  LSR     dp+X
+  LSR     labs
+  ROL      A
+  ROL      dp
+  ROL     dp+X
+  ROL     labs
+  ROR      A
+  ROR      dp
+  ROR     dp+X
+  ROR     labs
+  XCN      A
+  
+  MOVW     YA,dp
+  MOVW     dp,YA
+  INCW     dp
+  DECW     dp
+  ADDW    YA,dp
+  SUBW    YA,dp
+  CMPW    YA,dp
+  MUL      YA
+  DIV      YA,X
+  DAA       A
+  DAS       A
+  BRA     rel
+  BEQ     rel
+  BNE     rel
+  BCS     rel
+  BCC     rel
+  BVS     rel
+  BVC     rel
+  BMI     rel
+  BPL     rel
+  BBS0  dp,rel   
+  BBS1  dp,rel   
+  BBS2  dp,rel   
+  BBS3  dp,rel   
+  BBS4  dp,rel   
+  BBS5  dp,rel   
+  BBS6  dp,rel   
+  BBS7  dp,rel   
+  BBC0  dp,rel 
+  BBC1  dp,rel 
+  BBC2  dp,rel 
+  BBC3  dp,rel 
+  BBC4  dp,rel 
+  BBC5  dp,rel 
+  BBC6  dp,rel 
+  BBC7  dp,rel 
+  CBNE   dp,rel
+  CBNE  dp+X,rel
+  DBNZ   dp,rel
+  DBNZ    Y,rel
+  JMP     labs
+  JMP    (labs+X)
+  CALL     labs
+  PCALL   $ff00
+  TCALL     7
+  BRK
+rel:
+                                                                       
+  RET
+  RETI
+  PUSH      A
+  PUSH      X
+  PUSH      Y
+  PUSH     PSW
+  POP       A
+  POP       X
+  POP       Y
+  POP      PSW
+  SET0    dp
+  SET1    dp
+  SET2    dp
+  SET3    dp
+  SET4    dp
+  SET5    dp
+  SET6    dp
+  SET7    dp
+  CLR0    dp
+  CLR1    dp
+  CLR2    dp
+  CLR3    dp
+  CLR4    dp
+  CLR5    dp
+  CLR6    dp
+  CLR7    dp
+  
+  TSET1    labs
+  TCLR1    labs
+  
+  AND1   C,$1234.$05
+  AND1   C,/$1234.$05
+  OR1    C,$1234.$05
+  OR1    C,/$1234.$05
+  EOR1   C,$1234.$05
+  NOT1   $1234.$05
+  MOV1   C,$1234.$05
+  MOV1   $1234.$05,C
+  CLRC
+  SETC
+  NOTC
+  CLRV
+  CLRP
+  SETP
+  EI
+  DI
+  NOP
+  SLEEP
+  STOP
