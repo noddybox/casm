@@ -24,6 +24,7 @@ strout1:macro
 	jr	z,end_str
 	call	BDOS
 	inc	de
+	inc	de
 	jr	loop
 
 .str	defb	\*,0
@@ -37,7 +38,7 @@ strout1:macro
 	org	$100
 
 	strout	str
-	strout1	"Bye world", 13, 10, '$'
+	strout1	"Bye world", 13, 10, '$$'
 
 	ret
 

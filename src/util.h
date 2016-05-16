@@ -54,8 +54,17 @@ char    *RemoveNL(char *p);
 
 
 /* Remove white space from the start and end of a string.
+   Characters from the front are removed by memmov()ing the string, so the
+   returned point is always the same as the passed 'p'.
 */
 char    *Trim(char *p);
+
+
+/* Remove passed characters from the start and end of a string.
+   Characters from the front are removed by memmov()ing the string, so the
+   returned point is always the same as the passed 'p'.
+*/
+char    *TrimChars(char *p, const char *chars);
 
 
 /* Compare a string, but case insensitive.  Returns TRUE for match, otherwise

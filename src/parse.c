@@ -97,6 +97,17 @@ static void AddToken(const char *start, const char *end, Line *line, int quoted)
 }
 
 
+static int IsClosure(const char *p, const char *sep)
+{
+    while(*p && isspace(*p))
+    {
+	p++;
+    }
+
+    return !*p || strchr(sep, *p);
+}
+
+
 /* ---------------------------------------- INTERFACES
 */
 
@@ -210,9 +221,25 @@ int ParseLine(Line *line, const char *source)
                 {
                     if (quote)
                     {
+                        /* When we find a closing quote check if the following
+                           character is a seperator or end-of-line.  If not
+                           this wasn't really a quoted string.
+                        */
                         if (*p == quote)
                         {
-                            state = CONSUME_WS;
+			    if (IsClosure(p + 1, sep_chars[stage]))
+                            {
+                                state = CONSUME_WS;
+                            }
+                            else
+                            {
+                                /* Wasn't a real closue, so add the quote as
+                                   a character onto the string.
+                                */
+                                quote = 0;
+                                open_quote = 0;
+                                start--;
+                            }
                         }
                     }
                     else if (strchr(sep_chars[stage], *p) || *p == ';')

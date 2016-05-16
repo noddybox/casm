@@ -109,6 +109,27 @@ char *Trim(char *p)
 }
 
 
+char *TrimChars(char *p, const char *chars)
+{
+    if (p)
+    {
+        size_t l = strlen(p);
+
+        while (l > 0 && strchr(chars, *p))
+        {
+            memmove(p, p + 1, l--);
+        }
+
+        while(l > 1 && strchr(chars, p[l-1]))
+        {
+            p[--l] = 0;
+        }
+    }
+
+    return p;
+}
+
+
 char *CopyStr(char *dest, const char *src, size_t size)
 {
     strncpy(dest, src, size);

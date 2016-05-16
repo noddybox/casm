@@ -39,32 +39,32 @@
 */
 enum option_t
 {
-    OPT_ZP
+    OPT_DP
 };
 
-enum zp_mode_t
+enum dp_mode_t
 {
-    ZP_OFF,
-    ZP_ON,
-    ZP_AUTO
+    DP_OFF,
+    DP_ON,
+    DP_AUTO
 };
 
 static const ValueTable options[] =
 {
-    {"zero-page",       OPT_ZP},
+    {"direct-page",       OPT_DP},
     {NULL}
 };
 
-static const ValueTable zp_table[] =
+static const ValueTable dp_table[] =
 {
-    YES_NO_ENTRIES(ZP_ON, ZP_OFF),
-    {"auto", ZP_AUTO},
+    YES_NO_ENTRIES(DP_ON, DP_OFF),
+    {"auto", DP_AUTO},
     {NULL}
 };
 
 static struct
 {
-    enum zp_mode_t zp_mode;
+    enum dp_mode_t dp_mode;
 } option;
 
 
@@ -77,7 +77,8 @@ typedef enum
     SP_REGISTER,
     C_FLAG,
     PSW_REGISTER,
-    NOTTED_BIT,
+    BIT_ADDRESS,
+    NOTTED_BIT_ADDRESS,
     INDIRECT_X,
     INDIRECT_Y,
     INDIRECT_X_INC,
@@ -104,7 +105,8 @@ static const char *address_mode_name[] =
     "Stack Pointer",
     "Carry flag",
     "PSW register",
-    "Notted (/) bit",
+    "Bit address",
+    "Notted (/) bit address",
     "Indirect X",
     "Indirect Y",
     "Indirect X increment",
@@ -163,12 +165,12 @@ do                                                                      \
 } while(0)
 
 
-#define CMD_ZP_MODE(ZP_mode, non_ZP_mode)                               \
+#define CMD_DP_MODE(DP_mode, non_DP_mode)                               \
 do                                                                      \
 {                                                                       \
-    switch(option.zp_mode)                                              \
+    switch(option.dp_mode)                                              \
     {                                                                   \
-        case ZP_ON:                                                     \
+        case DP_ON:                                                     \
             if (*address < 0 || *address > 255)                         \
             {                                                           \
                 snprintf(err, errsize, "value %d outside of "           \
@@ -177,25 +179,36 @@ do                                                                      \
                 return;                                                 \
             }                                                           \
                                                                         \
-            *mode = ZP_mode;                                            \
+            *mode = DP_mode;                                            \
             break;                                                      \
                                                                         \
-        case ZP_OFF:                                                    \
-            *mode = non_ZP_mode;                                        \
+        case DP_OFF:                                                    \
+            *mode = non_DP_mode;                                        \
             break;                                                      \
                                                                         \
-        case ZP_AUTO:                                                   \
+        case DP_AUTO:                                                   \
             if (*address >= 0 && *address <= 255)                       \
             {                                                           \
-                *mode = ZP_mode;                                        \
+                *mode = DP_mode;                                        \
             }                                                           \
             else                                                        \
             {                                                           \
-                *mode = non_ZP_mode;                                    \
+                *mode = non_DP_mode;                                    \
             }                                                           \
             break;                                                      \
     }                                                                   \
 } while (0)
+
+#define CHECK_RANGE(val, min, max)                                      \
+do {                                                                    \
+    if (val < min || val > max)                                         \
+    {                                                                   \
+        snprintf(err, errsize, "%s: value %d outside "                  \
+                                    "of valid range %d - %d",           \
+                                        argv[0], val, min, max);        \
+        return CMD_FAILED;                                              \
+    }                                                                   \
+} while(0)
 
 
 /* ---------------------------------------- PRIVATE FUNCTIONS
@@ -285,19 +298,75 @@ static void CalcAddressMode(int argc, char *argv[], int quoted[], int index,
         return;
     }
 
-    /* 'Notted' bit
+    /* Bit addresses
     */
-    if (arg[0] == '/')
+    if (strchr(arg, '.'))
     {
-        *mode = NOTTED_BIT;
+        char *copy;
+        char *end;
+        int a,b;
 
-        if (!ExprEval(arg + 1, address))
+        copy = DupStr(arg);
+        end = strrchr(copy, '.');
+        *end++ = 0;
+
+        if (arg[0] == '/')
         {
-            snprintf(err, errsize, "%s: expression error: %s",
-                                        arg + 1, ExprError());
-            *mode = ADDR_MODE_ERROR;
+            *mode = NOTTED_BIT_ADDRESS;
+
+            if (IsFinalPass() && !ExprEval(copy + 1, &a))
+            {
+                snprintf(err, errsize, "%s: expression error: %s",
+                                            copy + 1, ExprError());
+                *mode = ADDR_MODE_ERROR;
+                free(copy);
+                return;
+            }
+        }
+        else
+        {
+            *mode = BIT_ADDRESS;
+
+            if (IsFinalPass() && !ExprEval(copy, &a))
+            {
+                snprintf(err, errsize, "%s: expression error: %s",
+                                            copy, ExprError());
+                *mode = ADDR_MODE_ERROR;
+                free(copy);
+                return;
+            }
         }
 
+        if (IsFinalPass() && !ExprEval(end, &b))
+        {
+            snprintf(err, errsize, "%s: expression error: %s",
+                                        end, ExprError());
+            *mode = ADDR_MODE_ERROR;
+            free(copy);
+            return;
+        }
+
+        if (IsFinalPass() && (a < 0 || a > 0x1fff))
+        {
+            snprintf(err, errsize, "%s: address component of bit address "
+                                    "out of valid range 0x0 to 0x1fff", copy);
+            *mode = ADDR_MODE_ERROR;
+            free(copy);
+            return;
+        }
+
+        if (IsFinalPass() && (b < 0 || b > 7))
+        {
+            snprintf(err, errsize, "%s: address component of bit address "
+                                    "out of valid range 0 to 7", end);
+            *mode = ADDR_MODE_ERROR;
+            free(copy);
+            return;
+        }
+
+        *address = a | b << 13;
+
+        free(copy);
         return;
     }
 
@@ -307,7 +376,7 @@ static void CalcAddressMode(int argc, char *argv[], int quoted[], int index,
     {
         *mode = IMMEDIATE;
 
-        if (!ExprEval(arg + 1, address))
+        if (IsFinalPass() && !ExprEval(arg + 1, address))
         {
             snprintf(err, errsize, "%s: expression error: %s",
                                         arg + 1, ExprError());
@@ -332,7 +401,7 @@ static void CalcAddressMode(int argc, char *argv[], int quoted[], int index,
         */
         if (quote == '(' && CompareString(end, "X"))
         {
-            if (!ExprEval(copy, address))
+            if (IsFinalPass() && !ExprEval(copy, address))
             {
                 snprintf(err, errsize, "%s: expression error: %s",
                                             copy, ExprError());
@@ -351,10 +420,15 @@ static void CalcAddressMode(int argc, char *argv[], int quoted[], int index,
         */
         if (!quote && *copy == '(' && CompareString(end, "Y"))
         {
-            if (!ExprEval(copy + 1, address))
+            /* Remember that the expression parser doesn't allow
+               round braclets.
+            */
+            TrimChars(copy, "()");
+
+            if (IsFinalPass() && !ExprEval(copy, address))
             {
                 snprintf(err, errsize, "%s: expression error: %s",
-                                            copy + 1, ExprError());
+                                            copy, ExprError());
                 *mode = ADDR_MODE_ERROR;
             }
             else
@@ -370,7 +444,7 @@ static void CalcAddressMode(int argc, char *argv[], int quoted[], int index,
         */
         if (!quote && CompareString(end, "X"))
         {
-            if (!ExprEval(copy, address))
+            if (IsFinalPass() && !ExprEval(copy, address))
             {
                 snprintf(err, errsize, "%s: expression error: %s",
                                             copy, ExprError());
@@ -378,7 +452,7 @@ static void CalcAddressMode(int argc, char *argv[], int quoted[], int index,
             }
             else
             {
-                CMD_ZP_MODE(DIRECT_PAGE_INDEX_X, ABSOLUTE_INDEX_X);
+                CMD_DP_MODE(DIRECT_PAGE_INDEX_X, ABSOLUTE_INDEX_X);
             }
 
             free(copy);
@@ -389,7 +463,7 @@ static void CalcAddressMode(int argc, char *argv[], int quoted[], int index,
         */
         if (!quote && CompareString(end, "Y"))
         {
-            if (!ExprEval(copy, address))
+            if (IsFinalPass() && !ExprEval(copy, address))
             {
                 snprintf(err, errsize, "%s: expression error: %s",
                                             copy, ExprError());
@@ -397,7 +471,7 @@ static void CalcAddressMode(int argc, char *argv[], int quoted[], int index,
             }
             else
             {
-                CMD_ZP_MODE(DIRECT_PAGE_INDEX_Y, ABSOLUTE_INDEX_Y);
+                CMD_DP_MODE(DIRECT_PAGE_INDEX_Y, ABSOLUTE_INDEX_Y);
             }
 
             free(copy);
@@ -409,7 +483,7 @@ static void CalcAddressMode(int argc, char *argv[], int quoted[], int index,
 
     /* If all else fails, Absolute
     */
-    if (!ExprEval(arg, address))
+    if (IsFinalPass() && !ExprEval(arg, address))
     {
         snprintf(err, errsize, "%s: expression error:  %s",
                                     arg, ExprError());
@@ -417,7 +491,7 @@ static void CalcAddressMode(int argc, char *argv[], int quoted[], int index,
         return;
     }
 
-    CMD_ZP_MODE(DIRECT_PAGE, ABSOLUTE);
+    CMD_DP_MODE(DIRECT_PAGE, ABSOLUTE);
 }
 
 
@@ -471,6 +545,20 @@ static int WriteRegisterPairModes(const char *caller,
 }
 
 
+static int MakeRelative(int *addr, char *cmd, char *err, size_t errsize)
+{
+    *addr = *addr - (PC() + 2);
+
+    if (IsFinalPass() && (*addr < -128 || *addr > 127))
+    {
+        snprintf(err, errsize, "%s: Branch offset (%d) too big",
+                                    cmd, *addr);
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
 
 /* ---------------------------------------- COMMAND HANDLERS
 */
@@ -486,6 +574,7 @@ static RegisterPairCodes codes[] =                                             \
     {ACCUMULATOR,           ABSOLUTE,               {base + 0x05, WW_RHS}},    \
     {ACCUMULATOR,           ABSOLUTE_INDEX_X,       {base + 0x15, WW_RHS}},    \
     {ACCUMULATOR,           ABSOLUTE_INDEX_Y,       {base + 0x16, WW_RHS}},    \
+    {ACCUMULATOR,           DIRECT_PAGE_INDEX_Y,    {base + 0x16, WW_RHS}},    \
     {ACCUMULATOR,           DIRECT_PAGE_INDIRECT_X, {base + 0x07, WB_RHS}},    \
     {ACCUMULATOR,           DIRECT_PAGE_INDIRECT_Y, {base + 0x17, WB_RHS}},    \
     {INDIRECT_X,            INDIRECT_Y,             {base + 0x19}},            \
@@ -525,6 +614,7 @@ static CommandStatus MOV(const char *label, int argc, char *argv[],
         {ACCUMULATOR,           DIRECT_PAGE_INDEX_X,    {0xf4, WB_RHS}},
         {ACCUMULATOR,           ABSOLUTE,               {0xe5, WW_RHS}},
         {ACCUMULATOR,           ABSOLUTE_INDEX_X,       {0xf5, WW_RHS}},
+        {ACCUMULATOR,           DIRECT_PAGE_INDEX_Y,    {0xf6, WW_RHS}},
         {ACCUMULATOR,           ABSOLUTE_INDEX_Y,       {0xf6, WW_RHS}},
         {ACCUMULATOR,           DIRECT_PAGE_INDIRECT_X, {0xe7, WB_RHS}},
         {ACCUMULATOR,           DIRECT_PAGE_INDIRECT_Y, {0xf7, WB_RHS}},
@@ -546,6 +636,7 @@ static CommandStatus MOV(const char *label, int argc, char *argv[],
         {ABSOLUTE,              ACCUMULATOR,            {0xc5, WW_LHS}},
         {ABSOLUTE_INDEX_X,      ACCUMULATOR,            {0xd5, WW_LHS}},
         {ABSOLUTE_INDEX_Y,      ACCUMULATOR,            {0xd6, WW_LHS}},
+        {DIRECT_PAGE_INDEX_Y,   ACCUMULATOR,            {0xd6, WW_LHS}},
         {DIRECT_PAGE_INDIRECT_X,ACCUMULATOR,            {0xc7, WB_LHS}},
         {DIRECT_PAGE_INDIRECT_Y,ACCUMULATOR,            {0xd7, WB_LHS}},
 
@@ -561,7 +652,8 @@ static CommandStatus MOV(const char *label, int argc, char *argv[],
         {ACCUMULATOR,           Y_REGISTER,             {0xdd}},
         {X_REGISTER,            ACCUMULATOR,            {0x5d}},
         {Y_REGISTER,            ACCUMULATOR,            {0xfd}},
-        {X_REGISTER,            SP_REGISTER,            {0xbd}},
+        {X_REGISTER,            SP_REGISTER,            {0x9d}},
+        {SP_REGISTER,           X_REGISTER,             {0xbd}},
         {DIRECT_PAGE,           DIRECT_PAGE,            {0xfa, WB_LHS, WB_RHS}},
         {DIRECT_PAGE,           IMMEDIATE,              {0x8f, WB_LHS, WB_RHS}}
     };
@@ -673,6 +765,7 @@ static CommandStatus CMP(const char *label, int argc, char *argv[],
         {ACCUMULATOR,           ABSOLUTE,               {0x65, WW_RHS}},
         {ACCUMULATOR,           ABSOLUTE_INDEX_X,       {0x75, WW_RHS}},
         {ACCUMULATOR,           ABSOLUTE_INDEX_Y,       {0x76, WW_RHS}},
+        {ACCUMULATOR,           DIRECT_PAGE_INDEX_Y,    {0x76, WW_RHS}},
         {ACCUMULATOR,           DIRECT_PAGE_INDIRECT_X, {0x67, WB_RHS}},
         {ACCUMULATOR,           DIRECT_PAGE_INDIRECT_Y, {0x77, WB_RHS}},
         {INDIRECT_X,            INDIRECT_Y,             {0x79}},
@@ -894,6 +987,7 @@ static CommandStatus JMP(const char *label, int argc, char *argv[],
 
         case DIRECT_PAGE_INDEX_X:
         case ABSOLUTE_INDEX_X:
+        case DIRECT_PAGE_INDIRECT_X:
             PCWrite(0x1f);
             PCWriteWord(address);
             return CMD_OK;
@@ -938,9 +1032,33 @@ static CommandStatus PCALL(const char *label, int argc, char *argv[],
 
     switch(mode)
     {
+        case ABSOLUTE:
         case DIRECT_PAGE:
             PCWrite(0x4f);
             PCWrite(address);
+            return CMD_OK;
+
+        default:
+            snprintf(err, errsize, "%s: unsupported addressing mode %s",
+                                            argv[0], address_mode_name[mode]);
+            return CMD_FAILED;
+    }
+}
+
+static CommandStatus TCALL(const char *label, int argc, char *argv[],
+                           int quoted[], char *err, size_t errsize)
+{
+    address_mode_t mode;
+    int address;
+
+    ADDRESS_MODE(mode, address, 1);
+
+    switch(mode)
+    {
+        case ABSOLUTE:
+        case DIRECT_PAGE:
+            CHECK_RANGE(address, 0, 15);
+            PCWrite(0x01 + 0x10 * address);
             return CMD_OK;
 
         default:
@@ -1314,6 +1432,413 @@ static CommandStatus POP(const char *label, int argc, char *argv[],
     }
 }
 
+static CommandStatus BBCx(const char *label, int argc, char *argv[],
+                          int quoted[], char *err, size_t errsize)
+{
+    address_mode_t mode1, mode2;
+    int addr1, addr2;
+    int bit;
+
+    CMD_ARGC_CHECK(3);
+
+    ADDRESS_MODE(mode1, addr1, 1);
+    ADDRESS_MODE(mode2, addr2, 2);
+
+    bit = argv[0][strlen(argv[0]) - 1] - '0';
+
+    if (!MakeRelative(&addr2, argv[0], err, errsize))
+    {
+        return CMD_FAILED;
+    }
+
+    switch(mode1)
+    {
+        case ABSOLUTE:
+        case DIRECT_PAGE:
+            PCWrite(0x13 + bit * 0x20);
+            PCWrite(addr1);
+            PCWrite(addr2);
+            return CMD_OK;
+
+        default:
+            snprintf(err, errsize, "%s: unsupported addressing mode %s",
+                                            argv[0], address_mode_name[mode1]);
+            return CMD_FAILED;
+    }
+}
+
+static CommandStatus BBSx(const char *label, int argc, char *argv[],
+                          int quoted[], char *err, size_t errsize)
+{
+    address_mode_t mode1, mode2;
+    int addr1, addr2;
+    int bit;
+
+    CMD_ARGC_CHECK(3);
+
+    ADDRESS_MODE(mode1, addr1, 1);
+    ADDRESS_MODE(mode2, addr2, 2);
+
+    bit = argv[0][strlen(argv[0]) - 1] - '0';
+
+    if (!MakeRelative(&addr2, argv[0], err, errsize))
+    {
+        return CMD_FAILED;
+    }
+
+    switch(mode1)
+    {
+        case ABSOLUTE:
+        case DIRECT_PAGE:
+            PCWrite(0x03 + bit * 0x20);
+            PCWrite(addr1);
+            PCWrite(addr2);
+            return CMD_OK;
+
+        default:
+            snprintf(err, errsize, "%s: unsupported addressing mode %s",
+                                            argv[0], address_mode_name[mode1]);
+            return CMD_FAILED;
+    }
+}
+
+static CommandStatus CBNE(const char *label, int argc, char *argv[],
+                          int quoted[], char *err, size_t errsize)
+{
+    address_mode_t mode1, mode2;
+    int addr1, addr2;
+
+    CMD_ARGC_CHECK(3);
+
+    ADDRESS_MODE(mode1, addr1, 1);
+    ADDRESS_MODE(mode2, addr2, 2);
+
+    if (!MakeRelative(&addr2, argv[0], err, errsize))
+    {
+        return CMD_FAILED;
+    }
+
+    switch(mode1)
+    {
+        case ABSOLUTE:
+        case DIRECT_PAGE:
+            PCWrite(0x2e);
+            PCWrite(addr1);
+            PCWrite(addr2);
+            return CMD_OK;
+
+        case DIRECT_PAGE_INDEX_X:
+            PCWrite(0xde);
+            PCWrite(addr1);
+            PCWrite(addr2);
+            return CMD_OK;
+
+        default:
+            snprintf(err, errsize, "%s: unsupported addressing mode %s",
+                                            argv[0], address_mode_name[mode1]);
+            return CMD_FAILED;
+    }
+}
+
+static CommandStatus DBNZ(const char *label, int argc, char *argv[],
+                          int quoted[], char *err, size_t errsize)
+{
+    address_mode_t mode1, mode2;
+    int addr1, addr2;
+
+    CMD_ARGC_CHECK(3);
+
+    ADDRESS_MODE(mode1, addr1, 1);
+    ADDRESS_MODE(mode2, addr2, 2);
+
+    if (!MakeRelative(&addr2, argv[0], err, errsize))
+    {
+        return CMD_FAILED;
+    }
+
+    switch(mode1)
+    {
+        case ABSOLUTE:
+        case DIRECT_PAGE:
+            PCWrite(0x6e);
+            PCWrite(addr1);
+            PCWrite(addr2);
+            return CMD_OK;
+
+        case Y_REGISTER:
+            PCWrite(0xfe);
+            PCWrite(addr2);
+            return CMD_OK;
+
+        default:
+            snprintf(err, errsize, "%s: unsupported addressing mode %s",
+                                            argv[0], address_mode_name[mode1]);
+            return CMD_FAILED;
+    }
+}
+
+static CommandStatus SETx(const char *label, int argc, char *argv[],
+                          int quoted[], char *err, size_t errsize)
+{
+    address_mode_t mode;
+    int addr;
+    int bit;
+
+    CMD_ARGC_CHECK(2);
+
+    ADDRESS_MODE(mode, addr, 1);
+
+    bit = argv[0][strlen(argv[0]) - 1] - '0';
+
+    switch(mode)
+    {
+        case ABSOLUTE:
+        case DIRECT_PAGE:
+            PCWrite(0x12 + bit * 0x20);
+            PCWrite(addr);
+            return CMD_OK;
+
+        default:
+            snprintf(err, errsize, "%s: unsupported addressing mode %s",
+                                            argv[0], address_mode_name[mode]);
+            return CMD_FAILED;
+    }
+}
+
+static CommandStatus CLRx(const char *label, int argc, char *argv[],
+                          int quoted[], char *err, size_t errsize)
+{
+    address_mode_t mode;
+    int addr;
+    int bit;
+
+    CMD_ARGC_CHECK(2);
+
+    ADDRESS_MODE(mode, addr, 1);
+
+    bit = argv[0][strlen(argv[0]) - 1] - '0';
+
+    switch(mode)
+    {
+        case ABSOLUTE:
+        case DIRECT_PAGE:
+            PCWrite(0x02 + bit * 0x20);
+            PCWrite(addr);
+            return CMD_OK;
+
+        default:
+            snprintf(err, errsize, "%s: unsupported addressing mode %s",
+                                            argv[0], address_mode_name[mode]);
+            return CMD_FAILED;
+    }
+}
+
+static CommandStatus TSET1(const char *label, int argc, char *argv[],
+                           int quoted[], char *err, size_t errsize)
+{
+    address_mode_t mode;
+    int addr;
+
+    CMD_ARGC_CHECK(2);
+
+    ADDRESS_MODE(mode, addr, 1);
+
+    switch(mode)
+    {
+        case DIRECT_PAGE:
+        case ABSOLUTE:
+            PCWrite(0x0e);
+            PCWriteWord(addr);
+            return CMD_OK;
+
+        default:
+            snprintf(err, errsize, "%s: unsupported addressing mode %s",
+                                            argv[0], address_mode_name[mode]);
+            return CMD_FAILED;
+    }
+}
+
+static CommandStatus TCLR1(const char *label, int argc, char *argv[],
+                           int quoted[], char *err, size_t errsize)
+{
+    address_mode_t mode;
+    int addr;
+
+    CMD_ARGC_CHECK(2);
+
+    ADDRESS_MODE(mode, addr, 1);
+
+    switch(mode)
+    {
+        case ABSOLUTE:
+        case DIRECT_PAGE:
+            PCWrite(0xe4);
+            PCWriteWord(addr);
+            return CMD_OK;
+
+        default:
+            snprintf(err, errsize, "%s: unsupported addressing mode %s",
+                                            argv[0], address_mode_name[mode]);
+            return CMD_FAILED;
+    }
+}
+
+static CommandStatus AND1(const char *label, int argc, char *argv[],
+                          int quoted[], char *err, size_t errsize)
+{
+    address_mode_t mode1, mode2;
+    int addr1, addr2;
+
+    CMD_ARGC_CHECK(3);
+
+    ADDRESS_MODE(mode1, addr1, 1);
+    ADDRESS_MODE(mode2, addr2, 2);
+
+    if (mode1 == C_FLAG)
+    {
+        switch(mode2)
+        {
+            case BIT_ADDRESS:
+                PCWrite(0x4a);
+                PCWriteWord(addr2);
+                return CMD_OK;
+
+            case NOTTED_BIT_ADDRESS:
+                PCWrite(0x6a);
+                PCWriteWord(addr2);
+                return CMD_OK;
+
+            default:
+                break;
+        }
+    }
+
+    snprintf(err, errsize, "%s: unsupported addressing mode %s, %s",
+                                    argv[0], address_mode_name[mode1],
+                                             address_mode_name[mode2]);
+    return CMD_FAILED;
+}
+
+static CommandStatus OR1(const char *label, int argc, char *argv[],
+                         int quoted[], char *err, size_t errsize)
+{
+    address_mode_t mode1, mode2;
+    int addr1, addr2;
+
+    CMD_ARGC_CHECK(3);
+
+    ADDRESS_MODE(mode1, addr1, 1);
+    ADDRESS_MODE(mode2, addr2, 2);
+
+    if (mode1 == C_FLAG)
+    {
+        switch(mode2)
+        {
+            case BIT_ADDRESS:
+                PCWrite(0x0a);
+                PCWriteWord(addr2);
+                return CMD_OK;
+
+            case NOTTED_BIT_ADDRESS:
+                PCWrite(0x2a);
+                PCWriteWord(addr2);
+                return CMD_OK;
+
+            default:
+                break;
+        }
+    }
+
+    snprintf(err, errsize, "%s: unsupported addressing mode %s, %s",
+                                    argv[0], address_mode_name[mode1],
+                                             address_mode_name[mode2]);
+    return CMD_FAILED;
+}
+
+static CommandStatus EOR1(const char *label, int argc, char *argv[],
+                          int quoted[], char *err, size_t errsize)
+{
+    address_mode_t mode1, mode2;
+    int addr1, addr2;
+
+    CMD_ARGC_CHECK(3);
+
+    ADDRESS_MODE(mode1, addr1, 1);
+    ADDRESS_MODE(mode2, addr2, 2);
+
+    if (mode1 == C_FLAG)
+    {
+        switch(mode2)
+        {
+            case BIT_ADDRESS:
+                PCWrite(0x8a);
+                PCWriteWord(addr2);
+                return CMD_OK;
+
+            default:
+                break;
+        }
+    }
+
+    snprintf(err, errsize, "%s: unsupported addressing mode %s, %s",
+                                    argv[0], address_mode_name[mode1],
+                                             address_mode_name[mode2]);
+    return CMD_FAILED;
+}
+
+static CommandStatus NOT1(const char *label, int argc, char *argv[],
+                          int quoted[], char *err, size_t errsize)
+{
+    address_mode_t mode;
+    int addr;
+
+    CMD_ARGC_CHECK(2);
+
+    ADDRESS_MODE(mode, addr, 1);
+
+    if (mode == BIT_ADDRESS)
+    {
+        PCWrite(0xea);
+        PCWriteWord(addr);
+        return CMD_OK;
+    }
+
+    snprintf(err, errsize, "%s: unsupported addressing mode %s",
+                                    argv[0], address_mode_name[mode]);
+    return CMD_FAILED;
+}
+
+static CommandStatus MOV1(const char *label, int argc, char *argv[],
+                          int quoted[], char *err, size_t errsize)
+{
+    address_mode_t mode1, mode2;
+    int addr1, addr2;
+
+    CMD_ARGC_CHECK(3);
+
+    ADDRESS_MODE(mode1, addr1, 1);
+    ADDRESS_MODE(mode2, addr2, 2);
+
+    if (mode1 == C_FLAG && mode2 == BIT_ADDRESS)
+    {
+        PCWrite(0xaa);
+        PCWriteWord(addr2);
+        return CMD_OK;
+    }
+
+    if (mode2 == C_FLAG && mode1 == BIT_ADDRESS)
+    {
+        PCWrite(0xca);
+        PCWriteWord(addr2);
+        return CMD_OK;
+    }
+
+    snprintf(err, errsize, "%s: unsupported addressing mode %s, %s",
+                                    argv[0], address_mode_name[mode1],
+                                             address_mode_name[mode2]);
+    return CMD_FAILED;
+}
+
 /* ---------------------------------------- OPCODE TABLES
 */
 typedef struct
@@ -1344,7 +1869,6 @@ static const OpcodeTable implied_opcodes[] =
     {"BRK",     0x0f},
     {"RET",     0x6f},
     {"RETI",    0x7f},
-    {"RET1",    0x7f},
     {NULL}
 };
 
@@ -1367,23 +1891,77 @@ static const OpcodeTable branch_opcodes[] =
 
 static const HandlerTable handler_table[] =
 {
-    {"ADC",	ADC},
-    {"AND",	AND},
-    {"ASL",	ASL},
-    {"CMP",	CMP},
-    {"DEC",	DEC},
-    {"EOR",	EOR},
-    {"INC",	INC},
-    {"JMP",	JMP},
-    {"CALL",	CALL},
-    {"PCALL",	PCALL},
-    {"LSR",	LSR},
-    {"OR",	OR},
-    {"ROL",	ROL},
-    {"ROR",	ROR},
-    {"SBC",	SBC},
-    {"MOV",	MOV},
-    {"MOVW",	MOVW},
+    {"ADC",     ADC},
+    {"ADDW",    ADDW},
+    {"AND",     AND},
+    {"AND1",    AND1},
+    {"ASL",     ASL},
+    {"BBC0",    BBCx},
+    {"BBC1",    BBCx},
+    {"BBC2",    BBCx},
+    {"BBC3",    BBCx},
+    {"BBC4",    BBCx},
+    {"BBC5",    BBCx},
+    {"BBC6",    BBCx},
+    {"BBC7",    BBCx},
+    {"BBS0",    BBSx},
+    {"BBS1",    BBSx},
+    {"BBS2",    BBSx},
+    {"BBS3",    BBSx},
+    {"BBS4",    BBSx},
+    {"BBS5",    BBSx},
+    {"BBS6",    BBSx},
+    {"BBS7",    BBSx},
+    {"CALL",    CALL},
+    {"CBNE",    CBNE},
+    {"CLR0",    CLRx},
+    {"CLR1",    CLRx},
+    {"CLR2",    CLRx},
+    {"CLR3",    CLRx},
+    {"CLR4",    CLRx},
+    {"CLR5",    CLRx},
+    {"CLR6",    CLRx},
+    {"CLR7",    CLRx},
+    {"CMP",     CMP},
+    {"CMPW",    CMPW},
+    {"DAA",     DAA},
+    {"DAS",     DAS},
+    {"DBNZ",    DBNZ},
+    {"DEC",     DEC},
+    {"DECW",    DECW},
+    {"DIV",     DIV},
+    {"EOR",     EOR},
+    {"EOR1",    EOR1},
+    {"INC",     INC},
+    {"INCW",    INCW},
+    {"JMP",     JMP},
+    {"LSR",     LSR},
+    {"MOV",     MOV},
+    {"MOV1",    MOV1},
+    {"MOVW",    MOVW},
+    {"MUL",     MUL},
+    {"NOT1",    NOT1},
+    {"OR",      OR},
+    {"OR1",     OR1},
+    {"PCALL",   PCALL},
+    {"POP",     POP},
+    {"PUSH",    PUSH},
+    {"ROL",     ROL},
+    {"ROR",     ROR},
+    {"SBC",     SBC},
+    {"SET0",    SETx},
+    {"SET1",    SETx},
+    {"SET2",    SETx},
+    {"SET3",    SETx},
+    {"SET4",    SETx},
+    {"SET5",    SETx},
+    {"SET6",    SETx},
+    {"SET7",    SETx},
+    {"SUBW",    SUBW},
+    {"TCALL",   TCALL},
+    {"TCLR1",   TCLR1},
+    {"TSET1",   TSET1},
+    {"XCN",     XCN},
     {NULL}
 };
 
@@ -1395,7 +1973,7 @@ static const HandlerTable handler_table[] =
 
 void Init_SPC700(void)
 {
-    option.zp_mode = ZP_AUTO;
+    option.dp_mode = DP_AUTO;
     SetNeededPasses(3);
 }
 
@@ -1412,11 +1990,11 @@ CommandStatus SetOption_SPC700(int opt, int argc, char *argv[],
 
     switch(opt)
     {
-        case OPT_ZP:
+        case OPT_DP:
             CMD_ARGC_CHECK(1);
-            CMD_TABLE(argv[0], zp_table, val);
+            CMD_TABLE(argv[0], dp_table, val);
 
-            option.zp_mode = val->value;
+            option.dp_mode = val->value;
             break;
 
         default:
@@ -1454,12 +2032,8 @@ CommandStatus Handler_SPC700(const char *label, int argc, char *argv[],
 
             CMD_EXPR(argv[1], offset);
 
-            offset = offset - (PC() + 2);
-
-            if (IsFinalPass() && (offset < -128 || offset > 127))
+            if (!MakeRelative(&offset, argv[0], err, errsize))
             {
-                snprintf(err, errsize, "%s: Branch offset (%d) too big",
-                                            argv[1], offset);
                 return CMD_FAILED;
             }
 

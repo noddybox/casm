@@ -157,6 +157,10 @@ http://www.gnu.org/licenses/gpl-3.0.html)</a></p>
 <p>
 <a href="#65c816">65c816</a> - 65c816 processor support, as used in the SNES.
 </p>
+<p>
+<a href="#spc700">SPC700</a> - SPC700 processor support, as used in the SNES
+sound co-processor.
+</p>
 
 
 <h1 id="casm">CASM</h1>
@@ -1557,7 +1561,7 @@ Controls the assumptions made regarding Zero Page address.  Defaults to
 off
 </td>
 <td class="def">
-The default; all addresses are assumed to be not on the Zero Page, regardless
+All addresses are assumed to be not on the Zero Page, regardless
 of the value used.
 </td></tr>
 
@@ -1834,6 +1838,70 @@ section.
 </td></tr>
 
 </table>
+
+<h1 id="spc700">SPC700 CPU</h1>
+
+<h2>Using the SPC700</h2>
+
+The SPC700 processor can be selected by passing <b>spc700</b> to the processor
+directive, i.e.
+
+<pre class="codeblock">
+        processor spc700
+</pre>
+
+<h2>Opcodes</h2>
+
+I could find no official documentation on The SPC700, so the assembler uses what
+seems to be the accepted opcode format.
+
+
+<h2>Options</h2>
+
+The SPC700 assembler has the following options.
+
+<table>
+
+<thead><tr><td class="head">SPC700 Option</td>
+<td class="head">Description</td></tr></thead>
+
+<tr><td class="cmd">
+option direct-page, &lt;on|off|auto&gt;
+</td>
+<td class="def">
+Controls the assumptions made regarding Direct Page address.  Defaults to
+<i>auto</i>, and can be the following values:
+
+<table>
+<tr><td class="cmd">
+off
+</td>
+<td class="def">
+All addresses are assumed to be not on the Direct Page, regardless of the value
+used.
+</td></tr>
+
+<tr><td class="cmd">
+on
+</td>
+<td class="def">
+Assumes all addresses are in the Direct Page, raising an error if any address is
+not in the Direct Page.
+</td></tr>
+
+<tr><td class="cmd">
+auto
+</td>
+<td class="def">
+Treats addresses less than 256 as being in the Direct Page automatically.  This
+mode also makes the assembler perform an extra pass to guard against the 
+possibility of the calculation being fooled.
+</td></tr>
+</table>
+
+</td></tr>
+</table>
+
 
 <!--  vim: ai sw=4 ts=8 expandtab spell
 -->
