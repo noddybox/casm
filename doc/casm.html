@@ -454,6 +454,41 @@ word<br>
 
 </table>
 
+<h2>Options</h2>
+
+<p>The core of CASM supports the following options that can be set via the
+<b>option</b> command.
+</p>
+
+<table>
+
+<thead><tr><td class="head">Option</td>
+<td class="head">Description</td></tr></thead>
+
+<tr><td class="cmd">
+option address24, &lt;on|off&gt;
+</td>
+<td class="def">
+Controls whether addresses have the current bank set in the high word, e.g.
+
+<pre class="codeblock">
+        org     $8000
+        bank    7
+
+        option  +address24
+label1: ; Label1 == $078000
+        
+        option  -address24
+label2: ; Label2 == $8000
+</pre>
+
+Note that the name is rather misleading; bank numbers are allowed to be greater
+than 256.
+
+</td></tr>
+
+</table>
+
 <h2>Expressions</h2>
 
 <p>In any of the directives above, where a value is defined, an expression can

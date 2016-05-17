@@ -144,6 +144,48 @@ static ValTableHandler  *valtable_handler;
 static int              valtable_count;
 
 
+/* ---------------------------------------- OPTIONS
+*/
+
+enum option_t
+{
+    OPT_ADDRESS24
+};
+
+static const ValueTable option_set[] =
+{
+    {"address24",       OPT_ADDRESS24},
+    {NULL}
+};
+
+
+typedef struct
+{
+    int         address24;
+} Options;
+
+static Options  options = {FALSE};
+
+
+CommandStatus SetOption(int opt, int argc, char *argv[],
+                        int quoted[], char *err, size_t errsize)
+{
+    CMD_ARGC_CHECK(1);
+
+    switch(opt)
+    {
+        case OPT_ADDRESS24:
+            options.address24 = ParseTrueFalse(argv[0], FALSE);
+            break;
+        default:
+            break;
+    }
+
+    return CMD_OK;
+}
+
+
+
 /* ---------------------------------------- PROTOS
 */
 static void             CheckLimits(void);
@@ -152,6 +194,7 @@ static void             InitProcessors(void);
 
 static void             RunPass(const char *name, FILE *, int depth);
 static void             ProduceOutput(void);
+
 
 
 /* ---------------------------------------- STATIC VALUE TABLE HANDLING
@@ -637,6 +680,7 @@ int main(int argc, char *argv[])
         return EXIT_FAILURE;
     }
 
+    PushValTableHandler(option_set, SetOption);
     PushValTableHandler(ListOptions(), ListSetOption);
     PushValTableHandler(MacroOptions(), MacroSetOption);
     PushValTableHandler(CodepageOptions(), CodepageSetOption);
@@ -658,6 +702,7 @@ int main(int argc, char *argv[])
         RunPass(argv[1], fp, 0);
         rewind(fp);
 
+        SetAddressBank(0);
         SetPC(0);
         MacroSetDefaults();
         AliasClear();
@@ -717,6 +762,8 @@ static void InitProcessors(void)
 
     SetWordMode(cpu->word_mode);
     SetAddressSpace(cpu->address_space);
+
+    options.address24 = FALSE;
 }
 
 
@@ -843,7 +890,14 @@ static void RunPass(const char *name, FILE *fp, int depth)
 
             /* This may well be updated by a command, but easier to set anyway
             */
-            LabelSet(label, PC(), type);
+            if (options.address24)
+            {
+                LabelSet(label, (Bank() << 16) | PC(), type);
+            }
+            else
+            {
+                LabelSet(label, PC(), type);
+            }
         }
 
         /* Check for no command/label only.  Still record for macro though.

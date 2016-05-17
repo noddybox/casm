@@ -503,7 +503,7 @@ void LabelDump(FILE *fp, int dump_private)
 
             for(f = 0; f < g->no_locals; f++)
             {
-                fprintf(fp, "; .%-*s = $%4.4x (%d)\n", MAX_LABEL_SIZE,
+                fprintf(fp, "; .%-*s = $%8.8x (%d)\n", MAX_LABEL_SIZE,
                                                 g->locals[f].name,
                                                 (unsigned)g->locals[f].value,
                                                 g->locals[f].value);

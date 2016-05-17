@@ -1,7 +1,8 @@
         option  output-file,lib2.lib
 	option  output-format,lib
 
-	org	$8800
+	option	+address24
+	org	$078800
 
 start_lib2:
 	ld	hl,$4321
