@@ -8,13 +8,25 @@
 h1
 {
     padding-top: 20px;
-    padding-top: 10px;
+    padding-bottom: 10px;
 }
 
 h2
 {
     padding-top: 20px;
-    padding-top: 10px;
+    padding-bottom: 10px;
+}
+
+h3
+{
+    padding-top: 20px;
+    padding-bottom: 10px;
+}
+
+h4
+{
+    padding-top: 20px;
+    padding-bottom: 10px;
 }
 
 body
@@ -983,6 +995,13 @@ A simple library format that allows the importing of pre-built memory and
 labels.
 </td></tr>
 
+<tr><td class="cmd">
+<a href="#nesout">nes</a>
+</td>
+<td class="def">
+A NES ROM file.
+</td></tr>
+
 </table>
 
 </td></tr>
@@ -1321,6 +1340,70 @@ gfx.lib: gfx.asm
         ; Lots of gfx data....
         ;
 </pre>
+
+
+<h3 id="nesout">NES ROM File Output Format</h3>
+
+<p>
+Generates a ROM file for a NES emulator or hardware.  Note that large ROM
+sizes have not been extensively checked and verified.
+</p>
+
+<p>It searches for banks with code in the range 0x8000 to 0xffff, or just in the
+range 0xc000 to 0xffff if there is just one ROM code bank. Video ROM (VROM)
+banks are identified by just using addresses up to 0x1fff.</p>
+
+<p>The output driver will output the appropriate number of ROM and VROM chunks
+to the file depending on these, and will error if there are no ROM banks
+or banks using illegal addresses.</p>
+
+<h4>NES ROM Output Format options</h4>
+
+<p>The NES output driver supports the following settings that can be set via
+an <b>option</b> command.
+</p>
+
+<table>
+
+<thead><tr><td class="head">Option</td>
+<td class="head">Description</td></tr></thead>
+
+<tr><td class="cmd">
+option nes-vector, <i>vector</i>, <i>address</i>
+</td>
+<td class="def">
+Specifies an address where an IRQ routine is stored, and sets the appropriate
+vectors in the appropriate place in memory. <i>irq</i> can either by
+<b>reset</b>, <b>nmi</b> or <b>brk</b>.<br><br>
+
+<b>reset</b> is for the reset vector (i.e. where the ROM runs from).  If
+undefined a warning is displayed and the vector will automatically be set to
+either 0x8000 or 0xc000 according to the ROM size.<br><br>
+
+<b>nmi</b> is the NMI vector used for the vertical blanking interrupt.  If
+undefined a warning is issued.<br><br>
+
+<b>brk</b> is the vector used for software interrupts from the brk command.
+This can be left undefined if not needed.
+</td></tr>
+
+<tr><td class="cmd">
+option nes-mapper, <i>number</i>
+</td>
+<td class="def">
+Sets the mapper type in the output file header.  If undefined left at zero,
+which is the correct one if you have 16 or 32K of code ROM and 8KB of video
+ROM.
+</td></tr>
+
+<tr><td class="cmd">
+option nes-tv-format, pal|ntsc
+</td>
+<td class="def">
+Defines the TV format stored in the ROM header, defaulting to <b>pal</b>.
+</td></tr>
+
+</table>
 
 
 <h2>Listing</h2>

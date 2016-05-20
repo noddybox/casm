@@ -40,5 +40,7 @@ src/casm
 *.tap
 *.t64
 *.p
+*.sfc
+*.nes
 src/A-Hdrive
 src/output

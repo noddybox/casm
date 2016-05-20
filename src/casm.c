@@ -691,6 +691,8 @@ int main(int argc, char *argv[])
     PushValTableHandler(ZX81OutputOptions(), ZX81OutputSetOption);
     PushValTableHandler(GBOutputOptions(), GBOutputSetOption);
     PushValTableHandler(SNESOutputOptions(), SNESOutputSetOption);
+    PushValTableHandler(LibOutputOptions(), LibOutputSetOption);
+    PushValTableHandler(NESOutputOptions(), NESOutputSetOption);
 
     ClearState();
 
