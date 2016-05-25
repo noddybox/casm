@@ -7,64 +7,63 @@
 	option  nes-vector,nmi,nmi
 	option  nes-vector,brk,nmi
 
+vsync:	macro
+.wait
+	lda	$2002
+	bpl	wait
+	endm
+
 start:	org	$c000
 
+	sei
+	cld
+	ldx	#$ff
+	txs
+
+	; this sets up the PPU.  Apparently.
+	lda	#%00001000     
+	sta	$2000          
+	lda	#%00011110 
+	sta	$2001
+
+	; Set PPU to palette
 	;
-	; Code taken from NES example
-	;
-
-	sei			; disable IRQs
-	cld			; disable decimal mode
-	ldx	#$40
-	stx	$4017		; dsiable APU frame IRQ
-	ldx	#$ff		; Set up stack
-	txs			;  .
-	inx			; now X = 0
-	stx	$2000		; disable NMI
-	stx	$2001		; disable rendering
-	stx	$4010		; disable DMC IRQs
-
-	;; first wait for vblank to make sure PPU is ready
-vblankwait1:
-	bit	$2002
-	bpl	vblankwait1
-
-clear_memory:
-	lda	#$00
-	sta	$0000, x
-	sta	$0100, x
-	sta	$0200, x
-	sta	$0300, x
-	sta	$0400, x
-	sta	$0500, x
-	sta	$0600, x
-	sta	$0700, x
-	inx
-	bne	clear_memory
-
-	;; second wait for vblank, PPU is ready after this
-vblankwait2:
-	bit	$2002
-	bpl	vblankwait2
-
-clear_palette:	
-	;; Need clear both palettes to $00. Needed for Nestopia. Not
-	;; needed for FCEU* as they're already $00 on powerup.
-	lda	$2002		; Read PPU status to reset PPU address
-	lda	#$3f		; Set PPU address to BG palette RAM ($3F00)
+loadpalette:
+	lda	#$3f
 	sta	$2006
 	lda	#$00
-	sta 	$2006
+	sta	$2006
 
-	ldx	#$20		; Loop $20 times (up to $3F20)
-	lda	#$00		; Set each entry to $00
-.loop
+	; Load the palette
+	;
+	ldx	#0
+.loop	lda	palette,x
 	sta	$2007
-	dex
+	inx
+	cpx	#$20
 	bne	loop
 
-	lda	#%10000000	; intensify blues
-	sta	$2001
+	; Wait for a vysnc before loading the name table
+	;
+	vsync
+
+	; Load the name map
+	;
+load_namemap:
+	lda	#$20
+	sta	$2006
+	lda	#$20
+	sta	$2006
+
+	ldx	#0
+.loop	lda	map,x
+	cmp	#$ff
+	beq	done
+	sta	$2007
+	inx
+	jmp	loop
+.done
+
 
 forever:
 	jmp	forever
@@ -72,11 +71,29 @@ forever:
 nmi:
 	rti
 
+palette:
+	db	15, 0, 16, 48, 15, 1, 33, 49, 15, 6, 22, 38, 15, 9, 25, 41
+	db	15, 0, 16, 48, 15, 1, 33, 49, 15, 6, 22, 38, 15, 9, 25, 41
+
+map:
+	db	'H'-'@'
+	db	'E'-'@'
+	db	'L'-'@'
+	db	'L'-'@'
+	db	'O'-'@'
+	db	0
+	db	'W'-'@'
+	db	'O'-'@'
+	db	'R'-'@'
+	db	'L'-'@'
+	db	'D'-'@'
+	db	255
+
 
 ;
-; Dummy VROM
+; VROM
 ;
 	org 0
 	bank 1
 
-	db	0
+	incbin	"tiles.chr"
