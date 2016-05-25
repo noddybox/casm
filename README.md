@@ -19,10 +19,8 @@ Currently **casm** supports:
 * 6502
 * Gameboy CPU
 * 65c816/Ricoh 5A22 (SNES)
+* SPC700 (SNES sound chip - VERY untested)
 
-Plans for:
-
-* SPC700 (SNES sound chip)
 
 ## Output Formats
 
@@ -35,12 +33,9 @@ Currently **casm** supports the following output drivers:
 * Gameboy ROM
 * SNES ROM
 * A simple library format for larger projects.
-
-Plans for:
-
 * NES ROM
 
-## Major Changes in V1.2
+## Major Changes in V1.3
 
-* Added basic SNES support for processor and output.
-* Added a library format for linking together of files in a larger project.
+* Added SPC700 (VERY untested)
+* Added NES output format
