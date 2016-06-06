@@ -81,6 +81,7 @@ nmi:
 
 palette:
 	incbin	"nes.pal"
+	incbin	"nes.pal"
 
 map:
 	db	'H'-'@'
