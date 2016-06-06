@@ -6,6 +6,7 @@
 	option  nes-vector,reset,start
 	option  nes-vector,nmi,nmi
 	option  nes-vector,brk,nmi
+	option	nes-mirror,horizontal
 
 vsync:	macro
 .wait
@@ -15,18 +16,27 @@ vsync:	macro
 
 start:	org	$c000
 
-	sei
+	; Clear decimal and setup stack
+	;
 	cld
 	ldx	#$ff
 	txs
 
-	; this sets up the PPU.  Apparently.
+	; Wait for the PPU.  Recommended practice is clear the flag, and
+	; wait for 2 VBL signals
+	;
+	bit	$2002
+	vsync
+	vsync
+
+	; Setup PPU
+	;
 	lda	#%00001000     
 	sta	$2000          
 	lda	#%00011110 
 	sta	$2001
 
-	; Set PPU to palette
+	; Setup the palette
 	;
 loadpalette:
 	lda	#$3f
@@ -34,8 +44,6 @@ loadpalette:
 	lda	#$00
 	sta	$2006
 
-	; Load the palette
-	;
 	ldx	#0
 .loop	lda	palette,x
 	sta	$2007
@@ -52,7 +60,7 @@ loadpalette:
 load_namemap:
 	lda	#$20
 	sta	$2006
-	lda	#$20
+	lda	#$40
 	sta	$2006
 
 	ldx	#0

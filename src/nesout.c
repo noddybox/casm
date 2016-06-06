@@ -45,7 +45,9 @@ enum option_t
 {
     OPT_VECTOR,
     OPT_TV_FORMAT,
-    OPT_MAPPER
+    OPT_MAPPER,
+    OPT_MIRROR,
+    OPT_BATTERY_RAM
 };
 
 static const ValueTable option_set[] =
@@ -53,6 +55,8 @@ static const ValueTable option_set[] =
     {"nes-vector",              OPT_VECTOR},
     {"nes-tv-format",           OPT_TV_FORMAT},
     {"nes-mapper",              OPT_MAPPER},
+    {"nes-mirror",              OPT_MIRROR},
+    {"nes-battery-ram",         OPT_BATTERY_RAM},
     {NULL}
 };
 
@@ -63,6 +67,19 @@ typedef enum
     VECTOR_BRK
 } VectorType;
 
+typedef enum
+{
+    MIRROR_HORIZONTAL	= 0x00,
+    MIRROR_VERTICAL	= 0x01,
+    MIRROR_VRAM		= 0x08,
+} MirrorType;
+
+typedef enum
+{
+    PAL = 1,
+    NTSC = 0
+} TVFormat;
+
 static ValueTable       vector_table[] =
 {
     {"reset",           VECTOR_RESET},
@@ -71,11 +88,13 @@ static ValueTable       vector_table[] =
     {NULL}
 };
 
-typedef enum
+static ValueTable       mirror_table[] =
 {
-    PAL = 1,
-    NTSC = 0
-} TVFormat;
+    {"horizontal",   	MIRROR_HORIZONTAL},
+    {"vertical",        MIRROR_VERTICAL},
+    {"vram",            MIRROR_VRAM},
+    {NULL}
+};
 
 static ValueTable       format_table[] =
 {
@@ -90,9 +109,11 @@ static struct
     int         vector[3];
     TVFormat    tv_format;
     int         mapper;
+    MirrorType	mirror;
+    int		battery_ram;
 } option =
 {
-    {-1, -1, -1}, PAL, 0
+    {-1, -1, -1}, PAL, 0, MIRROR_HORIZONTAL, FALSE
 };
 
 
@@ -171,6 +192,15 @@ CommandStatus NESOutputSetOption(int opt, int argc, char *argv[],
         case OPT_MAPPER:
             CMD_EXPR(argv[1], f);
             option.mapper = f;
+            break;
+
+        case OPT_MIRROR:
+            CMD_TABLE(argv[0], mirror_table, val);
+            option.mirror = val->value;
+            break;
+
+	case OPT_BATTERY_RAM:
+            option.battery_ram = ParseTrueFalse(argv[0], FALSE);
             break;
 
         default:
@@ -302,7 +332,8 @@ int NESOutput(const char *filename, const char *filename_bank,
 
     fputc(num_vrom, fp);
 
-    fputc((option.mapper & 0x0f) << 4, fp);
+    fputc(((option.mapper & 0x0f) << 4) | option.mirror | 
+                (option.battery_ram ? 0x02 : 0x00), fp);
     fputc(option.mapper & 0xf0, fp);
 
     fputc(0, fp);
