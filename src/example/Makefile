@@ -48,7 +48,7 @@ vcs.bin: vcs.asm $(CASM)
 snes.sfc: snes.asm $(CASM)
 	$(CASM) snes.asm
 
-nes.nes: nes.asm $(CASM)
+nes.nes: nes.asm tiles.chr nes.pal $(CASM)
 	$(CASM) nes.asm
 
 clean:
