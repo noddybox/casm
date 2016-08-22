@@ -1,5 +1,6 @@
-	option  output-file,"link.out"
 	option	+list
+	option  output-file,"link.out"
+	option  output-bank,"link.%u"
 	option	list-labels,all
 
 	import	"lib2.lib"
