@@ -496,7 +496,7 @@ void LabelDump(FILE *fp, int dump_private)
 
         if (g->label.name[0] != '_' || dump_private)
         {
-            fprintf(fp, "; %-*s  = $%4.4x (%d)\n", MAX_LABEL_SIZE,
+            fprintf(fp, "; %-*s  = $%8.8x (%d)\n", MAX_LABEL_SIZE,
                                             g->label.name,
                                             (unsigned)g->label.value,
                                             g->label.value);
