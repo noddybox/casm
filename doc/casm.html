@@ -1030,10 +1030,44 @@ have been used, in which case each code file in the TAP file will use the
 <b>output-bank</b> setting to generate the filename for each block.
 </p>
 
+<p>If the options are set the TAP file will contain a BASIC loader for the
+machine code.</p>
+
 <p>
 Remember that TAP files can be concatenated, so the output could be appended to
-another TAP file containing a BASIC loader, for example.
+another TAP file.
 </p>
+
+<h4>Spectrum TAP Output Format options</h4>
+
+<p>The Spectrum TAP output driver supports the following settings that can be
+set via an <b>option</b> command.
+</p>
+
+<table>
+
+<thead><tr><td class="head">Option</td>
+<td class="head">Description</td></tr></thead>
+
+<tr><td class="cmd">
+option spectrum-loader, &lt;on|off&gt;
+</td>
+<td class="def">
+Whether the TAP file should contain a BASIC loader to load and run the machine
+code.
+</td></tr>
+
+<tr><td class="cmd">
+option spectrum-start, <i>address</i>
+</td>
+<td class="def">
+The start address for the generated BASIC loader.  If left undefined defaults
+to the start of written memory.
+</td></tr>
+
+
+</table>
+
 
 
 <h3 id="zx81out">ZX81 .P Output Format</h3>

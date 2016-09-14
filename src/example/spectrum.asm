@@ -8,8 +8,10 @@
 
 	option	output-file,spectrum.tap
 	option	output-format,spectrum
+	option	+spectrum-loader
+	option	spectrum-start,start
 
-	org 32768
+start:	org 32768
 
 	ld	a,0
 loop:
