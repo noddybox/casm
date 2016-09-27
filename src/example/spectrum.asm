@@ -13,9 +13,9 @@
 
 start:	org 32768
 
-	ld	a,0
+	xor	a
+	ld	bc,$fe00
 loop:
-	out	($fe), a
+	out	(c), a
 	inc	a
-	and	7
-	jp	loop
+	jr	loop
