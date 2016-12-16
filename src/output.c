@@ -55,7 +55,8 @@ typedef enum
     GAMEBOY,
     SNES,
     LIBRARY,
-    NES
+    NES,
+    CPC
 } Format;
 
 static char             output[4096] = "output";
@@ -73,6 +74,7 @@ static ValueTable       format_table[] =
     {"snes",            SNES},
     {"lib",             LIBRARY},
     {"nes",             NES},
+    {"cpc",             CPC},
     {NULL}
 };
 
@@ -164,6 +166,10 @@ int OutputCode(void)
 
         case NES:
             return NESOutput(output, output_bank, bank, count,
+                             error, sizeof error);
+
+        case CPC:
+            return CPCOutput(output, output_bank, bank, count,
                              error, sizeof error);
 
         default:

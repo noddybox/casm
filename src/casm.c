@@ -693,6 +693,7 @@ int main(int argc, char *argv[])
     PushValTableHandler(SNESOutputOptions(), SNESOutputSetOption);
     PushValTableHandler(LibOutputOptions(), LibOutputSetOption);
     PushValTableHandler(NESOutputOptions(), NESOutputSetOption);
+    PushValTableHandler(CPCOutputOptions(), CPCOutputSetOption);
 
     ClearState();
 

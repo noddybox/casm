@@ -19,49 +19,35 @@
 
     -------------------------------------------------------------------------
 
-    Various output type handlers
+    Amstrad CPC tape output
 
 */
 
-#ifndef CASM_OUTPUT_H
-#define CASM_OUTPUT_H
+#ifndef CASM_CPCOUT_H
+#define CASM_CPCOUT_H
 
 #include "parse.h"
+#include "state.h"
 #include "cmd.h"
-
-/* Pull in the output drivers
-*/
-#include "rawout.h"
-#include "specout.h"
-#include "t64out.h"
-#include "zx81out.h"
-#include "gbout.h"
-#include "snesout.h"
-#include "libout.h"
-#include "nesout.h"
-#include "cpcout.h"
 
 /* ---------------------------------------- INTERFACES
 */
 
 
-/* Output options
+/* RAW Output options
 */
-const ValueTable *OutputOptions(void);
+const ValueTable *CPCOutputOptions(void);
 
-CommandStatus OutputSetOption(int opt, int argc, char *argv[],
-                              int quoted[], char *error, size_t error_size);
+CommandStatus CPCOutputSetOption(int opt, int argc, char *argv[],
+                                 int quoted[], char *error,
+                                 size_t error_size);
 
 
-/* Outputs the result of assembly.  Returns TRUE if OK, FALSE for failure.
+/* C64 CPC tape output of assembly.  Returns TRUE if OK, FALSE for failure.
 */
-int     OutputCode(void);
-
-
-/* Returns a reason for the last failure.
-*/
-const char *OutputError(void);
-
+int CPCOutput(const char *filename, const char *filename_bank,
+              MemoryBank **bank, int count,
+              char *error, size_t error_size);
 
 #endif
 
