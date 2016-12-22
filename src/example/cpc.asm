@@ -4,7 +4,7 @@
 	;
 	; RUN ""
 
-	option	output-file,cpc.cdt
+	option	output-file,cpc.tap
 	option	output-format,cpc
 	option	cpc-start,start
 
@@ -18,5 +18,5 @@ loop:
 	inc	hl
 	jr loop
 
-msg:	org	$9000
+msg:	org	$8800
 	defb "Hello World",0

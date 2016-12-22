@@ -20,7 +20,7 @@
 # Makefile for examples
 #
 
-ALL	= spectrum.tap c64.t64 zx81.p gb.gb vcs.bin snes.sfc nes.nes cpc.cdt
+ALL	= spectrum.tap c64.t64 zx81.p gb.gb vcs.bin snes.sfc nes.nes cpc.tap
 CASM	= ../casm
 
 all: $(ALL) $(CASM)
@@ -36,7 +36,7 @@ spectrum.tap: spectrum.asm $(CASM)
 c64.t64: c64.asm $(CASM)
 	$(CASM) c64.asm
 
-cpc.cdt: cpc.asm
+cpc.tap: cpc.asm
 	$(CASM)	cpc.asm
 
 zx81.p: zx81.asm $(CASM)

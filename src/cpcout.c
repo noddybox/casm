@@ -35,6 +35,8 @@
 /* ---------------------------------------- MACROS & TYPES
 */
 
+#define BLOCK_SIZE      2048
+
 enum option_t
 {
     OPT_START_ADDR,
@@ -55,32 +57,6 @@ static Options options = {-1};
 
 /* ---------------------------------------- PRIVATE FUNCTIONS
 */
-
-static int PokeB(Byte *mem, int addr, Byte b)
-{
-    mem[addr++] = b;
-    return (addr % 0x10000);
-}
-
-
-static int PokeW(Byte *mem, int addr, int w)
-{
-    addr = PokeB(mem, addr, w & 0xff);
-    return PokeB(mem, addr, (w & 0xff00) >> 8);
-}
-
-
-static int PokeS(Byte *mem, int addr, const char *str)
-{
-    while(*str)
-    {
-        addr = PokeB(mem, addr, CodeFromNative(CP_ASCII, *str++));
-    }
-
-    return addr;
-}
-
-
 static void WriteByte(FILE *fp, Byte b)
 {
     putc(b, fp);
@@ -148,7 +124,6 @@ int CPCOutput(const char *filename, const char *filename_bank,
 {
     FILE *fp = fopen(filename, "wb");
     int f;
-    int offset;
 
     if (!fp)
     {
@@ -156,118 +131,91 @@ int CPCOutput(const char *filename, const char *filename_bank,
         return FALSE;
     }
 
-    /* Write signature
+    /* First get the initial address is none defined
     */
-    WriteString(fp, "C64 tape image file", 32, 0, CP_ASCII);
-
-    /* Write directory header
-    */
-    WriteWord(fp, 0x200);
-    WriteWord(fp, count);
-    WriteWord(fp, count);
-    WriteString(fp, filename, 24, ' ', CP_ASCII);
-
-    /* Offset to tape data
-    */
-    offset = 64 + 32 * count;
-
-    /* Write directory entries
-    */
-    for(f = 0; f < count; f++)
+    if (options.start_addr == -1)
     {
-        int min, max, len;
-
-        min = bank[f]->min_address_used;
-        max = bank[f]->max_address_used;
-
-        /* If this is the first bank, we're going to prepend some BASIC
-        */
-        if (f == 0)
-        {
-            if (min < 0x810)
-            {
-                snprintf(error, error_size, "First bank starts below a safe "
-                                            "area to add BASIC loader");
-
-                return FALSE;
-            }
-
-            min = 0x801;        /* Start of BASIC */
-        }
-
-        len = max - min + 1;
-
-        WriteByte(fp, 1);
-        WriteByte(fp, 0x82);
-        WriteWord(fp, min);
-        WriteWord(fp, max + 1);
-        WriteLong(fp, offset);
-
-        if (count == 1)
-        {
-            WriteString(fp, filename, 16, ' ', CP_CBM);
-        }
-        else
-        {
-            char fn[16];
-
-            snprintf(fn, sizeof fn, filename_bank, bank[f]->number);
-            WriteString(fp, fn, 16, ' ', CP_CBM);
-        }
-
-        /* +2 is to include the 2-byte PRG header
-        offset += len + 2;
-        */
-        offset += len;
+        options.start_addr = bank[0]->min_address_used;
     }
 
-    /* Write actual contents
+    /* Output the binary files
     */
     for(f = 0; f < count; f++)
     {
-        Byte *mem;
-        int min, max, len;
+        const Byte *mem;
+        int min, max, len, blocks, addr;
+        int block, blocklen;
 
         mem = bank[f]->memory;
-
         min = bank[f]->min_address_used;
+        addr = min;
         max = bank[f]->max_address_used;
-
-        /* If this is the first bank, we're going to prepend some BASIC.
-           Note that output drivers are allowed to manipulate memory directly.
-        */
-        if (f == 0)
-        {
-            char sys[16];
-            int a = 0x803;
-            int next;
-
-            snprintf(sys, sizeof sys, "%u", min);
-
-            a = PokeW(mem, a, 10);
-            a = PokeB(mem, a, 0x9e);
-            a = PokeS(mem, a, sys);
-            a = PokeB(mem, a, 0x00);
-
-            next = a;
-
-            a = PokeW(mem, a, 0x00);
-
-            PokeW(mem, 0x801, next);
-
-            min = 0x801;
-        }
-
         len = max - min + 1;
+        blocks = len / BLOCK_SIZE;
 
-        fwrite(mem + min, len, 1, fp);
+        for(block = 0; block <= blocks; block++)
+        {
+            int first, last;
+
+            first = 0;
+            last = 0;
+
+            WriteWord(fp, 0x1d);
+            WriteByte(fp, 0x2c);
+
+            if (f == 0)
+            {
+                WriteString(fp, filename, 16, 0, CP_ASCII);
+            }
+            else
+            {
+                char fn[16];
+
+                snprintf(fn, sizeof fn, filename_bank, bank[f]->number);
+                WriteString(fp, fn, 16, 0, CP_ASCII);
+            }
+
+            WriteByte(fp, block+1);
+
+            if (block == 0)
+            {
+                first = 255;
+                blocklen = BLOCK_SIZE;
+            }
+
+            if (block == blocks)
+            {
+                last = 255;
+                blocklen = len % BLOCK_SIZE;
+            }
+
+            WriteByte(fp, last);
+            WriteByte(fp, 2);
+            WriteWord(fp, blocklen);
+            WriteWord(fp, addr);
+            WriteByte(fp, first);
+            WriteWord(fp, len);
+            WriteWord(fp, options.start_addr);
+
+            addr += blocklen;
+
+            /* Output file data
+            */
+            WriteWord(fp, blocklen + 3);
+            WriteByte(fp, 0x16);
+
+            while(min < addr)
+            {
+                WriteByte(fp, mem[min]);
+                min++;
+            }
+        }
     }
 
     fclose(fp);
 
     return TRUE;
 }
-
 
 /*
 vim: ai sw=4 ts=8 expandtab
