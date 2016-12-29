@@ -4,7 +4,7 @@
 	;
 	; RUN ""
 
-	option	output-file,cpc.tap
+	option	output-file,cpc.cdt
 	option	output-format,cpc
 	option	cpc-start,start
 

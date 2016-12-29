@@ -140,6 +140,11 @@ int CPCOutput(const char *filename, const char *filename_bank,
 
     /* Output the binary files
     */
+    WriteString(fp, "ZXTape!", 7, 0, CP_ASCII);
+    WriteByte(fp, 0x1a);
+    WriteByte(fp, 1);
+    WriteByte(fp, 13);
+
     for(f = 0; f < count; f++)
     {
         const Byte *mem;
@@ -159,6 +164,10 @@ int CPCOutput(const char *filename, const char *filename_bank,
 
             first = 0;
             last = 0;
+
+            WriteWord(fp, 10);
+            WriteWord(fp, 1000);
+            WriteWord(fp, 0x1d + 2);
 
             WriteWord(fp, 0x1d);
             WriteByte(fp, 0x2c);
@@ -201,6 +210,10 @@ int CPCOutput(const char *filename, const char *filename_bank,
 
             /* Output file data
             */
+            WriteWord(fp, 10);
+            WriteWord(fp, 1000);
+            WriteWord(fp, blocklen + 5);
+
             WriteWord(fp, blocklen + 3);
             WriteByte(fp, 0x16);
 
