@@ -165,11 +165,11 @@ int CPCOutput(const char *filename, const char *filename_bank,
             first = 0;
             last = 0;
 
-            WriteWord(fp, 10);
+            WriteWord(fp, 0x10);
             WriteWord(fp, 1000);
-            WriteWord(fp, 0x1d + 2);
+            WriteWord(fp, 0x40 + 2);
 
-            WriteWord(fp, 0x1d);
+            WriteWord(fp, 0x40);
             WriteByte(fp, 0x2c);
 
             if (f == 0)
@@ -189,7 +189,15 @@ int CPCOutput(const char *filename, const char *filename_bank,
             if (block == 0)
             {
                 first = 255;
-                blocklen = BLOCK_SIZE;
+
+                if (len > BLOCK_SIZE)
+                {
+                    blocklen = BLOCK_SIZE;
+                }
+                else
+                {
+                    blocklen = len;
+                }
             }
 
             if (block == blocks)
@@ -205,12 +213,13 @@ int CPCOutput(const char *filename, const char *filename_bank,
             WriteByte(fp, first);
             WriteWord(fp, len);
             WriteWord(fp, options.start_addr);
+            WriteString(fp, "", 64 - 28, 0, CP_ASCII);
 
             addr += blocklen;
 
             /* Output file data
             */
-            WriteWord(fp, 10);
+            WriteWord(fp, 0x10);
             WriteWord(fp, 1000);
             WriteWord(fp, blocklen + 5);
 

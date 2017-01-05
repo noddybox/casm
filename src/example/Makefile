@@ -36,7 +36,7 @@ spectrum.tap: spectrum.asm $(CASM)
 c64.t64: c64.asm $(CASM)
 	$(CASM) c64.asm
 
-cpc.cdt: cpc.asm
+cpc.cdt: cpc.asm $(CASM)
 	$(CASM)	cpc.asm
 
 zx81.p: zx81.asm $(CASM)
