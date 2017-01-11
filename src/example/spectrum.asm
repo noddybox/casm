@@ -14,8 +14,18 @@
 start:	org 32768
 
 	xor	a
-	ld	bc,$fe00
 loop:
-	out	(c), a
+	out	($fe), a
+
+	ld	hl,0x5800
+	ld	bc,32*24
+
+loop1:
+	ld	(hl),a
+	inc	hl
+	dec	c
+	jr	nz,loop1
+	djnz	loop1
+
 	inc	a
 	jr	loop
