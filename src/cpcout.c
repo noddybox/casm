@@ -70,6 +70,18 @@ static void WriteWord(FILE *fp, int w)
 }
 
 
+static void Write3(FILE *fp, unsigned long l)
+{
+    int f;
+
+    for(f = 0; f < 3; f++)
+    {
+        WriteByte(fp, l & 0xff);
+        l >>= 8u;
+    }
+}
+
+
 static void WriteLong(FILE *fp, unsigned long l)
 {
     int f;
