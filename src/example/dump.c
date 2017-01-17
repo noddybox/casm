@@ -108,7 +108,7 @@ static void CompareEnds(Block **block, int count)
     }
 }
 
-int main(int argc, char *argv)
+int main(int argc, char *argv[])
 {
     int ch;
     int count;
