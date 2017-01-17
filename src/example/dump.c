@@ -78,8 +78,12 @@ static void CompareEnds(Block **block, int count)
     {
     	for(n = 0; n < count - 1 && !done; n++)
 	{
-	    if (block[n]->addr[block[n]->len - 1 - f] !=
-	    		block[n+1]->addr[block[n+1]->len - 1 - f])
+	    int diff;
+
+	    diff = (int)block[n]->addr[block[n]->len - 1 - f] -
+	    		(int)block[n+1]->addr[block[n+1]->len - 1 - f];
+
+	    if (abs(diff) > 5)
 	    {
 	    	done = 1;
 	    }
