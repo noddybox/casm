@@ -129,5 +129,10 @@ int main(int argc, char *argv[])
 
     printf("Got %d blocks\n", count);
 
+    for(f = 0; f < count; f++)
+    {
+    	printf("Block %d len %d\n", f, block[f]->len);
+    }
+
     CompareEnds(block, count);
 }

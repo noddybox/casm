@@ -170,6 +170,11 @@ int CPCOutput(const char *filename, const char *filename_bank,
         len = max - min + 1;
         blocks = len / BLOCK_SIZE;
 
+        if ((len % BLOCK_SIZE) == 0)
+        {
+            blocks--;
+        }
+
         for(block = 0; block <= blocks; block++)
         {
             int first, last;
@@ -177,12 +182,17 @@ int CPCOutput(const char *filename, const char *filename_bank,
             first = 0;
             last = 0;
 
-            WriteWord(fp, 0x10);
-            WriteWord(fp, 1000);
-            WriteWord(fp, 0x40 + 2);
+            WriteByte(fp, 0x11);        /* Block type */
 
-            WriteWord(fp, 0x40);
-            WriteByte(fp, 0x2c);
+            WriteWord(fp, 0x09cc);      /* PILOT */
+            WriteWord(fp, 0x0585);      /* SYNC1 */
+            WriteWord(fp, 0x04aa);      /* SYNC2 */
+            WriteWord(fp, 0x0505);      /* ZERO */
+            WriteWord(fp, 0x0a09);      /* ONE */
+            WriteWord(fp, 0x1000);      /* PILOT LEN */
+            WriteByte(fp, 0x08);        /* NUM BITS IN LAST BYTE */
+            WriteWord(fp, 0x07d0);      /* PAUSE */
+            Write3(fp, 0x0040);         /* LEN */
 
             if (f == 0)
             {
@@ -231,12 +241,17 @@ int CPCOutput(const char *filename, const char *filename_bank,
 
             /* Output file data
             */
-            WriteWord(fp, 0x10);
-            WriteWord(fp, 1000);
-            WriteWord(fp, blocklen + 5);
+            WriteByte(fp, 0x11);        /* Block type */
 
-            WriteWord(fp, blocklen + 3);
-            WriteByte(fp, 0x16);
+            WriteWord(fp, 0x09cc);      /* PILOT */
+            WriteWord(fp, 0x0585);      /* SYNC1 */
+            WriteWord(fp, 0x04aa);      /* SYNC2 */
+            WriteWord(fp, 0x0505);      /* ZERO */
+            WriteWord(fp, 0x0a09);      /* ONE */
+            WriteWord(fp, 0x1000);      /* PILOT LEN */
+            WriteByte(fp, 0x08);        /* NUM BITS IN LAST BYTE */
+            WriteWord(fp, 0x07d0);      /* PAUSE */
+            Write3(fp, blocklen);       /* LEN */
 
             while(min < addr)
             {
