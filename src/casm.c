@@ -59,7 +59,7 @@
 */
 
 static const char *casm_usage =
-"Version 1.5 development\n"
+"Version 1.5\n"
 "\n"
 "This program is distributed in the hope that it will be useful,\n"
 "but WITHOUT ANY WARRANTY; without even the implied warranty of\n"
@@ -176,6 +176,7 @@ CommandStatus SetOption(int opt, int argc, char *argv[],
     {
         case OPT_ADDRESS24:
             options.address24 = ParseTrueFalse(argv[0], FALSE);
+            LabelSetAddress24(options.address24);
             break;
         default:
             break;

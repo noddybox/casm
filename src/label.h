@@ -126,6 +126,10 @@ void            LabelWriteBlob(FILE *fp);
 */
 void            LabelReadBlob(FILE *fp, int offset);
 
+/* Set 24-bit address mode
+*/
+void            LabelSetAddress24(int onoff);
+
 
 #endif
 

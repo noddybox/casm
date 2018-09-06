@@ -56,6 +56,8 @@ static char             namespace[MAX_LABEL_SIZE + 1];
 
 static Stack            *stack;
 
+static int              address24 = FALSE;
+
 
 /* ---------------------------------------- PRIVATE FUNCTIONS
 */
@@ -297,7 +299,15 @@ int LabelExpand(const char *expr, int *result)
             /* Current PC
             */
             case '$':
-                *result = PC();
+                if (address24)
+                {
+                    *result = Bank() << 16 | PC();
+                }
+                else
+                {
+                    *result = PC();
+                }
+
                 return TRUE;
 
             default:
@@ -567,6 +577,12 @@ void LabelReadBlob(FILE *fp, int offset)
 
         LabelSet(name, value + offset, GLOBAL_LABEL);
     }
+}
+
+
+void LabelSetAddress24(int onoff)
+{
+    address24 = onoff;
 }
 
 

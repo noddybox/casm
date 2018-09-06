@@ -1,4 +1,8 @@
 
+	option	+list
+	option	+list-labels
+	option	+address24
+
 	; option	output-format,spectrum
 	option	output-bank,code-%u
 	option	output-file,output.tap
@@ -13,4 +17,6 @@
 	defb	2
 
 	org $078000
+label:
 	defb	3
+labellen: equ $ - label
