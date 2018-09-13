@@ -59,7 +59,7 @@
 */
 
 static const char *casm_usage =
-"Version 1.5\n"
+"Version 1.6 Development\n"
 "\n"
 "This program is distributed in the hope that it will be useful,\n"
 "but WITHOUT ANY WARRANTY; without even the implied warranty of\n"
