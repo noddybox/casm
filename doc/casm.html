@@ -238,15 +238,18 @@ of a string constant).</li>
 <li>Labels must start in column zero (the left hand most column).</li>
 
   <ul>
+  <li>It is an error to redefine a global label that already exists.</li>
+
   <li>If the label ends with a colon (:) then the colon is removed.</li>
 
   <li>If the label doesn't start with a period (.) then it is assumed a global
   label.</li>
 
   <li>If the label starts with a period (.) then it is assumed to be a local
-  label.  Local labels are associated with the preceding global label.
-  If a global label and related local label have the same name, the local
-  label will be used on expansion.</li>
+  label.  Local labels are associated with the preceding global label.  If
+  a local label has the same name as a global variable the local value will be
+  used on expansion.  If a local label already exists with the same name it
+  is an error.</li>
 
   <li>Any label can be followed by an <code>equ</code> directive, in which case
   the label is set to that value rather than the current program counter.</li>

@@ -892,6 +892,28 @@ static void RunPass(const char *name, FILE *fp, int depth)
                 goto error_handling;
             }
 
+            if (IsFirstPass())
+            {
+                const Label *l;
+
+                if ((l = LabelFind(label, type)))
+                {
+                    if (l->type == GLOBAL_LABEL)
+                    {
+                        snprintf(err, sizeof err, "Global %s already defined",
+                                        label);
+                    }
+                    else
+                    {
+                        snprintf(err, sizeof err, "Local %s already defined",
+                                        label);
+                    }
+
+                    cmdstat = CMD_FAILED;
+                    goto error_handling;
+                }
+            }
+
             /* This may well be updated by a command, but easier to set anyway
             */
             if (options.address24)
