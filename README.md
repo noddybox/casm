@@ -35,7 +35,8 @@ Currently **casm** supports the following output drivers:
 * A simple library format for larger projects.
 * NES ROM
 
-## Major Changes in V1.3
+## Latest changes
 
-* Added SPC700 (VERY untested)
-* Added NES output format
+* Started trying to add Amstrad CPC output
+* Made duplicate labels an error
+* Fixes to 24-bit addresses
