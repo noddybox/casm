@@ -8,7 +8,7 @@
 	option	output-format,cpc
 	option	cpc-start,start
 
-start:	org $8000
+start:	org	$8000
 
 	ld	hl,msg
 loop:
@@ -16,7 +16,7 @@ loop:
 	ret	z
 	call	$bb5a
 	inc	hl
-	jr loop
+	jr	loop
 
-msg:	org	$8800
-	defb "Hello World",0
+	org	$8800
+msg:	defb	"Hello World",0

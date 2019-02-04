@@ -2,12 +2,52 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <string.h>
+#include <ctype.h>
 
 typedef struct
 {
     int len;
     unsigned char *addr;
 } Block;
+
+static void HexDump(const unsigned char *p, int len)
+{
+    int o = 0;
+    int f;
+    char buff[17] = {0};
+
+    while(o < len)
+    {
+    	strcpy(buff, "                ");
+
+	printf("%4.4X:  ", o);
+
+	for(f = 0; f < 16; f++)
+	{
+	    if (o < len)
+	    {
+	    	printf(" %2.2X", p[o]);
+	    }
+	    else
+	    {
+	    	printf(" **");
+	    }
+
+	    if (isprint(p[o]))
+	    {
+	    	buff[f] = p[o];
+	    }
+	    else
+	    {
+	    	buff[f] = '.';
+	    }
+
+	    o++;
+	}
+
+	printf("   %s\n", buff);
+    }
+}
 
 static int Word(FILE *fp)
 {
@@ -35,22 +75,50 @@ static int Triplet(FILE *fp)
 
 static Block *DumpBlock(FILE *fp)
 {
+    static int first = 1;
     Block *block;
 
-    Word(fp);	/* PILOT */
-    Word(fp);	/* SYNC1 */
-    Word(fp);	/* SYNC2 */
-    Word(fp);	/* ZERO */
-    Word(fp);	/* ONE */
-    Word(fp);	/* PILOT LEN */
-    getc(fp);	/* USED BITS */
-    Word(fp);	/* PAUSE */
+    if (first)
+    {
+	printf("PILOT=%4.4x\n", Word(fp));	/* PILOT */
+	printf("SYNC1=%4.4x\n", Word(fp));	/* SYNC1 */
+	printf("SYNC2=%4.4x\n", Word(fp));	/* SYNC2 */
+	printf("ZERO=%4.4x\n", Word(fp));	/* ZERO */
+	printf("ONE=%4.4x\n", Word(fp));	/* ONE */
+	printf("PILOT LEN=%4.4x\n", Word(fp));	/* PILOT LEN */
+	printf("USED BITS=%2.2x\n", getc(fp));	/* USED BITS */
+	printf("PAUSE=%4.4x\n", Word(fp));	/* PAUSE */
+    }
+    else
+    {
+	Word(fp);	/* PILOT */
+	Word(fp);	/* SYNC1 */
+	Word(fp);	/* SYNC2 */
+	Word(fp);	/* ZERO */
+	Word(fp);	/* ONE */
+	Word(fp);	/* PILOT LEN */
+	getc(fp);	/* USED BITS */
+	Word(fp);	/* PAUSE */
+    }
 
     block = malloc(sizeof *block);
 
     block->len = Triplet(fp);	/* LEN */
+
+    if (first)
+    {
+	printf("LEN=%6.6x\n", block->len);
+    }
+
     block->addr = malloc(block->len);
     fread(block->addr, 1, block->len, fp);
+
+    if (first)
+    {
+    	HexDump(block->addr, block->len);
+    }
+
+    first = 1;
 
     return block;
 }
@@ -114,6 +182,9 @@ int main(int argc, char *argv[])
     int count;
     int f;
     Block *block[256] = {0};
+    char buff[9];
+
+    fread(buff, 1, sizeof buff, stdin);
 
     ch = getc(stdin);
 

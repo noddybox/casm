@@ -19,7 +19,7 @@
 
     -------------------------------------------------------------------------
 
-    Commodore CPC tape output handler.
+    Amstrad CPC tape output handler.
 
 */
 #include <stdlib.h>
@@ -57,50 +57,41 @@ static Options options = {-1};
 
 /* ---------------------------------------- PRIVATE FUNCTIONS
 */
-static void WriteByte(FILE *fp, Byte b)
+static Byte WriteByte(FILE *fp, Byte b, Byte chk)
 {
+    chk ^= b;
     putc(b, fp);
+    return chk;
 }
 
 
-static void WriteWord(FILE *fp, int w)
+static Byte WriteWord(FILE *fp, int w, Byte chk)
 {
-    WriteByte(fp, w & 0xff);
-    WriteByte(fp, (w & 0xff00) >> 8);
+    chk = WriteByte(fp, w & 0xff, chk);
+    chk = WriteByte(fp, (w & 0xff00) >> 8, chk);
+    return chk;
 }
 
 
-static void Write3(FILE *fp, unsigned long l)
+static Byte Write3Word(FILE *fp, int w, Byte chk)
 {
-    int f;
-
-    for(f = 0; f < 3; f++)
-    {
-        WriteByte(fp, l & 0xff);
-        l >>= 8u;
-    }
+    chk = WriteByte(fp, w & 0xff, chk);
+    chk = WriteByte(fp, (w & 0xff00) >> 8, chk);
+    chk = WriteByte(fp, (w & 0xff0000) >> 16, chk);
+    return chk;
 }
 
 
-static void WriteLong(FILE *fp, unsigned long l)
-{
-    int f;
-
-    for(f = 0; f < 4; f++)
-    {
-        WriteByte(fp, l & 0xff);
-        l >>= 8u;
-    }
-}
-
-
-static void WriteString(FILE *fp, const char *p, int len,
-                        Byte fill, Codepage cp)
+static Byte WriteString(FILE *fp, const char *p, int len,
+                        Byte fill, Codepage cp, Byte chk)
 {
     while(len--)
     {
-        WriteByte(fp, *p ? CodeFromNative(cp, *p++) : CodeFromNative(cp, fill));
+        chk = WriteByte(fp, *p ? CodeFromNative(cp, *p++) :
+                                 CodeFromNative(cp, fill), chk);
     }
+
+    return chk;
 }
 
 
@@ -152,10 +143,10 @@ int CPCOutput(const char *filename, const char *filename_bank,
 
     /* Output the binary files
     */
-    WriteString(fp, "ZXTape!", 7, 0, CP_ASCII);
-    WriteByte(fp, 0x1a);
-    WriteByte(fp, 1);
-    WriteByte(fp, 13);
+    WriteString(fp, "ZXTape!", 7, 0, CP_ASCII, 0);
+    WriteByte(fp, 0x1a, 0);
+    WriteByte(fp, 1, 0);
+    WriteByte(fp, 13, 0);
 
     for(f = 0; f < count; f++)
     {
@@ -177,36 +168,39 @@ int CPCOutput(const char *filename, const char *filename_bank,
 
         for(block = 0; block <= blocks; block++)
         {
+            Byte chk;
             int first, last;
 
             first = 0;
             last = 0;
 
-            WriteByte(fp, 0x11);        /* Block type */
+            WriteByte(fp, 0x11, 0);     /* Block type */
 
-            WriteWord(fp, 0x09cc);      /* PILOT */
-            WriteWord(fp, 0x0585);      /* SYNC1 */
-            WriteWord(fp, 0x04aa);      /* SYNC2 */
-            WriteWord(fp, 0x0505);      /* ZERO */
-            WriteWord(fp, 0x0a09);      /* ONE */
-            WriteWord(fp, 0x1000);      /* PILOT LEN */
-            WriteByte(fp, 0x08);        /* NUM BITS IN LAST BYTE */
-            WriteWord(fp, 0x07d0);      /* PAUSE */
-            Write3(fp, 0x0040);         /* LEN */
+            WriteWord(fp, 0x626, 0);    /* PILOT */
+            WriteWord(fp, 0x34f, 0);    /* SYNC1 */
+            WriteWord(fp, 0x302, 0);    /* SYNC2 */
+            WriteWord(fp, 0x33a, 0);    /* ZERO */
+            WriteWord(fp, 0x673, 0);    /* ONE */
+            WriteWord(fp, 0xffe, 0);    /* PILOT LEN */
+            WriteByte(fp, 8, 0);        /* USED BITS */
+            WriteWord(fp, 0x10, 0);     /* PAUSE */
+            Write3Word(fp, 0x0041, 0);  /* LEN */
+
+            chk = 0;
 
             if (f == 0)
             {
-                WriteString(fp, filename, 16, 0, CP_ASCII);
+                chk = WriteString(fp, filename, 16, 0, CP_ASCII, chk);
             }
             else
             {
                 char fn[16];
 
                 snprintf(fn, sizeof fn, filename_bank, bank[f]->number);
-                WriteString(fp, fn, 16, 0, CP_ASCII);
+                chk = WriteString(fp, fn, 16, 0, CP_ASCII, chk);
             }
 
-            WriteByte(fp, block+1);
+            chk = WriteByte(fp, block+1, chk);
 
             if (block == 0)
             {
@@ -228,36 +222,42 @@ int CPCOutput(const char *filename, const char *filename_bank,
                 blocklen = len % BLOCK_SIZE;
             }
 
-            WriteByte(fp, last);
-            WriteByte(fp, 2);
-            WriteWord(fp, blocklen);
-            WriteWord(fp, addr);
-            WriteByte(fp, first);
-            WriteWord(fp, len);
-            WriteWord(fp, options.start_addr);
-            WriteString(fp, "", 64 - 28, 0, CP_ASCII);
+            chk = WriteByte(fp, last, chk);
+            chk = WriteByte(fp, 2, chk);
+            chk = WriteWord(fp, blocklen, chk);
+            chk = WriteWord(fp, addr, chk);
+            chk = WriteByte(fp, first, chk);
+            chk = WriteWord(fp, len, chk);
+            chk = WriteWord(fp, options.start_addr, chk);
+            chk = WriteString(fp, "", 64 - 28, 0, CP_ASCII, chk);
+
+            WriteByte(fp, chk, 0);
 
             addr += blocklen;
 
             /* Output file data
             */
-            WriteByte(fp, 0x11);        /* Block type */
+            WriteByte(fp, 0x11, 0);             /* Block type */
 
-            WriteWord(fp, 0x09cc);      /* PILOT */
-            WriteWord(fp, 0x0585);      /* SYNC1 */
-            WriteWord(fp, 0x04aa);      /* SYNC2 */
-            WriteWord(fp, 0x0505);      /* ZERO */
-            WriteWord(fp, 0x0a09);      /* ONE */
-            WriteWord(fp, 0x1000);      /* PILOT LEN */
-            WriteByte(fp, 0x08);        /* NUM BITS IN LAST BYTE */
-            WriteWord(fp, 0x07d0);      /* PAUSE */
-            Write3(fp, blocklen);       /* LEN */
+            WriteWord(fp, 0x626, 0);            /* PILOT */
+            WriteWord(fp, 0x34f, 0);            /* SYNC1 */
+            WriteWord(fp, 0x302, 0);            /* SYNC2 */
+            WriteWord(fp, 0x33a, 0);            /* ZERO */
+            WriteWord(fp, 0x673, 0);            /* ONE */
+            WriteWord(fp, 0xffe, 0);            /* PILOT LEN */
+            WriteByte(fp, 8, 0);                /* USED BITS */
+            WriteWord(fp, 0x10, 0);             /* PAUSE */
+            Write3Word(fp, blocklen + 1, 0);    /* LEN */
+
+            chk = 0;
 
             while(min < addr)
             {
-                WriteByte(fp, mem[min]);
+                chk = WriteByte(fp, mem[min], chk);
                 min++;
             }
+
+            WriteByte(fp, chk, 0);
         }
     }
 
