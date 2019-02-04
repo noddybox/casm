@@ -1,6 +1,9 @@
 # casm
 
-Portable cross assembler.
+Portable cross assembler.  Source control for this is now located in Subversion
+at <a href="https://noddybox.co.uk/svn/casm/trunk">
+https://noddybox.co.uk/svn/casm/trunk</a>.  Sorry, I tried to like GIT but 
+found it's workflow not as comfortable as SVN for me.
 
 ## Usage
 
