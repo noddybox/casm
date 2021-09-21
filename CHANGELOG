@@ -3,3 +3,7 @@ V1.9
 * Added CHANGELOG
 * Added Commodore 64 PRG output.
 * Added start-address option to T64 output.
+
+V1.10
+=====
+* Added c64 codepage for Commodore 64 screen codes.

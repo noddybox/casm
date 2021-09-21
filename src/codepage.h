@@ -36,7 +36,8 @@ typedef enum
     CP_ASCII,
     CP_ZX81,
     CP_SPECTRUM,
-    CP_CBM
+    CP_CBM,
+    CP_C64
 } Codepage;
 
 
