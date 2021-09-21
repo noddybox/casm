@@ -8,8 +8,7 @@ Simply pass it the file to assemble, i.e.
 
 `casm source.txt`
 
-Full documentation can be found in
-<a href="/svnbrowse/cat.php?u=https://noddybox.co.uk/svn/casm/trunk/doc/casm.html">HTML</a> format.
+Full documentation can be found in [HTML](doc/casm.html) format.
 
 ## Processors
 
