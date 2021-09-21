@@ -42,20 +42,23 @@
 enum option_t
 {
     OPT_START_ADDR,
+    OPT_LOADER
 };
 
 static const ValueTable option_set[] =
 {
-    {"cpc-start",  OPT_START_ADDR},
+    {"cpc-start",	OPT_START_ADDR},
+    {"cpc-loader",	OPT_LOADER},
     {NULL}
 };
 
 typedef struct
 {
     int         start_addr;
+    int         loader;
 } Options;
 
-static Options options = {-1};
+static Options options = {-1, 0};
 
 typedef struct
 {
@@ -71,6 +74,7 @@ static void InitStream(Stream *s)
     s->length = 0;
 }
 
+
 static void AddStreamByte(Stream *s, Byte b)
 {
     s->length++;
@@ -78,12 +82,20 @@ static void AddStreamByte(Stream *s, Byte b)
     s->stream[s->length - 1] = b;
 }
 
+
 static void AddStreamMem(Stream *s, Byte *mem, size_t len)
 {
     while(len--)
     {
         AddStreamByte(s, *mem++);
     }
+}
+
+
+static void AddStreamWord(Stream *s, int w)
+{
+    AddStreamByte(s, LO_BYTE(w));
+    AddStreamByte(s, HI_BYTE(w));
 }
 
 
@@ -236,6 +248,10 @@ CommandStatus CPCOutputSetOption(int opt, int argc, char *argv[], int quoted[],
             CMD_EXPR(argv[0], options.start_addr);
             break;
 
+	case OPT_LOADER:
+	    options.loader = ParseTrueFalse(argv[0], FALSE);
+	    break;
+
         default:
             break;
     }
@@ -268,6 +284,104 @@ int CPCOutput(const char *filename, const char *filename_bank,
     WriteByte(fp, 0x1a);
     WriteByte(fp, 1);
     WriteByte(fp, 0x14);
+
+    /* Output the basic loader if defined
+    */
+    if (options.loader)
+    {
+    	Stream basic;
+	Stream stream;
+	Byte header[256] = {0};
+	Word crc;
+
+	InitStream(&basic);
+
+	/* Line 10 MEMORY &xxxx
+	*/
+	AddStreamWord(&basic, 2 + 2 + 1 + 3 + 1);
+	AddStreamWord(&basic, 10);
+	AddStreamByte(&basic, 0xaa);
+	AddStreamByte(&basic, 0x1c);
+	AddStreamWord(&basic, bank[0]->min_address_used);
+	AddStreamByte(&basic, 0);
+
+	/* Line 20 LOAD ""
+	*/
+	AddStreamWord(&basic, 2 + 2 + 1 + 3 + 1);
+	AddStreamWord(&basic, 20);
+	AddStreamByte(&basic, 0xa8);
+	AddStreamByte(&basic, CodeFromNative(CP_ASCII, '"'));
+	AddStreamByte(&basic, CodeFromNative(CP_ASCII, '!'));
+	AddStreamByte(&basic, CodeFromNative(CP_ASCII, '"'));
+	AddStreamByte(&basic, 0);
+
+	/* Line 30 CALL &xxxx
+	*/
+	AddStreamWord(&basic, 2 + 2 + 1 + 3 + 1);
+	AddStreamWord(&basic, 30);
+	AddStreamByte(&basic, 0x83);
+	AddStreamByte(&basic, 0x1c);
+	AddStreamWord(&basic, options.start_addr);
+	AddStreamByte(&basic, 0);
+
+        /* End of program
+        */
+        AddStreamWord(&basic, 0);
+
+	/* Create header
+	*/
+	WriteStringMem(header, 0, "LOADER.BAS", 16, 0, CP_ASCII);
+
+	header[16] = 1;
+	header[17] = 255;
+	header[18] = 0;
+	WriteWordMem(header, 19, basic.length);
+	WriteWordMem(header, 21, 0x170);
+	header[23] = 255;
+	WriteWordMem(header, 24, basic.length);
+
+	crc = CRC(header, 256);
+
+	/* Output header block
+	*/
+	InitStream(&stream);
+
+	AddStreamByte(&stream, 0x2c);
+	AddStreamMem(&stream, header, 256);
+	AddStreamByte(&stream, HIBYTE(crc));
+	AddStreamByte(&stream, LOBYTE(crc));
+	AddStreamByte(&stream, 0xff);
+	AddStreamByte(&stream, 0xff);
+	AddStreamByte(&stream, 0xff);
+	AddStreamByte(&stream, 0xff);
+
+	OutputTZXTurboBlock(fp, &stream);
+
+	FreeStream(&stream);
+
+	/* Output basic data block
+	*/
+	InitStream(&stream);
+
+	memset(header, 0, 256);
+	memcpy(header, basic.stream, basic.length);
+	crc = CRC(header, 256);
+
+	AddStreamByte(&stream, 0x16);
+	AddStreamMem(&stream, header, 256);
+	AddStreamByte(&stream, HIBYTE(crc));
+	AddStreamByte(&stream, LOBYTE(crc));
+	AddStreamByte(&stream, 0xff);
+	AddStreamByte(&stream, 0xff);
+	AddStreamByte(&stream, 0xff);
+	AddStreamByte(&stream, 0xff);
+
+	OutputTZXTurboBlock(fp, &stream);
+
+	FreeStream(&stream);
+
+	FreeStream(&basic);
+    }
 
     for(f = 0; f < count; f++)
     {
@@ -355,7 +469,7 @@ int CPCOutput(const char *filename, const char *filename_bank,
 
             crc = CRC(header, 256);
 
-            /* Write CSW data
+            /* Write header data
             */
             AddStreamByte(&stream, 0x2c);
             AddStreamMem(&stream, header, 256);

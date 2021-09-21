@@ -7,12 +7,13 @@
 	option	output-file,cpc.cdt
 	option	output-format,cpc
 	option	cpc-start,start
+	option	cpc-loader,true
 
 start:	org	$8000
 
 	ld	hl,msg
 	call	print
-	jp	$
+	ret
 
 	org	$8400
 print:

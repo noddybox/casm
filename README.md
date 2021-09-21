@@ -32,8 +32,9 @@ Currently **casm** supports the following output drivers:
 * ZX81 P file
 * Gameboy ROM
 * SNES ROM
-* A simple library format for larger projects.
+* A simple library format for larger projects
 * NES ROM
+* Amstrad CPC CDT tape file
 
 ## Latest changes
 
