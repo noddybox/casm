@@ -56,7 +56,8 @@ typedef enum
     SNES,
     LIBRARY,
     NES,
-    CPC
+    CPC,
+    PRG
 } Format;
 
 static char             output[4096] = "output";
@@ -75,6 +76,7 @@ static ValueTable       format_table[] =
     {"lib",             LIBRARY},
     {"nes",             NES},
     {"cpc",             CPC},
+    {"prg",             PRG},
     {NULL}
 };
 
@@ -170,6 +172,10 @@ int OutputCode(void)
 
         case CPC:
             return CPCOutput(output, output_bank, bank, count,
+                             error, sizeof error);
+
+        case PRG:
+            return PRGOutput(output, output_bank, bank, count,
                              error, sizeof error);
 
         default:

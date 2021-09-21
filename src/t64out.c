@@ -29,12 +29,37 @@
 #include "global.h"
 #include "codepage.h"
 #include "t64out.h"
+#include "expr.h"
 
 
 /* ---------------------------------------- MACROS & TYPES
 */
 
 #define NOT_USED        0
+
+/* ---------------------------------------- PRIVATE TYPES AND VARS
+*/
+enum option_t
+{
+    OPT_START_ADDR
+};
+
+static const ValueTable option_set[]=
+{
+    {"t64-start", OPT_START_ADDR},
+    {NULL}
+};
+
+typedef struct
+{
+    int		start_addr;
+} Options;
+
+static Options options =
+{
+    -1
+};
+
 
 /* ---------------------------------------- PRIVATE FUNCTIONS
 */
@@ -103,14 +128,27 @@ static void WriteString(FILE *fp, const char *p, int len,
 */
 const ValueTable *T64OutputOptions(void)
 {
-    return NULL;
+    return option_set;
 }
 
 CommandStatus T64OutputSetOption(int opt, int argc, char *argv[],
-                                     int quoted[],
-                                     char *error, size_t error_size)
+                                 int quoted[], char *err, size_t errsize)
 {
-    return CMD_NOT_KNOWN;
+    CommandStatus stat = CMD_OK;
+
+    CMD_ARGC_CHECK(1);
+
+    switch(opt)
+    {
+        case OPT_START_ADDR:
+            CMD_EXPR(argv[0], options.start_addr);
+            break;
+
+        default:
+            break;
+    }
+
+    return stat;
 }
 
 int T64Output(const char *filename, const char *filename_bank,
@@ -216,7 +254,14 @@ int T64Output(const char *filename, const char *filename_bank,
             int a = 0x803;
             int next;
 
-            snprintf(sys, sizeof sys, "%u", min);
+	    if (options.start_addr == -1)
+	    {
+		snprintf(sys, sizeof sys, "%u", min);
+	    }
+	    else
+	    {
+		snprintf(sys, sizeof sys, "%d", options.start_addr);
+	    }
 
             a = PokeW(mem, a, 10);
             a = PokeB(mem, a, 0x9e);

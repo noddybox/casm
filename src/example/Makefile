@@ -20,7 +20,8 @@
 # Makefile for examples
 #
 
-ALL	= spectrum.tap c64.t64 zx81.p gb.gb vcs.bin snes.sfc nes.nes cpc.cdt
+ALL	= spectrum.tap t64.t64 zx81.p gb.gb vcs.bin snes.sfc nes.nes cpc.cdt \
+	  prg.prg
 CASM	= ../casm
 
 all: $(ALL) $(CASM)
@@ -33,8 +34,8 @@ remake: clean all
 spectrum.tap: spectrum.asm $(CASM)
 	$(CASM) spectrum.asm
 
-c64.t64: c64.asm $(CASM)
-	$(CASM) c64.asm
+t64.t64: t64.asm $(CASM)
+	$(CASM) t64.asm
 
 cpc.cdt: cpc.asm $(CASM)
 	$(CASM)	cpc.asm
@@ -54,5 +55,9 @@ snes.sfc: snes.asm $(CASM)
 nes.nes: nes.asm tiles.chr nes.pal $(CASM)
 	$(CASM) nes.asm
 
+prg.prg: prg.asm $(CASM)
+	$(CASM) prg.asm
+
 clean:
 	rm -f $(ALL)
+

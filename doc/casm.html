@@ -1012,6 +1012,13 @@ A NES ROM file.
 An Amstrad CPC CDT file.
 </td></tr>
 
+<tr><td class="cmd">
+<a href="#prgout">prg</a>
+</td>
+<td class="def">
+A Commodore 64 PRG file.
+</td></tr>
+
 </table>
 
 </td></tr>
@@ -1172,6 +1179,26 @@ to start the machine code, e.g.
 
 <p>Any remaining blocks will be stored as-is without any basic loader.</p>
 
+<h4>C64 T64 Tape Output Format options</h4>
+
+<p>The C64 T64 output driver supports the following settings that can be
+set via an <b>option</b> command.
+</p>
+
+<table>
+
+<thead><tr><td class="head">Option</td>
+<td class="head">Description</td></tr></thead>
+
+<tr><td class="cmd">
+option t64-start, <i>address</i>
+</td>
+<td class="def">
+The start address for the generated BASIC loader.  If left undefined defaults
+to the start of written memory in the first bank.
+</td></tr>
+
+</table>
 
 <h3 id="gameboyout">Nintendo Gameboy ROM File Output Format</h3>
 
@@ -1497,9 +1524,60 @@ The start address for the tape file.  If left undefined defaults to the start
 of written memory.
 </td></tr>
 
+<tr><td class="cmd">
+option cpc-loader, &lt;on|off&gt;
+</td>
+<td class="def">
+Whether the CDT file should contain a BASIC loader to load and run the machine
+code.
+</td></tr>
+
 
 </table>
 
+
+<h3 id="prgout">C64 PRG Output Format</h3>
+<p>
+Generates a PRG file for an emulator or real hardware.
+</p>
+
+<p>The tape file will be given the same name as the output filename, and the
+internal code block will also be given the same name, unless memory banks
+have been used, in which case then each entry in the tape file will use the
+<b>output-bank</b> setting to generate the filename for each entry.
+</p>
+
+<p>All banks will have a small BASIC program inserted as part of
+the generated file.  For this reason the bank should start near the BASIC
+area (0x820 should be a safe place to start) unless you have a great
+desire for a PRG full of zero bytes. This BASIC will simply hold a SYS command
+to start the machine code, e.g.
+</p>
+
+<pre class="codeblock">
+10 SYS 2080
+</pre>
+
+<h4>C64 PRG Output Format options</h4>
+
+<p>The C64 PRG output driver supports the following settings that can be
+set via an <b>option</b> command.
+</p>
+
+<table>
+
+<thead><tr><td class="head">Option</td>
+<td class="head">Description</td></tr></thead>
+
+<tr><td class="cmd">
+option prg-start, <i>address</i>
+</td>
+<td class="def">
+The start address for the generated BASIC loader.  If left undefined defaults
+to the start of written memory in the bank.
+</td></tr>
+
+</table>
 
 
 <h2>Listing</h2>

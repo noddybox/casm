@@ -59,7 +59,7 @@
 */
 
 static const char *casm_usage =
-"Version 1.8\n"
+"Version 1.9\n"
 "\n"
 "This program is distributed in the hope that it will be useful,\n"
 "but WITHOUT ANY WARRANTY; without even the implied warranty of\n"
@@ -695,6 +695,7 @@ int main(int argc, char *argv[])
     PushValTableHandler(LibOutputOptions(), LibOutputSetOption);
     PushValTableHandler(NESOutputOptions(), NESOutputSetOption);
     PushValTableHandler(CPCOutputOptions(), CPCOutputSetOption);
+    PushValTableHandler(PRGOutputOptions(), PRGOutputSetOption);
 
     ClearState();
 
