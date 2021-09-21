@@ -36,6 +36,8 @@
 */
 
 #define BLOCK_SIZE      2048
+#define LO_BYTE(w)      ((w) & 0xff)
+#define HI_BYTE(w)      (((w) & 0xff00)>>8)
 
 enum option_t
 {
@@ -55,43 +57,162 @@ typedef struct
 
 static Options options = {-1};
 
+typedef struct
+{
+    Byte *stream;
+    size_t length;
+} Stream;
+
 /* ---------------------------------------- PRIVATE FUNCTIONS
 */
-static Byte WriteByte(FILE *fp, Byte b, Byte chk)
+static void InitStream(Stream *s)
 {
-    chk ^= b;
-    putc(b, fp);
-    return chk;
+    s->stream = NULL;
+    s->length = 0;
 }
 
-
-static Byte WriteWord(FILE *fp, int w, Byte chk)
+static void AddStreamByte(Stream *s, Byte b)
 {
-    chk = WriteByte(fp, w & 0xff, chk);
-    chk = WriteByte(fp, (w & 0xff00) >> 8, chk);
-    return chk;
+    s->length++;
+    s->stream = Realloc(s->stream, s->length);
+    s->stream[s->length - 1] = b;
 }
 
-
-static Byte Write3Word(FILE *fp, int w, Byte chk)
-{
-    chk = WriteByte(fp, w & 0xff, chk);
-    chk = WriteByte(fp, (w & 0xff00) >> 8, chk);
-    chk = WriteByte(fp, (w & 0xff0000) >> 16, chk);
-    return chk;
-}
-
-
-static Byte WriteString(FILE *fp, const char *p, int len,
-                        Byte fill, Codepage cp, Byte chk)
+static void AddStreamMem(Stream *s, Byte *mem, size_t len)
 {
     while(len--)
     {
-        chk = WriteByte(fp, *p ? CodeFromNative(cp, *p++) :
-                                 CodeFromNative(cp, fill), chk);
+        AddStreamByte(s, *mem++);
+    }
+}
+
+
+static void FreeStream(Stream *s)
+{
+    if (s->stream)
+    {
+        free(s->stream);
     }
 
-    return chk;
+    InitStream(s);
+}
+
+
+static Word CRC(const Byte *b, int size)
+{
+    Word crc = 0xffff;
+    int f;
+
+    for(f = 0; f < 256; f++)
+    {
+        Word w;
+        int n;
+
+        if (f < size)
+        {
+            w = b[f];
+        }
+        else
+        {
+            w = 0;
+        }
+
+        crc ^= w << 8;
+
+        for(n = 0; n < 8; n++)
+        {
+            if (crc & 0x8000)
+            {
+                crc = ((crc << 1) ^ 0x1021) & 0xffff;
+            }
+            else
+            {
+                crc = (crc << 1) & 0xffff;
+            }
+        }
+    }
+
+    crc ^= 0xffff;
+
+    return crc;
+}
+
+
+static void WriteByte(FILE *fp, Byte b)
+{
+    putc(b, fp);
+}
+
+
+static void WriteWord(FILE *fp, int w)
+{
+    WriteByte(fp, LO_BYTE(w));
+    WriteByte(fp, HI_BYTE(w));
+}
+
+
+static void WriteDWord(FILE *fp, unsigned long w)
+{
+    WriteWord(fp, w & 0xffff);
+    WriteWord(fp, (w & 0xffff0000) >> 16);
+}
+
+
+static void WriteMem(FILE *fp, const Byte *mem, int len)
+{
+    fwrite(mem, 1, len, fp);
+}
+
+
+static void WriteWordMem(Byte *mem, int offset, int w)
+{
+    mem[offset] = LO_BYTE(w);
+    mem[offset+1] = HI_BYTE(w);
+}
+
+
+static void Write3Word(FILE *fp, int w)
+{
+    WriteByte(fp, LO_BYTE(w));
+    WriteByte(fp, HI_BYTE(w));
+    WriteByte(fp, (w & 0xff0000) >> 16);
+}
+
+
+static void WriteString(FILE *fp, const char *p, int len,
+                        Byte fill, Codepage cp)
+{
+    while(len--)
+    {
+        WriteByte(fp, *p ? CodeFromNative(cp, *p++) : CodeFromNative(cp, fill));
+    }
+}
+
+
+static void WriteStringMem(Byte *mem, int offset, const char *p, int len,
+                           Byte fill, Codepage cp)
+{
+    while(len--)
+    {
+        mem[offset++] =
+                *p ? CodeFromNative(cp, *p++) : CodeFromNative(cp, fill);
+    }
+}
+
+
+static void OutputTZXTurboBlock(FILE *fp, Stream *s)
+{
+    WriteByte(fp, 0x11);                /* Block type - Turbo block */
+    WriteWord(fp, 0x0b21);              /* PILOT pulse len */
+    WriteWord(fp, 0x05ad);              /* SYNC 1 len */
+    WriteWord(fp, 0x05ad);              /* SYNC 2 len */
+    WriteWord(fp, 0x05ac);              /* Zero len */
+    WriteWord(fp, 0x0af4);              /* One len */
+    WriteWord(fp, 0x1002);              /* PILOT tone */
+    WriteByte(fp, 8);                   /* Last byte used bits */
+    WriteWord(fp, 0x0011);              /* Pause after block */
+    Write3Word(fp, s->length);
+    WriteMem(fp, s->stream, s->length);
 }
 
 
@@ -143,16 +264,17 @@ int CPCOutput(const char *filename, const char *filename_bank,
 
     /* Output the binary files
     */
-    WriteString(fp, "ZXTape!", 7, 0, CP_ASCII, 0);
-    WriteByte(fp, 0x1a, 0);
-    WriteByte(fp, 1, 0);
-    WriteByte(fp, 13, 0);
+    WriteString(fp, "ZXTape!", 7, 0, CP_ASCII);
+    WriteByte(fp, 0x1a);
+    WriteByte(fp, 1);
+    WriteByte(fp, 0x14);
 
     for(f = 0; f < count; f++)
     {
         const Byte *mem;
         int min, max, len, blocks, addr;
         int block, blocklen;
+        Stream stream;
 
         mem = bank[f]->memory;
         min = bank[f]->min_address_used;
@@ -168,39 +290,31 @@ int CPCOutput(const char *filename, const char *filename_bank,
 
         for(block = 0; block <= blocks; block++)
         {
-            Byte chk;
+            Byte header[256] = {0};
+            Word crc;
             int first, last;
+            int seg, segs;
+
+            InitStream(&stream);
 
             first = 0;
             last = 0;
 
-            WriteByte(fp, 0x11, 0);     /* Block type */
-
-            WriteWord(fp, 0x626, 0);    /* PILOT */
-            WriteWord(fp, 0x34f, 0);    /* SYNC1 */
-            WriteWord(fp, 0x302, 0);    /* SYNC2 */
-            WriteWord(fp, 0x33a, 0);    /* ZERO */
-            WriteWord(fp, 0x673, 0);    /* ONE */
-            WriteWord(fp, 0xffe, 0);    /* PILOT LEN */
-            WriteByte(fp, 8, 0);        /* USED BITS */
-            WriteWord(fp, 0x10, 0);     /* PAUSE */
-            Write3Word(fp, 0x0041, 0);  /* LEN */
-
-            chk = 0;
-
+            /* Create the header
+            */
             if (f == 0)
             {
-                chk = WriteString(fp, filename, 16, 0, CP_ASCII, chk);
+                WriteStringMem(header, 0, filename, 16, 0, CP_ASCII);
             }
             else
             {
                 char fn[16];
 
                 snprintf(fn, sizeof fn, filename_bank, bank[f]->number);
-                chk = WriteString(fp, fn, 16, 0, CP_ASCII, chk);
+                WriteStringMem(header, 0, fn, 16, 0, CP_ASCII);
             }
 
-            chk = WriteByte(fp, block+1, chk);
+            header[16] = block + 1;
 
             if (block == 0)
             {
@@ -222,42 +336,86 @@ int CPCOutput(const char *filename, const char *filename_bank,
                 blocklen = len % BLOCK_SIZE;
             }
 
-            chk = WriteByte(fp, last, chk);
-            chk = WriteByte(fp, 2, chk);
-            chk = WriteWord(fp, blocklen, chk);
-            chk = WriteWord(fp, addr, chk);
-            chk = WriteByte(fp, first, chk);
-            chk = WriteWord(fp, len, chk);
-            chk = WriteWord(fp, options.start_addr, chk);
-            chk = WriteString(fp, "", 64 - 28, 0, CP_ASCII, chk);
-
-            WriteByte(fp, chk, 0);
-
-            addr += blocklen;
-
-            /* Output file data
-            */
-            WriteByte(fp, 0x11, 0);             /* Block type */
-
-            WriteWord(fp, 0x626, 0);            /* PILOT */
-            WriteWord(fp, 0x34f, 0);            /* SYNC1 */
-            WriteWord(fp, 0x302, 0);            /* SYNC2 */
-            WriteWord(fp, 0x33a, 0);            /* ZERO */
-            WriteWord(fp, 0x673, 0);            /* ONE */
-            WriteWord(fp, 0xffe, 0);            /* PILOT LEN */
-            WriteByte(fp, 8, 0);                /* USED BITS */
-            WriteWord(fp, 0x10, 0);             /* PAUSE */
-            Write3Word(fp, blocklen + 1, 0);    /* LEN */
-
-            chk = 0;
-
-            while(min < addr)
+            if (blocklen == BLOCK_SIZE)
             {
-                chk = WriteByte(fp, mem[min], chk);
-                min++;
+                segs = 7;
+            }
+            else
+            {
+                segs = blocklen / 256;
             }
 
-            WriteByte(fp, chk, 0);
+            header[17] = last;
+            header[18] = 2;
+            WriteWordMem(header, 19, blocklen);
+            WriteWordMem(header, 21, addr);
+            header[23] = first;
+            WriteWordMem(header, 24, len);
+            WriteWordMem(header, 26, options.start_addr);
+
+            crc = CRC(header, 256);
+
+            /* Write CSW data
+            */
+            AddStreamByte(&stream, 0x2c);
+            AddStreamMem(&stream, header, 256);
+            AddStreamByte(&stream, HIBYTE(crc));
+            AddStreamByte(&stream, LOBYTE(crc));
+            AddStreamByte(&stream, 0xff);
+            AddStreamByte(&stream, 0xff);
+            AddStreamByte(&stream, 0xff);
+            AddStreamByte(&stream, 0xff);
+
+            OutputTZXTurboBlock(fp, &stream);
+
+            FreeStream(&stream);
+
+            /* Loop round for the segments (up to 8)
+            */
+            InitStream(&stream);
+            AddStreamByte(&stream, 0x16);
+
+            for(seg = 0; seg <= segs; seg++)
+            {
+                Byte segment[256] = {0};
+                int segi = 0;
+                int last_seg = 0;
+
+                last_seg = (seg == segs);
+
+                if (!last_seg || blocklen == BLOCK_SIZE)
+                {
+                    addr += 256;
+                }
+                else
+                {
+                    addr += blocklen % 256;
+                }
+
+                while(min < addr)
+                {
+                    segment[segi++] = mem[min++];
+                }
+
+                /* Add segment data to stream
+                */
+                AddStreamMem(&stream, segment, 256);
+                crc = CRC(segment, 256);
+                AddStreamByte(&stream, HIBYTE(crc));
+                AddStreamByte(&stream, LOBYTE(crc));
+
+                if (last_seg)
+                {
+                    AddStreamByte(&stream, 0xff);
+                    AddStreamByte(&stream, 0xff);
+                    AddStreamByte(&stream, 0xff);
+                    AddStreamByte(&stream, 0xff);
+                }
+            }
+
+            OutputTZXTurboBlock(fp, &stream);
+
+            FreeStream(&stream);
         }
     }
 

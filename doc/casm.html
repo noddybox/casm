@@ -1005,6 +1005,13 @@ labels.
 A NES ROM file.
 </td></tr>
 
+<tr><td class="cmd">
+<a href="#cpcout">cpc</a>
+</td>
+<td class="def">
+An Amstrad CPC CDT file.
+</td></tr>
+
 </table>
 
 </td></tr>
@@ -1457,6 +1464,42 @@ Defines whether there is battery backed RAM in the cartridge.  Defaults to
 </td></tr>
 
 </table>
+
+
+<h3 id="cpcout">Amstrad CPC CDT Output Format</h3>
+<p>
+Generates an Amstrad CPC TAP file for an emulator.  
+The file can also be run into a real CPC using TZX to wav file converters.
+</p>
+
+<p>The CDT file will be given the same name as the output filename, 
+unless memory banks have been used, in which case each code file in the CDT
+file will use the <b>output-bank</b> setting to generate the filename for
+each block.
+</p>
+
+<h4>Amstrad CPC CDT Output Format options</h4>
+
+<p>The Amstrad CPC CDT output driver supports the following settings that can be
+set via an <b>option</b> command.
+</p>
+
+<table>
+
+<thead><tr><td class="head">Option</td>
+<td class="head">Description</td></tr></thead>
+
+<tr><td class="cmd">
+option cpc-start, <i>address</i>
+</td>
+<td class="def">
+The start address for the tape file.  If left undefined defaults to the start
+of written memory.
+</td></tr>
+
+
+</table>
+
 
 
 <h2>Listing</h2>

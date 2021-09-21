@@ -11,12 +11,19 @@
 start:	org	$8000
 
 	ld	hl,msg
-loop:
+	call	print
+	jp	$
+
+	org	$8400
+print:
 	ld	a,(hl)
+	cp	0
 	ret	z
+	push	hl
 	call	$bb5a
+	pop	hl
 	inc	hl
-	jr	loop
+	jr	print
 
 	org	$8800
 msg:	defb	"Hello World",0
