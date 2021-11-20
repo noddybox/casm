@@ -696,6 +696,7 @@ int main(int argc, char *argv[])
     PushValTableHandler(NESOutputOptions(), NESOutputSetOption);
     PushValTableHandler(CPCOutputOptions(), CPCOutputSetOption);
     PushValTableHandler(PRGOutputOptions(), PRGOutputSetOption);
+    PushValTableHandler(HEXOutputOptions(), HEXOutputSetOption);
 
     ClearState();
 
