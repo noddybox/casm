@@ -21,7 +21,7 @@
 #
 
 ALL	= spectrum.tap t64.t64 zx81.p gb.gb vcs.bin snes.sfc nes.nes cpc.cdt \
-	  prg.prg
+	  prg.prg hex.hex
 CASM	= ../casm
 
 all: $(ALL) $(CASM)
@@ -57,6 +57,9 @@ nes.nes: nes.asm tiles.chr nes.pal $(CASM)
 
 prg.prg: prg.asm $(CASM)
 	$(CASM) prg.asm
+
+hex.hex: emucpm.z80 $(CASM)
+	$(CASM) emucpm.z80
 
 clean:
 	rm -f $(ALL)

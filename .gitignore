@@ -42,5 +42,8 @@ src/casm
 *.p
 *.sfc
 *.nes
+*.prg
+*.hex
+*.cdt
 src/A-Hdrive
 src/output

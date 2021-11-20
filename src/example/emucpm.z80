@@ -1,0 +1,40 @@
+;
+; Quick hack to emulate some CPM bdos calls (well, enough to make it work)
+;
+        option  output-file, hex.hex
+        option  output-format, hex
+
+	org	0
+	halt
+
+	org	5
+	jp	cpm
+
+	org $f000
+cpm:
+	push	af
+	push	bc
+	push	de
+	push	hl
+	ld	a,9
+	cp	c
+	call	z,print_string
+	ld	a,2
+	cp	c
+	call	z,print_char
+	pop	hl
+	pop	de
+	pop	bc
+	pop	af
+	ret
+
+print_string:
+	ld	bc,$0082
+	out	(c),a
+	ret
+
+print_char:
+	ld	a,e
+	ld	bc,$0080
+	out	(c),a
+	ret

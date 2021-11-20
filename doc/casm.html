@@ -1030,6 +1030,13 @@ An Amstrad CPC CDT file.
 A Commodore 64 PRG file.
 </td></tr>
 
+<tr><td class="cmd">
+<a href="#hexout">hex</a>
+</td>
+<td class="def">
+An Intel HEX format file.
+</td></tr>
+
 </table>
 
 </td></tr>
@@ -1586,6 +1593,34 @@ option prg-start, <i>address</i>
 <td class="def">
 The start address for the generated BASIC loader.  If left undefined defaults
 to the start of written memory in the bank.
+</td></tr>
+
+</table>
+
+
+<h3 id="hexout">Intel HEX Output Format</h3>
+<p>
+Generates a Intel HEX file for an emulator or real hardware.  This format is
+used by various tools and programmers.
+</p>
+
+<h4>Intel HEX Output Format options</h4>
+
+<p>The Intel HEX output driver supports the following settings that can be
+set via an <b>option</b> command.
+</p>
+
+<table>
+
+<thead><tr><td class="head">Option</td>
+<td class="head">Description</td></tr></thead>
+
+<tr><td class="cmd">
+option hex-null, <i>value</i>
+</td>
+<td class="def">
+Sets the value that the output handler considers an empty byte that doesn't 
+need to be output.  Defaults to zero.
 </td></tr>
 
 </table>
