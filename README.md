@@ -38,6 +38,4 @@ Currently **casm** supports the following output drivers:
 
 ## Latest changes
 
-* Started trying to add Amstrad CPC output
-* Made duplicate labels an error
-* Fixes to 24-bit addresses
+* Added Intel HEX format output
