@@ -34,6 +34,7 @@ Currently **casm** supports the following output drivers:
 * A simple library format for larger projects
 * NES ROM
 * Amstrad CPC CDT tape file
+* Intel HEX format files
 
 ## Latest changes
 
