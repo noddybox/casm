@@ -7,3 +7,7 @@ V1.9
 V1.10
 =====
 * Added c64 codepage for Commodore 64 screen codes.
+
+V1.11
+=====
+* Added Intel HEX output.
