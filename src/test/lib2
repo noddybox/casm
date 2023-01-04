@@ -4,8 +4,10 @@
 	option	+address24
 	org	$078800
 
+        import "lib1.lib", labels
+
 start_lib2:
-	ld	hl,$4321
+	ld	hl,data1
 	call	$0100
 end_lib2:
 
@@ -13,4 +15,3 @@ data2:
 	db	"I'm data from lib2"
 
 var_lib2 equ	$7fff
-var_lib1 equ	$1234
