@@ -39,23 +39,42 @@
 */
 enum option_t
 {
-    OPT_START_ADDR
+    OPT_START_ADDR,
+    OPT_SYSTEM_TYPE
 };
 
 static const ValueTable option_set[]=
 {
     {"prg-start", OPT_START_ADDR},
+    {"prg-system", OPT_SYSTEM_TYPE},
+    {NULL}
+};
+
+typedef enum
+{
+    SYS_C64,
+    SYS_VIC20,
+    SYS_VIC20_8K
+} system_t;
+
+static ValueTable system_table[]=
+{
+    {"c64",     SYS_C64},
+    {"vic20",   SYS_VIC20},
+    {"vic20+8k",SYS_VIC20_8K},
     {NULL}
 };
 
 typedef struct
 {
     int		start_addr;
+    system_t    system;
 } Options;
 
 static Options options =
 {
-    -1
+    -1,
+    SYS_C64
 };
 
 
@@ -110,6 +129,7 @@ const ValueTable *PRGOutputOptions(void)
 CommandStatus PRGOutputSetOption(int opt, int argc, char *argv[],
                                  int quoted[], char *err, size_t errsize)
 {
+    const ValueTable *val;
     CommandStatus stat = CMD_OK;
 
     CMD_ARGC_CHECK(1);
@@ -118,6 +138,11 @@ CommandStatus PRGOutputSetOption(int opt, int argc, char *argv[],
     {
         case OPT_START_ADDR:
             CMD_EXPR(argv[0], options.start_addr);
+            break;
+
+        case OPT_SYSTEM_TYPE:
+            CMD_TABLE(argv[0], system_table, val);
+            options.system = val->value;
             break;
 
         default:
@@ -140,7 +165,8 @@ int PRGOutput(const char *filename, const char *filename_bank,
         Byte *mem;
         int min, max, len;
         char sys[16];
-        int addr = 0x803;
+        int addr;
+        int start_addr;
         int next;
 
         if (count == 1)
@@ -159,13 +185,29 @@ int PRGOutput(const char *filename, const char *filename_bank,
             return FALSE;
         }
 
+        switch(options.system)
+        {
+            case SYS_C64:
+                addr = 0x803;
+                start_addr = 0x801;
+                break;
+            case SYS_VIC20:
+                addr = 0x1003;
+                start_addr = 0x1001;
+                break;
+            case SYS_VIC20_8K:
+                addr = 0x1203;
+                start_addr = 0x1201;
+                break;
+        }
+
         mem = bank[f]->memory;
         min = bank[f]->min_address_used;
         max = bank[f]->max_address_used;
 
         /* We're going to prepend some BASIC
         */
-        if (min < 0x810)
+        if (min < (addr + 0x10))
         {
             snprintf(error, error_size, "Bank starts below a safe "
                                         "area to add BASIC loader");
@@ -191,9 +233,9 @@ int PRGOutput(const char *filename, const char *filename_bank,
 
         addr = PokeW(mem, addr, 0x00);
 
-        PokeW(mem, 0x801, next);
+        PokeW(mem, start_addr, next);
 
-        min = 0x801;        /* Start of BASIC */
+        min = start_addr;        /* Start of BASIC */
 
         len = max - min + 1;
 
