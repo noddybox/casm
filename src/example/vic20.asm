@@ -18,6 +18,12 @@ main:
 loop:
 	sta	36879
 	adc	#1
+        pha
+        jsr     $ffe4
+        beq     nokey
+        rts
+nokey:
+        pla
 	jmp	loop
 
 start:

@@ -19,7 +19,7 @@
 
     -------------------------------------------------------------------------
 
-    Commodore T64 tape output handler.
+    Commodore PRG output handler.
 
 */
 #include <stdlib.h>
