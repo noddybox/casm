@@ -11,3 +11,7 @@ V1.10
 V1.11
 =====
 * Added Intel HEX output.
+
+V1.12
+=====
+* Added VIC-20 PRG output options.

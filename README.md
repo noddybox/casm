@@ -35,7 +35,8 @@ Currently **casm** supports the following output drivers:
 * NES ROM
 * Amstrad CPC CDT tape file
 * Intel HEX format files
+* Commodore PRG file
 
 ## Latest changes
 
-* Added Intel HEX format output
+* Commodore PRG file for VIC-20
