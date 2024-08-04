@@ -697,6 +697,7 @@ int main(int argc, char *argv[])
     PushValTableHandler(CPCOutputOptions(), CPCOutputSetOption);
     PushValTableHandler(PRGOutputOptions(), PRGOutputSetOption);
     PushValTableHandler(HEXOutputOptions(), HEXOutputSetOption);
+    PushValTableHandler(CBMTAPOutputOptions(), CBMTAPOutputSetOption);
 
     ClearState();
 

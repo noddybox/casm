@@ -19,52 +19,35 @@
 
     -------------------------------------------------------------------------
 
-    Various output type handlers
+    Commodore TAP tape output
 
 */
 
-#ifndef CASM_OUTPUT_H
-#define CASM_OUTPUT_H
+#ifndef CASM_CBMTAPOUT_H
+#define CASM_CBMTAPOUT_H
 
 #include "parse.h"
+#include "state.h"
 #include "cmd.h"
-
-/* Pull in the output drivers
-*/
-#include "rawout.h"
-#include "specout.h"
-#include "t64out.h"
-#include "zx81out.h"
-#include "gbout.h"
-#include "snesout.h"
-#include "libout.h"
-#include "nesout.h"
-#include "cpcout.h"
-#include "prgout.h"
-#include "hexout.h"
-#include "cbmtapout.h"
 
 /* ---------------------------------------- INTERFACES
 */
 
 
-/* Output options
+/* CBMTAP Output options
 */
-const ValueTable *OutputOptions(void);
+const ValueTable *CBMTAPOutputOptions(void);
 
-CommandStatus OutputSetOption(int opt, int argc, char *argv[],
-                              int quoted[], char *error, size_t error_size);
+CommandStatus CBMTAPOutputSetOption(int opt, int argc, char *argv[],
+                                    int quoted[], char *error,
+                                    size_t error_size);
 
 
-/* Outputs the result of assembly.  Returns TRUE if OK, FALSE for failure.
+/* C64 CBMTAP output of assembly.  Returns TRUE if OK, FALSE for failure.
 */
-int     OutputCode(void);
-
-
-/* Returns a reason for the last failure.
-*/
-const char *OutputError(void);
-
+int CBMTAPOutput(const char *filename, const char *filename_bank,
+                 MemoryBank **bank, int count,
+                 char *error, size_t error_size);
 
 #endif
 

@@ -21,7 +21,7 @@
 #
 
 ALL	= spectrum.tap t64.t64 zx81.p gb.gb vcs.bin snes.sfc nes.nes cpc.cdt \
-	  prg.prg hex.hex vic20.prg vic20+8k.prg
+	  prg.prg hex.hex vic20.prg vic20+8k.prg c64.tap vic20.tap vic20+8k.tap
 CASM	= ../casm
 
 all: $(ALL) $(CASM)
@@ -66,6 +66,15 @@ vic20.prg: vic20.asm $(CASM)
 
 vic20+8k.prg: vic20+8k.asm $(CASM)
 	$(CASM) vic20+8k.asm
+
+c64.tap: c64-tap.asm $(CASM)
+	$(CASM) c64-tap.asm
+
+vic20.tap: vic20-tap.asm $(CASM)
+	$(CASM) vic20-tap.asm
+
+vic20+8k.tap: vic20+8k-tap.asm $(CASM)
+	$(CASM) vic20+8k-tap.asm
 
 clean:
 	rm -f $(ALL)
