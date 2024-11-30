@@ -42,7 +42,6 @@
 #include "cpcout.h"
 #include "prgout.h"
 #include "hexout.h"
-#include "cbmtapout.h"
 
 /* ---------------------------------------- INTERFACES
 */

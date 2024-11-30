@@ -52,8 +52,7 @@ SOURCE	=	casm.c		\
 		nesout.c	\
 		cpcout.c	\
 		prgout.c        \
-                hexout.c        \
-                cbmtapout.c
+                hexout.c
 
 OBJECTS	=	casm.o		\
 		expr.o		\
@@ -83,8 +82,7 @@ OBJECTS	=	casm.o		\
 		nesout.o	\
 		cpcout.o	\
 		prgout.o        \
-                hexout.o        \
-                cbmtapout.o
+                hexout.o
 
 $(TARGET): $(OBJECTS)
 	$(CC) $(CLAGS) -o $(TARGET) $(OBJECTS)

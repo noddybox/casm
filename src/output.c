@@ -186,10 +186,6 @@ int OutputCode(void)
             return HEXOutput(output, output_bank, bank, count,
                              error, sizeof error);
 
-        case CBM_TAP:
-            return CBMTAPOutput(output, output_bank, bank, count,
-                                error, sizeof error);
-
         default:
             break;
     }
