@@ -1425,8 +1425,6 @@ static CommandStatus ANE(const char *label, int argc, char *argv[],
 
     CMD_ADDRESS_MODE(mode, address);
 
-    printf("Warning: %s is highly unstable and not recommended\n", argv[0]);
-
     switch(mode)
     {
         case IMMEDIATE:
@@ -1647,8 +1645,6 @@ static CommandStatus LXA(const char *label, int argc, char *argv[],
 
     CMD_ADDRESS_MODE(mode, address);
 
-    printf("Warning: %s is highly unstable and not recommended\n", argv[0]);
-
     switch(mode)
     {
         case IMMEDIATE:
@@ -1836,8 +1832,6 @@ static CommandStatus SHA(const char *label, int argc, char *argv[],
 
     CMD_ADDRESS_MODE(mode, address);
 
-    printf("Warning: %s is unstable\n", argv[0]);
-
     switch(mode)
     {
         case ABSOLUTE_INDEX_Y:
@@ -1865,8 +1859,6 @@ static CommandStatus SHX(const char *label, int argc, char *argv[],
 
     CMD_ADDRESS_MODE(mode, address);
 
-    printf("Warning: %s is unstable\n", argv[0]);
-
     switch(mode)
     {
         case ABSOLUTE_INDEX_Y:
@@ -1888,8 +1880,6 @@ static CommandStatus SHY(const char *label, int argc, char *argv[],
     int address;
 
     CMD_ADDRESS_MODE(mode, address);
-
-    printf("Warning: %s is unstable\n", argv[0]);
 
     switch(mode)
     {
