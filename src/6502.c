@@ -331,58 +331,8 @@ static void CalcAddressMode(int argc, char *argv[], int quoted[],
 
 
 
-/* ---------------------------------------- COMMAND HANDLERS
+/* ---------------------------------------- COMMAND HANDLERS - LEGAL OPCODES
 */
-
-static CommandStatus DUMMY(const char *label, int argc, char *argv[],
-                           int quoted[], char *err, size_t errsize)
-{
-    address_mode_t mode;
-    int address;
-
-    CMD_ADDRESS_MODE(mode, address);
-
-    switch(mode)
-    {
-        case ACCUMULATOR:
-            return CMD_OK;
-
-        case IMPLIED:
-            return CMD_OK;
-
-        case IMMEDIATE:
-            return CMD_OK;
-
-        case ABSOLUTE:
-            return CMD_OK;
-
-        case ZERO_PAGE:
-            return CMD_OK;
-
-        case ABSOLUTE_INDEX_X:
-            return CMD_OK;
-
-        case ABSOLUTE_INDEX_Y:
-            return CMD_OK;
-
-        case ZERO_PAGE_INDEX_X:
-            return CMD_OK;
-
-        case ZERO_PAGE_INDEX_Y:
-            return CMD_OK;
-
-        case ZERO_PAGE_INDIRECT_X:
-            return CMD_OK;
-
-        case ZERO_PAGE_INDIRECT_Y:
-            return CMD_OK;
-
-        default:
-            snprintf(err, errsize, "%s: unsupported addressing mode %s",
-                                            argv[0], address_mode_name[mode]);
-            return CMD_FAILED;
-    }
-}
 
 static CommandStatus ADC(const char *label, int argc, char *argv[],
                          int quoted[], char *err, size_t errsize)
@@ -1399,6 +1349,720 @@ static CommandStatus STY(const char *label, int argc, char *argv[],
     }
 }
 
+/* ---------------------------------------- HANDLERS - UNDOCUMENTED OPCODES
+*/
+static CommandStatus ALR(const char *label, int argc, char *argv[],
+                         int quoted[], char *err, size_t errsize)
+{
+    address_mode_t mode;
+    int address;
+
+    CMD_ADDRESS_MODE(mode, address);
+
+    switch(mode)
+    {
+        case IMMEDIATE:
+            PCWrite(0x4b);
+            PCWrite(address);
+            return CMD_OK;
+
+        default:
+            snprintf(err, errsize, "%s: unsupported addressing mode %s",
+                                            argv[0], address_mode_name[mode]);
+            return CMD_FAILED;
+    }
+}
+
+static CommandStatus ANC(const char *label, int argc, char *argv[],
+                         int quoted[], char *err, size_t errsize)
+{
+    address_mode_t mode;
+    int address;
+
+    CMD_ADDRESS_MODE(mode, address);
+
+    switch(mode)
+    {
+        case IMMEDIATE:
+            PCWrite(0x0b);
+            PCWrite(address);
+            return CMD_OK;
+
+        default:
+            snprintf(err, errsize, "%s: unsupported addressing mode %s",
+                                            argv[0], address_mode_name[mode]);
+            return CMD_FAILED;
+    }
+}
+
+static CommandStatus ANC2(const char *label, int argc, char *argv[],
+                          int quoted[], char *err, size_t errsize)
+{
+    address_mode_t mode;
+    int address;
+
+    CMD_ADDRESS_MODE(mode, address);
+
+    switch(mode)
+    {
+        case IMMEDIATE:
+            PCWrite(0x2b);
+            PCWrite(address);
+            return CMD_OK;
+
+        default:
+            snprintf(err, errsize, "%s: unsupported addressing mode %s",
+                                            argv[0], address_mode_name[mode]);
+            return CMD_FAILED;
+    }
+}
+
+static CommandStatus ANE(const char *label, int argc, char *argv[],
+                         int quoted[], char *err, size_t errsize)
+{
+    address_mode_t mode;
+    int address;
+
+    CMD_ADDRESS_MODE(mode, address);
+
+    printf("Warning: %s is highly unstable and not recommended\n", argv[0]);
+
+    switch(mode)
+    {
+        case IMMEDIATE:
+            PCWrite(0x8b);
+            PCWrite(address);
+            return CMD_OK;
+
+        default:
+            snprintf(err, errsize, "%s: unsupported addressing mode %s",
+                                            argv[0], address_mode_name[mode]);
+            return CMD_FAILED;
+    }
+}
+
+static CommandStatus ARR(const char *label, int argc, char *argv[],
+                         int quoted[], char *err, size_t errsize)
+{
+    address_mode_t mode;
+    int address;
+
+    CMD_ADDRESS_MODE(mode, address);
+
+    switch(mode)
+    {
+        case IMMEDIATE:
+            PCWrite(0x6b);
+            PCWrite(address);
+            return CMD_OK;
+
+        default:
+            snprintf(err, errsize, "%s: unsupported addressing mode %s",
+                                            argv[0], address_mode_name[mode]);
+            return CMD_FAILED;
+    }
+}
+
+static CommandStatus DCP(const char *label, int argc, char *argv[],
+                         int quoted[], char *err, size_t errsize)
+{
+    address_mode_t mode;
+    int address;
+
+    CMD_ADDRESS_MODE(mode, address);
+
+    switch(mode)
+    {
+        case ABSOLUTE:
+            PCWrite(0xcf);
+            PCWriteWord(address);
+            return CMD_OK;
+
+        case ZERO_PAGE:
+            PCWrite(0xc7);
+            PCWrite(address);
+            return CMD_OK;
+
+        case ABSOLUTE_INDEX_X:
+            PCWrite(0xdf);
+            PCWriteWord(address);
+            return CMD_OK;
+
+        case ABSOLUTE_INDEX_Y:
+        case ZERO_PAGE_INDEX_Y:
+            PCWrite(0xdb);
+            PCWriteWord(address);
+            return CMD_OK;
+
+        case ZERO_PAGE_INDEX_X:
+            PCWrite(0xd7);
+            PCWrite(address);
+            return CMD_OK;
+
+        case ZERO_PAGE_INDIRECT_X:
+            PCWrite(0xc3);
+            PCWrite(address);
+            return CMD_OK;
+
+        case ZERO_PAGE_INDIRECT_Y:
+            PCWrite(0xd3);
+            PCWrite(address);
+            return CMD_OK;
+
+        default:
+            snprintf(err, errsize, "%s: unsupported addressing mode %s",
+                                            argv[0], address_mode_name[mode]);
+            return CMD_FAILED;
+    }
+}
+
+static CommandStatus ISC(const char *label, int argc, char *argv[],
+                         int quoted[], char *err, size_t errsize)
+{
+    address_mode_t mode;
+    int address;
+
+    CMD_ADDRESS_MODE(mode, address);
+
+    switch(mode)
+    {
+        case ABSOLUTE:
+            PCWrite(0xef);
+            PCWriteWord(address);
+            return CMD_OK;
+
+        case ZERO_PAGE:
+            PCWrite(0xe7);
+            PCWrite(address);
+            return CMD_OK;
+
+        case ABSOLUTE_INDEX_X:
+            PCWrite(0xff);
+            PCWriteWord(address);
+            return CMD_OK;
+
+        case ABSOLUTE_INDEX_Y:
+        case ZERO_PAGE_INDEX_Y:
+            PCWrite(0xfb);
+            PCWriteWord(address);
+            return CMD_OK;
+
+        case ZERO_PAGE_INDEX_X:
+            PCWrite(0xf7);
+            PCWrite(address);
+            return CMD_OK;
+
+        case ZERO_PAGE_INDIRECT_X:
+            PCWrite(0xe3);
+            PCWrite(address);
+            return CMD_OK;
+
+        case ZERO_PAGE_INDIRECT_Y:
+            PCWrite(0xf3);
+            PCWrite(address);
+            return CMD_OK;
+
+        default:
+            snprintf(err, errsize, "%s: unsupported addressing mode %s",
+                                            argv[0], address_mode_name[mode]);
+            return CMD_FAILED;
+    }
+}
+
+static CommandStatus LAS(const char *label, int argc, char *argv[],
+                         int quoted[], char *err, size_t errsize)
+{
+    address_mode_t mode;
+    int address;
+
+    CMD_ADDRESS_MODE(mode, address);
+
+    switch(mode)
+    {
+        case ABSOLUTE_INDEX_Y:
+        case ZERO_PAGE_INDEX_Y:
+            PCWrite(0xbb);
+            PCWriteWord(address);
+            return CMD_OK;
+
+        default:
+            snprintf(err, errsize, "%s: unsupported addressing mode %s",
+                                            argv[0], address_mode_name[mode]);
+            return CMD_FAILED;
+    }
+}
+
+static CommandStatus LAX(const char *label, int argc, char *argv[],
+                         int quoted[], char *err, size_t errsize)
+{
+    address_mode_t mode;
+    int address;
+
+    CMD_ADDRESS_MODE(mode, address);
+
+    switch(mode)
+    {
+        case ABSOLUTE:
+            PCWrite(0xaf);
+            PCWriteWord(address);
+            return CMD_OK;
+
+        case ZERO_PAGE:
+            PCWrite(0xa7);
+            PCWrite(address);
+            return CMD_OK;
+
+        case ZERO_PAGE_INDEX_Y:
+            PCWrite(0xb7);
+            PCWrite(address);
+            return CMD_OK;
+
+        case ABSOLUTE_INDEX_Y:
+            PCWrite(0xbf);
+            PCWriteWord(address);
+            return CMD_OK;
+
+        case ZERO_PAGE_INDIRECT_X:
+            PCWrite(0xa3);
+            PCWrite(address);
+            return CMD_OK;
+
+        case ZERO_PAGE_INDIRECT_Y:
+            PCWrite(0xb3);
+            PCWrite(address);
+            return CMD_OK;
+
+        default:
+            snprintf(err, errsize, "%s: unsupported addressing mode %s",
+                                            argv[0], address_mode_name[mode]);
+            return CMD_FAILED;
+    }
+}
+
+static CommandStatus LXA(const char *label, int argc, char *argv[],
+                         int quoted[], char *err, size_t errsize)
+{
+    address_mode_t mode;
+    int address;
+
+    CMD_ADDRESS_MODE(mode, address);
+
+    printf("Warning: %s is highly unstable and not recommended\n", argv[0]);
+
+    switch(mode)
+    {
+        case IMMEDIATE:
+            PCWrite(0xab);
+            PCWrite(address);
+            return CMD_OK;
+
+        default:
+            snprintf(err, errsize, "%s: unsupported addressing mode %s",
+                                            argv[0], address_mode_name[mode]);
+            return CMD_FAILED;
+    }
+}
+
+static CommandStatus RLA(const char *label, int argc, char *argv[],
+                         int quoted[], char *err, size_t errsize)
+{
+    address_mode_t mode;
+    int address;
+
+    CMD_ADDRESS_MODE(mode, address);
+
+    switch(mode)
+    {
+        case ABSOLUTE:
+            PCWrite(0x2f);
+            PCWriteWord(address);
+            return CMD_OK;
+
+        case ZERO_PAGE:
+            PCWrite(0x27);
+            PCWrite(address);
+            return CMD_OK;
+
+        case ABSOLUTE_INDEX_X:
+            PCWrite(0x3f);
+            PCWriteWord(address);
+            return CMD_OK;
+
+        case ABSOLUTE_INDEX_Y:
+        case ZERO_PAGE_INDEX_Y:
+            PCWrite(0x3b);
+            PCWriteWord(address);
+            return CMD_OK;
+
+        case ZERO_PAGE_INDEX_X:
+            PCWrite(0x37);
+            PCWrite(address);
+            return CMD_OK;
+
+        case ZERO_PAGE_INDIRECT_X:
+            PCWrite(0x23);
+            PCWrite(address);
+            return CMD_OK;
+
+        case ZERO_PAGE_INDIRECT_Y:
+            PCWrite(0x33);
+            PCWrite(address);
+            return CMD_OK;
+
+        default:
+            snprintf(err, errsize, "%s: unsupported addressing mode %s",
+                                            argv[0], address_mode_name[mode]);
+            return CMD_FAILED;
+    }
+}
+
+static CommandStatus RRA(const char *label, int argc, char *argv[],
+                         int quoted[], char *err, size_t errsize)
+{
+    address_mode_t mode;
+    int address;
+
+    CMD_ADDRESS_MODE(mode, address);
+
+    switch(mode)
+    {
+        case ABSOLUTE:
+            PCWrite(0x6f);
+            PCWriteWord(address);
+            return CMD_OK;
+
+        case ZERO_PAGE:
+            PCWrite(0x67);
+            PCWrite(address);
+            return CMD_OK;
+
+        case ABSOLUTE_INDEX_X:
+            PCWrite(0x7f);
+            PCWriteWord(address);
+            return CMD_OK;
+
+        case ABSOLUTE_INDEX_Y:
+        case ZERO_PAGE_INDEX_Y:
+            PCWrite(0x7b);
+            PCWriteWord(address);
+            return CMD_OK;
+
+        case ZERO_PAGE_INDEX_X:
+            PCWrite(0x77);
+            PCWrite(address);
+            return CMD_OK;
+
+        case ZERO_PAGE_INDIRECT_X:
+            PCWrite(0x63);
+            PCWrite(address);
+            return CMD_OK;
+
+        case ZERO_PAGE_INDIRECT_Y:
+            PCWrite(0x73);
+            PCWrite(address);
+            return CMD_OK;
+
+        default:
+            snprintf(err, errsize, "%s: unsupported addressing mode %s",
+                                            argv[0], address_mode_name[mode]);
+            return CMD_FAILED;
+    }
+}
+
+static CommandStatus SAX(const char *label, int argc, char *argv[],
+                         int quoted[], char *err, size_t errsize)
+{
+    address_mode_t mode;
+    int address;
+
+    CMD_ADDRESS_MODE(mode, address);
+
+    switch(mode)
+    {
+        case ABSOLUTE:
+            PCWrite(0x8f);
+            PCWriteWord(address);
+            return CMD_OK;
+
+        case ZERO_PAGE:
+            PCWrite(0x87);
+            PCWrite(address);
+            return CMD_OK;
+
+        case ZERO_PAGE_INDEX_Y:
+            PCWrite(0x97);
+            PCWrite(address);
+            return CMD_OK;
+
+        case ZERO_PAGE_INDIRECT_X:
+            PCWrite(0x83);
+            PCWrite(address);
+            return CMD_OK;
+
+        default:
+            snprintf(err, errsize, "%s: unsupported addressing mode %s",
+                                            argv[0], address_mode_name[mode]);
+            return CMD_FAILED;
+    }
+}
+
+static CommandStatus SBX(const char *label, int argc, char *argv[],
+                         int quoted[], char *err, size_t errsize)
+{
+    address_mode_t mode;
+    int address;
+
+    CMD_ADDRESS_MODE(mode, address);
+
+    switch(mode)
+    {
+        case IMMEDIATE:
+            PCWrite(0xcb);
+            PCWrite(address);
+            return CMD_OK;
+
+        default:
+            snprintf(err, errsize, "%s: unsupported addressing mode %s",
+                                            argv[0], address_mode_name[mode]);
+            return CMD_FAILED;
+    }
+}
+
+static CommandStatus SHA(const char *label, int argc, char *argv[],
+                         int quoted[], char *err, size_t errsize)
+{
+    address_mode_t mode;
+    int address;
+
+    CMD_ADDRESS_MODE(mode, address);
+
+    printf("Warning: %s is unstable\n", argv[0]);
+
+    switch(mode)
+    {
+        case ABSOLUTE_INDEX_Y:
+            PCWrite(0x9f);
+            PCWriteWord(address);
+            return CMD_OK;
+
+        case ZERO_PAGE_INDIRECT_Y:
+            PCWrite(0x93);
+            PCWrite(address);
+            return CMD_OK;
+
+        default:
+            snprintf(err, errsize, "%s: unsupported addressing mode %s",
+                                            argv[0], address_mode_name[mode]);
+            return CMD_FAILED;
+    }
+}
+
+static CommandStatus SHX(const char *label, int argc, char *argv[],
+                         int quoted[], char *err, size_t errsize)
+{
+    address_mode_t mode;
+    int address;
+
+    CMD_ADDRESS_MODE(mode, address);
+
+    printf("Warning: %s is unstable\n", argv[0]);
+
+    switch(mode)
+    {
+        case ABSOLUTE_INDEX_Y:
+            PCWrite(0x9e);
+            PCWriteWord(address);
+            return CMD_OK;
+
+        default:
+            snprintf(err, errsize, "%s: unsupported addressing mode %s",
+                                            argv[0], address_mode_name[mode]);
+            return CMD_FAILED;
+    }
+}
+
+static CommandStatus SHY(const char *label, int argc, char *argv[],
+                         int quoted[], char *err, size_t errsize)
+{
+    address_mode_t mode;
+    int address;
+
+    CMD_ADDRESS_MODE(mode, address);
+
+    printf("Warning: %s is unstable\n", argv[0]);
+
+    switch(mode)
+    {
+        case ABSOLUTE_INDEX_X:
+            PCWrite(0x9c);
+            PCWriteWord(address);
+            return CMD_OK;
+
+        default:
+            snprintf(err, errsize, "%s: unsupported addressing mode %s",
+                                            argv[0], address_mode_name[mode]);
+            return CMD_FAILED;
+    }
+}
+
+static CommandStatus SLO(const char *label, int argc, char *argv[],
+                         int quoted[], char *err, size_t errsize)
+{
+    address_mode_t mode;
+    int address;
+
+    CMD_ADDRESS_MODE(mode, address);
+
+    switch(mode)
+    {
+        case ABSOLUTE:
+            PCWrite(0x0f);
+            PCWriteWord(address);
+            return CMD_OK;
+
+        case ZERO_PAGE:
+            PCWrite(0x07);
+            PCWrite(address);
+            return CMD_OK;
+
+        case ABSOLUTE_INDEX_X:
+            PCWrite(0x1f);
+            PCWriteWord(address);
+            return CMD_OK;
+
+        case ABSOLUTE_INDEX_Y:
+        case ZERO_PAGE_INDEX_Y:
+            PCWrite(0x1b);
+            PCWriteWord(address);
+            return CMD_OK;
+
+        case ZERO_PAGE_INDEX_X:
+            PCWrite(0x17);
+            PCWrite(address);
+            return CMD_OK;
+
+        case ZERO_PAGE_INDIRECT_X:
+            PCWrite(0x03);
+            PCWrite(address);
+            return CMD_OK;
+
+        case ZERO_PAGE_INDIRECT_Y:
+            PCWrite(0x13);
+            PCWrite(address);
+            return CMD_OK;
+
+        default:
+            snprintf(err, errsize, "%s: unsupported addressing mode %s",
+                                            argv[0], address_mode_name[mode]);
+            return CMD_FAILED;
+    }
+}
+
+static CommandStatus SRE(const char *label, int argc, char *argv[],
+                         int quoted[], char *err, size_t errsize)
+{
+    address_mode_t mode;
+    int address;
+
+    CMD_ADDRESS_MODE(mode, address);
+
+    switch(mode)
+    {
+        case ABSOLUTE:
+            PCWrite(0x4f);
+            PCWriteWord(address);
+            return CMD_OK;
+
+        case ZERO_PAGE:
+            PCWrite(0x47);
+            PCWrite(address);
+            return CMD_OK;
+
+        case ABSOLUTE_INDEX_X:
+            PCWrite(0x5f);
+            PCWriteWord(address);
+            return CMD_OK;
+
+        case ABSOLUTE_INDEX_Y:
+        case ZERO_PAGE_INDEX_Y:
+            PCWrite(0x5b);
+            PCWriteWord(address);
+            return CMD_OK;
+
+        case ZERO_PAGE_INDEX_X:
+            PCWrite(0x57);
+            PCWrite(address);
+            return CMD_OK;
+
+        case ZERO_PAGE_INDIRECT_X:
+            PCWrite(0x43);
+            PCWrite(address);
+            return CMD_OK;
+
+        case ZERO_PAGE_INDIRECT_Y:
+            PCWrite(0x53);
+            PCWrite(address);
+            return CMD_OK;
+
+        default:
+            snprintf(err, errsize, "%s: unsupported addressing mode %s",
+                                            argv[0], address_mode_name[mode]);
+            return CMD_FAILED;
+    }
+}
+
+static CommandStatus TAS(const char *label, int argc, char *argv[],
+                         int quoted[], char *err, size_t errsize)
+{
+    address_mode_t mode;
+    int address;
+
+    CMD_ADDRESS_MODE(mode, address);
+
+    switch(mode)
+    {
+        case ABSOLUTE_INDEX_Y:
+        case ZERO_PAGE_INDEX_Y:
+            PCWrite(0x9b);
+            PCWriteWord(address);
+            return CMD_OK;
+
+        default:
+            snprintf(err, errsize, "%s: unsupported addressing mode %s",
+                                            argv[0], address_mode_name[mode]);
+            return CMD_FAILED;
+    }
+}
+
+static CommandStatus USBC(const char *label, int argc, char *argv[],
+                          int quoted[], char *err, size_t errsize)
+{
+    address_mode_t mode;
+    int address;
+
+    CMD_ADDRESS_MODE(mode, address);
+
+    switch(mode)
+    {
+        case IMMEDIATE:
+            PCWrite(0xeb);
+            PCWrite(address);
+            return CMD_OK;
+
+        default:
+            snprintf(err, errsize, "%s: unsupported addressing mode %s",
+                                            argv[0], address_mode_name[mode]);
+            return CMD_FAILED;
+    }
+}
+
+static CommandStatus JAM(const char *label, int argc, char *argv[],
+                         int quoted[], char *err, size_t errsize)
+{
+    PCWrite(0x02);
+    return CMD_OK;
+}
+
 /* ---------------------------------------- OPCODE TABLES
 */
 typedef struct
@@ -1487,6 +2151,56 @@ static const HandlerTable handler_table[] =
 };
 
 
+static const HandlerTable undocumented_handler_table[] =
+{
+    {"ALR",	ALR},
+    {"ASR",	ALR},
+    {"ANC",	ANC},
+    {"ANC2",	ANC2},
+    {"ANE",	ANE},
+    {"XAA",	ANE},
+    {"ARR",	ARR},
+    {"DCP",	DCP},
+    {"DCM",	DCP},
+    {"ISC",	ISC},
+    {"ISB",	ISC},
+    {"INS",	ISC},
+    {"LAS",	LAS},
+    {"LAR",	LAS},
+    {"LAX",	LAX},
+    {"LXA",	LXA},
+    {"RLA",	RLA},
+    {"RRA",	RRA},
+    {"SAX",	SAX},
+    {"AXS",	SAX},
+    {"AAX",	SAX},
+    {"SBX",	SBX},
+    {"ASX",	SBX},
+    {"SAX",	SBX},
+    {"SHA",	SHA},
+    {"AHX",	SHA},
+    {"AXA",	SHA},
+    {"SHX",	SHX},
+    {"SXA",	SHX},
+    {"XAS",	SHX},
+    {"SHY",	SHY},
+    {"SYA",	SHY},
+    {"SAY",	SHY},
+    {"SLO",	SLO},
+    {"ASO",	SLO},
+    {"SRE",	SRE},
+    {"TAS",	TAS},
+    {"XAS",	TAS},
+    {"SHS",	TAS},
+    {"USBC",	USBC},
+    {"SBC",	USBC},
+    {"JAM",	JAM},
+    {"KIL",	JAM},
+    {"HLT",	JAM},
+    {NULL}
+};
+
+
 
 
 /* ---------------------------------------- PUBLIC FUNCTIONS
@@ -1570,7 +2284,7 @@ CommandStatus Handler_6502(const char *label, int argc, char *argv[],
     }
 
 
-    /* Check for other opcodes
+    /* Check for legal opcodes
     */
     for(f = 0; handler_table[f].op; f++)
     {
@@ -1578,6 +2292,18 @@ CommandStatus Handler_6502(const char *label, int argc, char *argv[],
         {
             return handler_table[f].cmd(label, argc, argv,
                                         quoted, err, errsize);;
+        }
+    }
+
+
+    /* Check for undocumented opcodes
+    */
+    for(f = 0; undocumented_handler_table[f].op; f++)
+    {
+        if (CompareString(argv[0], undocumented_handler_table[f].op))
+        {
+            return undocumented_handler_table[f].cmd(label, argc, argv,
+                                                     quoted, err, errsize);;
         }
     }
 
