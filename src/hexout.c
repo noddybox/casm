@@ -79,7 +79,7 @@ CommandStatus HEXOutputSetOption(int opt, int argc, char *argv[],
     switch(opt)
     {
         case OPT_NULL_BYTE:
-            CMD_EXPR(argv[0], options.null_byte);
+            CMD_EXPR_INT(argv[0], options.null_byte);
             break;
 
         default:

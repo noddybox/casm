@@ -32,13 +32,13 @@
 /* Converts a number to a sized value.  If the number is negative then the
    result is returned in twos complement form.
 */
-int     ExprConvert(int no_bits, int value);
+int     ExprConvert(int no_bits, long value);
 
 
 /* Returns the result of expr and stores the answer in result.
    Returns FALSE on error.
 */
-int     ExprEval(const char *expr, int *result);
+int     ExprEval(const char *expr, long *result);
 
 
 /* Gets a readable reason for an error from ExprEval() or ExprParse.

@@ -141,7 +141,7 @@ CommandStatus T64OutputSetOption(int opt, int argc, char *argv[],
     switch(opt)
     {
         case OPT_START_ADDR:
-            CMD_EXPR(argv[0], options.start_addr);
+            CMD_EXPR_INT(argv[0], options.start_addr);
             break;
 
         default:

@@ -101,7 +101,7 @@ do                                                                      \
 
    Args:
         expr    - The expression to evaluate
-        result  - The variable to hold the result
+        result  - The variable to hold the result (long)
 
    Expects:
 
@@ -119,6 +119,33 @@ do                                                                      \
                                         argv[0], ExprError());          \
         return CMD_FAILED;                                              \
     }                                                                   \
+} while(0)
+
+
+/* Evaluate an expression.
+
+   Args:
+        expr    - The expression to evaluate
+        result  - The variable to hold the result (int)
+
+   Expects:
+
+        argc    - The argc passed to the command handler
+        argv    - The argv passed to the command handler
+        err     - The error location passed to the command handler
+        errsize - The size of the error location passed to the command handler
+*/
+#define CMD_EXPR_INT(expr, result)                                      \
+do                                                                      \
+{                                                                       \
+    long expr_result;                                                   \
+    if (!ExprEval(expr, &expr_result))                                  \
+    {                                                                   \
+        snprintf(err, errsize, "%s: expression error:  %s",             \
+                                        argv[0], ExprError());          \
+        return CMD_FAILED;                                              \
+    }                                                                   \
+    result = (int)expr_result;                                          \
 } while(0)
 
 

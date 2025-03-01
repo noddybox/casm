@@ -228,7 +228,7 @@ static char *HasIndex(const char *str, char *index_char)
 
 static void CalcAddressMode(int argc, char *argv[], int quoted[],
                             char *err, size_t errsize,
-                            address_mode_t *mode, int *address)
+                            address_mode_t *mode, long *address)
 {
     *mode = ADDR_MODE_UNKNOWN;
     *address = 0;
@@ -541,8 +541,8 @@ static CommandStatus MX8_16(const char *label, int argc, char *argv[],
     {
         if (CompareString(argv[0], "MX") || CompareString(argv[0], ".MX"))
         {
-            int asize;
-            int isize;
+            long asize;
+            long isize;
 
             CMD_EXPR(argv[1], asize);
             CMD_EXPR(argv[2], isize);
@@ -569,7 +569,7 @@ static CommandStatus MX8_16(const char *label, int argc, char *argv[],
 #define COMMON(base)                                                    \
 do {                                                                    \
     address_mode_t mode;                                                \
-    int address;                                                        \
+    long address;                                                       \
                                                                         \
     CMD_ADDRESS_MODE(mode, address);                                    \
                                                                         \
@@ -673,7 +673,7 @@ static CommandStatus ASL(const char *label, int argc, char *argv[],
                          int quoted[], char *err, size_t errsize)
 {
     address_mode_t mode;
-    int address;
+    long address;
 
     CMD_ADDRESS_MODE(mode, address);
 
@@ -715,7 +715,7 @@ static CommandStatus BIT(const char *label, int argc, char *argv[],
                          int quoted[], char *err, size_t errsize)
 {
     address_mode_t mode;
-    int address;
+    long address;
 
     CMD_ADDRESS_MODE(mode, address);
 
@@ -757,7 +757,7 @@ static CommandStatus TRB(const char *label, int argc, char *argv[],
                          int quoted[], char *err, size_t errsize)
 {
     address_mode_t mode;
-    int address;
+    long address;
 
     CMD_ADDRESS_MODE(mode, address);
 
@@ -784,7 +784,7 @@ static CommandStatus TSB(const char *label, int argc, char *argv[],
                          int quoted[], char *err, size_t errsize)
 {
     address_mode_t mode;
-    int address;
+    long address;
 
     CMD_ADDRESS_MODE(mode, address);
 
@@ -817,7 +817,7 @@ static CommandStatus CPX(const char *label, int argc, char *argv[],
                          int quoted[], char *err, size_t errsize)
 {
     address_mode_t mode;
-    int address;
+    long address;
 
     CMD_ADDRESS_MODE(mode, address);
 
@@ -849,7 +849,7 @@ static CommandStatus CPY(const char *label, int argc, char *argv[],
                          int quoted[], char *err, size_t errsize)
 {
     address_mode_t mode;
-    int address;
+    long address;
 
     CMD_ADDRESS_MODE(mode, address);
 
@@ -881,7 +881,7 @@ static CommandStatus DEC(const char *label, int argc, char *argv[],
                          int quoted[], char *err, size_t errsize)
 {
     address_mode_t mode;
-    int address;
+    long address;
 
     CMD_ADDRESS_MODE(mode, address);
 
@@ -929,7 +929,7 @@ static CommandStatus INC(const char *label, int argc, char *argv[],
                          int quoted[], char *err, size_t errsize)
 {
     address_mode_t mode;
-    int address;
+    long address;
 
     CMD_ADDRESS_MODE(mode, address);
 
@@ -971,7 +971,7 @@ static CommandStatus JMP(const char *label, int argc, char *argv[],
                          int quoted[], char *err, size_t errsize)
 {
     address_mode_t mode;
-    int address;
+    long address;
 
     CMD_ADDRESS_MODE(mode, address);
 
@@ -1014,7 +1014,7 @@ static CommandStatus JSL(const char *label, int argc, char *argv[],
                          int quoted[], char *err, size_t errsize)
 {
     address_mode_t mode;
-    int address;
+    long address;
 
     CMD_ADDRESS_MODE(mode, address);
 
@@ -1038,7 +1038,7 @@ static CommandStatus JSR(const char *label, int argc, char *argv[],
                          int quoted[], char *err, size_t errsize)
 {
     address_mode_t mode;
-    int address;
+    long address;
 
     CMD_ADDRESS_MODE(mode, address);
 
@@ -1072,7 +1072,7 @@ static CommandStatus LDX(const char *label, int argc, char *argv[],
                          int quoted[], char *err, size_t errsize)
 {
     address_mode_t mode;
-    int address;
+    long address;
 
     CMD_ADDRESS_MODE(mode, address);
 
@@ -1114,7 +1114,7 @@ static CommandStatus LDY(const char *label, int argc, char *argv[],
                          int quoted[], char *err, size_t errsize)
 {
     address_mode_t mode;
-    int address;
+    long address;
 
     CMD_ADDRESS_MODE(mode, address);
 
@@ -1156,7 +1156,7 @@ static CommandStatus LSR(const char *label, int argc, char *argv[],
                          int quoted[], char *err, size_t errsize)
 {
     address_mode_t mode;
-    int address;
+    long address;
 
     CMD_ADDRESS_MODE(mode, address);
 
@@ -1204,7 +1204,7 @@ static CommandStatus ROL(const char *label, int argc, char *argv[],
                          int quoted[], char *err, size_t errsize)
 {
     address_mode_t mode;
-    int address;
+    long address;
 
     CMD_ADDRESS_MODE(mode, address);
 
@@ -1246,7 +1246,7 @@ static CommandStatus ROR(const char *label, int argc, char *argv[],
                          int quoted[], char *err, size_t errsize)
 {
     address_mode_t mode;
-    int address;
+    long address;
 
     CMD_ADDRESS_MODE(mode, address);
 
@@ -1300,7 +1300,7 @@ static CommandStatus STX(const char *label, int argc, char *argv[],
                          int quoted[], char *err, size_t errsize)
 {
     address_mode_t mode;
-    int address;
+    long address;
 
     CMD_ADDRESS_MODE(mode, address);
 
@@ -1332,7 +1332,7 @@ static CommandStatus STY(const char *label, int argc, char *argv[],
                          int quoted[], char *err, size_t errsize)
 {
     address_mode_t mode;
-    int address;
+    long address;
 
     CMD_ADDRESS_MODE(mode, address);
 
@@ -1364,7 +1364,7 @@ static CommandStatus STZ(const char *label, int argc, char *argv[],
                          int quoted[], char *err, size_t errsize)
 {
     address_mode_t mode;
-    int address;
+    long address;
 
     CMD_ADDRESS_MODE(mode, address);
 
@@ -1401,7 +1401,7 @@ static CommandStatus COP(const char *label, int argc, char *argv[],
                          int quoted[], char *err, size_t errsize)
 {
     address_mode_t mode;
-    int address;
+    long address;
 
     CMD_ADDRESS_MODE(mode, address);
 
@@ -1424,7 +1424,7 @@ static CommandStatus REP(const char *label, int argc, char *argv[],
                          int quoted[], char *err, size_t errsize)
 {
     address_mode_t mode;
-    int address;
+    long address;
 
     CMD_ADDRESS_MODE(mode, address);
 
@@ -1447,7 +1447,7 @@ static CommandStatus SEP(const char *label, int argc, char *argv[],
                          int quoted[], char *err, size_t errsize)
 {
     address_mode_t mode;
-    int address;
+    long address;
 
     CMD_ADDRESS_MODE(mode, address);
 
@@ -1474,8 +1474,8 @@ static CommandStatus MVN_MVP(const char *label, int argc, char *argv[],
     */
     address_mode_t mode1;
     address_mode_t mode2;
-    int address1;
-    int address2;
+    long address1;
+    long address2;
 
     CMD_ARGC_CHECK(3);
 
@@ -1527,7 +1527,7 @@ static CommandStatus PEA(const char *label, int argc, char *argv[],
                          int quoted[], char *err, size_t errsize)
 {
     address_mode_t mode;
-    int address;
+    long address;
 
     CMD_ADDRESS_MODE(mode, address);
 
@@ -1551,7 +1551,7 @@ static CommandStatus PEI(const char *label, int argc, char *argv[],
                          int quoted[], char *err, size_t errsize)
 {
     address_mode_t mode;
-    int address;
+    long address;
 
     CMD_ADDRESS_MODE(mode, address);
 
@@ -1573,7 +1573,7 @@ static CommandStatus PER(const char *label, int argc, char *argv[],
                          int quoted[], char *err, size_t errsize)
 {
     address_mode_t mode;
-    int address;
+    long address;
 
     CMD_ADDRESS_MODE(mode, address);
 
@@ -1597,7 +1597,7 @@ static CommandStatus OP_SIGNATURE(const char *label, int argc, char *argv[],
                                   int quoted[], char *err, size_t errsize)
 {
     address_mode_t mode;
-    int address;
+    long address;
     int opcode;
 
     CMD_ADDRESS_MODE(mode, address);
@@ -1838,7 +1838,7 @@ CommandStatus Handler_65c816(const char *label, int argc, char *argv[],
     {
         if (CompareString(argv[0], branch_opcodes[f].op))
         {
-            int offset;
+            long offset;
 
             CMD_ARGC_CHECK(2);
 
@@ -1864,7 +1864,7 @@ CommandStatus Handler_65c816(const char *label, int argc, char *argv[],
     {
         if (CompareString(argv[0], long_branch_opcodes[f].op))
         {
-            int offset;
+            long offset;
 
             CMD_ARGC_CHECK(2);
 

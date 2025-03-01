@@ -29,6 +29,8 @@
 #ifndef CASM_STATE_H
 #define CASM_STATE_H
 
+#include "global.h"
+
 /* ---------------------------------------- TYPES
 */
 typedef enum
@@ -43,11 +45,14 @@ typedef struct
     */
     unsigned    number;
 
-    /* The memory in that bank.  NULL if not used.  Addressing starts at zero.
+    /* The memory in that bank.  By default a 64K bank will be allocated.
+       This is to maintain compatibiility with it's original defination for
+       8-bit machines.  Addressing starts at zero so this will be wildly
+       inefficient on 16-bit machines if high addresses are used.
     */
     Byte        *memory;
 
-    /* The minumum address used in the bank.  Will be BANK_SIZE if not used.
+    /* The minumum address used in the bank.  Will be address space if not used.
     */
     int         min_address_used;
 
@@ -57,7 +62,7 @@ typedef struct
 
     /* This is a field used internally by the state
     */
-    int         memory_alloc_size;
+    long        memory_alloc_size;
 } MemoryBank;
 
 /* ---------------------------------------- INTERFACES
@@ -112,7 +117,7 @@ int     GetCurrentPass(void);
 
 /* Set the current PC
 */
-void    SetPC(int i);
+void    SetPC(long i);
 
 
 /* Set the mode to write words in
@@ -122,12 +127,12 @@ void    SetWordMode(WordMode mode);
 
 /* Set the size of address space
 */
-void    SetAddressSpace(int size);
+void    SetAddressSpace(long size);
 
 
 /* Get the current PC
 */
-int     PC(void);
+long    PC(void);
 
 
 /* Add a number to the PC
@@ -158,7 +163,7 @@ MemoryBank **MemoryBanks(int *count);
 
 /* Read a byte from the current bank.
 */
-Byte    ReadByte(int addr);
+Byte    ReadByte(long addr);
 
 
 #endif

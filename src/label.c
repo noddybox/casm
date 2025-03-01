@@ -167,7 +167,7 @@ static Label *Find(const char *p, LabelType type)
 }
 
 
-static void AddGlobal(const char *p, int value)
+static void AddGlobal(const char *p, long value)
 {
     GlobalLabel *l = FindGlobal(p);
 
@@ -244,12 +244,12 @@ static void AddLocal(const char *p, int value)
 }
 
 
-static int ParseBase(const char *str, int base, int *result, char last)
+static int ParseBase(const char *str, int base, long *result, char last)
 {
     char *p;
     int i;
 
-    *result = (int)strtol(str, &p, base);
+    *result = strtol(str, &p, base);
 
     return *p == last;
 }
@@ -285,7 +285,7 @@ void LabelClear(void)
 }
 
 
-int LabelExpand(const char *expr, int *result)
+int LabelExpand(const char *expr, long *result)
 {
     Label *label;
     int found = FALSE;
@@ -398,7 +398,7 @@ const Label *LabelFind(const char *label, LabelType type)
 }
 
 
-void LabelSet(const char *label, int value, LabelType type)
+void LabelSet(const char *label, long value, LabelType type)
 {
     /* ANY_LABEL indicates that a label is being updated
     */
@@ -427,7 +427,7 @@ void LabelSet(const char *label, int value, LabelType type)
 }
 
 
-void LabelScopePush(const char *name, int value)
+void LabelScopePush(const char *name, long value)
 {
     if (!stack)
     {

@@ -77,7 +77,7 @@ static const char *casm_usage =
 typedef struct
 {
     const char          *name;
-    int                 address_space;
+    long                address_space;
     WordMode            word_mode;
     void                (*init)(void);
     const ValueTable    *(*options)(void);
@@ -128,6 +128,12 @@ static const CPU cpu_table[]=
     {
         "spc700",
         0x10000,
+        LSB_Word,
+        Init_SPC700, Options_SPC700, SetOption_SPC700, Handler_SPC700
+    },
+    {
+        "68000",
+        0x100000000,
         LSB_Word,
         Init_SPC700, Options_SPC700, SetOption_SPC700, Handler_SPC700
     },
@@ -252,7 +258,7 @@ static CommandStatus CheckValTableHandlers(const char *opt, int ac,
 static CommandStatus EQU(const char *label, int argc, char *argv[],
                          int quoted[], char *err, size_t errsize)
 {
-    int result;
+    long result;
 
     CMD_LABEL_CHECK;
     CMD_ARGC_CHECK(2);
@@ -266,14 +272,14 @@ static CommandStatus EQU(const char *label, int argc, char *argv[],
 static CommandStatus ORG(const char *label, int argc, char *argv[],
                          int quoted[], char *err, size_t errsize)
 {
-    int result;
+    long result;
 
     CMD_ARGC_CHECK(2);
     CMD_EXPR(argv[1], result);
 
-    /* See if a bank was added
+    /* See if a bank was added for 8-bit CPUs
     */
-    if (result > 0xffff)
+    if (cpu->address_space == 0x10000 && result > 0xffff)
     {
         int bank = (result >> 16);
         SetAddressBank(bank);
@@ -303,7 +309,7 @@ static CommandStatus ORG(const char *label, int argc, char *argv[],
 static CommandStatus BANK(const char *label, int argc, char *argv[],
                           int quoted[], char *err, size_t errsize)
 {
-    int result;
+    long result;
 
     CMD_ARGC_CHECK(2);
     CMD_EXPR(argv[1], result);
@@ -316,8 +322,8 @@ static CommandStatus BANK(const char *label, int argc, char *argv[],
 static CommandStatus DS(const char *label, int argc, char *argv[],
                         int quoted[], char *err, size_t errsize)
 {
-    int count;
-    int value = 0;
+    long count;
+    long value = 0;
     int f;
 
     CMD_ARGC_CHECK(2);
@@ -366,7 +372,7 @@ static CommandStatus DefineMem(const char *label, int argc, char *argv[],
         }
         else
         {
-            int val;
+            long val;
 
             CMD_EXPR(argv[f], val);
 
@@ -402,8 +408,8 @@ static CommandStatus DW(const char *label, int argc, char *argv[],
 static CommandStatus ALIGN(const char *label, int argc, char *argv[],
                            int quoted[], char *err, size_t errsize)
 {
-    int count;
-    int value = 0;
+    long count;
+    long value = 0;
     int f;
 
     CMD_ARGC_CHECK(2);
@@ -571,7 +577,7 @@ static CommandStatus IMPORT(const char *label, int argc, char *argv[],
                             int quoted[], char *err, size_t errsize)
 {
     LibLoadOption opt = LibLoadAll;
-    int offset = 0;
+    long offset = 0;
 
     CMD_ARGC_CHECK(2);
 

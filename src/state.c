@@ -36,9 +36,9 @@
 */
 static int      pass = 1;
 static int      maxpass = 2;
-static int      pc = 0;
+static long     pc = 0;
 static int      num_banks = 0;
-static int      address_space = 0;
+static long     address_space = 0;
 static unsigned currbank = 0;
 static WordMode wmode = LSB_Word;
 
@@ -111,10 +111,10 @@ static MemoryBank *AddBank(unsigned n)
     bank = Realloc(bank, (sizeof *bank) * num_banks);
     bank[num_banks-1] = Malloc(sizeof **bank);
     bank[num_banks-1]->number = n;
-    bank[num_banks-1]->memory = NULL;
+    bank[num_banks-1]->memory_alloc_size = 0x10000;
+    bank[num_banks-1]->memory = Malloc(bank[num_banks-1]->memory_alloc_size);
     bank[num_banks-1]->min_address_used = address_space;
     bank[num_banks-1]->max_address_used = -1;
-    bank[num_banks-1]->memory_alloc_size = 0;
 
     qsort(bank, num_banks, sizeof *bank, SortBank);
 
@@ -208,29 +208,24 @@ void SetWordMode(WordMode mode)
 }
 
 
-void SetAddressSpace(int size)
+void SetAddressSpace(long size)
 {
     address_space = size;
 }
 
 
-void SetPC(int i)
+void SetPC(long i)
 {
     pc = i;
 
     if (address_space > 0)
     {
-        while (pc < 0)
-        {
-            pc += address_space;
-        }
-
         pc = pc % address_space;
     }
 }
 
 
-int PC(void)
+long PC(void)
 {
     return pc;
 }
@@ -239,12 +234,6 @@ int PC(void)
 void PCAdd(int i)
 {
     pc += i;
-
-    while(pc < 0)
-    {
-        pc += address_space;
-    }
-
     pc %= address_space;
 }
 
@@ -268,7 +257,7 @@ void PCWrite(int i)
 
     if (pc >= current->memory_alloc_size)
     {
-        current->memory_alloc_size = current->max_address_used +  0x100;
+        current->memory_alloc_size = current->max_address_used + 0x100;
         current->memory = Realloc(current->memory, current->memory_alloc_size);
     }
 
@@ -317,7 +306,7 @@ MemoryBank **MemoryBanks(int *count)
 }
 
 
-Byte ReadByte(int addr)
+Byte ReadByte(long addr)
 {
     Byte b = 0;
 

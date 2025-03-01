@@ -62,7 +62,7 @@ void            LabelClear(void);
 
 /* Expand a label or constant value.  Returns TRUE if parsed OK.
 */
-int             LabelExpand(const char *expr, int *result);
+int             LabelExpand(const char *expr, long *result);
 
 
 /* Utility to sanatise a label name, returning whether it's a global or local
@@ -80,12 +80,12 @@ const Label     *LabelFind(const char *label, LabelType type);
    If the label being set is a GLOBAL_LABEL also sets the scope for local
    variables and the stacked global scope is cleared.
 */
-void            LabelSet(const char *label, int value, LabelType type);
+void            LabelSet(const char *label, long value, LabelType type);
 
 
 /* Set a global label, pushing the current global namespace onto a stack.
 */
-void            LabelScopePush(const char *label, int value);
+void            LabelScopePush(const char *label, long value);
 
 
 /* Pops the last namespace that was saved with LabelScopePush().

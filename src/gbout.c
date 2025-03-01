@@ -154,17 +154,17 @@ CommandStatus GBOutputSetOption(int opt, int argc, char *argv[],
             break;
 
         case OPT_CART_RAM:
-            CMD_EXPR(argv[0], option.cart_ram);
+            CMD_EXPR_INT(argv[0], option.cart_ram);
             break;
 
         case OPT_CART_TYPE:
-            CMD_EXPR(argv[0], option.cart_type);
+            CMD_EXPR_INT(argv[0], option.cart_type);
             break;
 
         case OPT_IRQ:
             CMD_ARGC_CHECK(2);
             CMD_TABLE(argv[0], irq_table, val);
-            CMD_EXPR(argv[1], f);
+            CMD_EXPR_INT(argv[1], f);
             option.irq_vector[val->value] = f;
             break;
 
