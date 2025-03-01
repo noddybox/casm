@@ -498,7 +498,8 @@ label2: ; Label2 == $8000
 </pre>
 
 Note that the name is rather misleading; bank numbers are allowed to be greater
-than 256.
+than 256.  Also it only makes sense for 8-bit processors.  If the CPU's address
+space is not 64K then an error is raised.
 
 </td></tr>
 

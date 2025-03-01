@@ -175,6 +175,15 @@ CommandStatus SetOption(int opt, int argc, char *argv[],
     switch(opt)
     {
         case OPT_ADDRESS24:
+            if (cpu && cpu->address_space > 0x10000)
+            {
+                snprintf(err, errsize, "address24 makes no sense for CPU "
+                                        "with address space %d",
+                                                        cpu->address_space);
+
+                return CMD_FAILED;
+            }
+
             options.address24 = ParseTrueFalse(argv[0], FALSE);
             LabelSetAddress24(options.address24);
             break;
