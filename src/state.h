@@ -21,7 +21,8 @@
 
     Stores assembly state (passes, memory, etc).
 
-    Memory is arranged in banks of RAM of 64K each.
+    Memory is arranged in banks of RAM of 64K each.  This has now updated to
+    support larger memory banks for 16 bit processors.
 
 */
 
@@ -30,21 +31,33 @@
 
 /* ---------------------------------------- TYPES
 */
-#define BANK_SIZE       0x10000u
-
 typedef enum
 {
     MSB_Word,
     LSB_Word
 } WordMode;
 
-
 typedef struct
 {
-    unsigned    number;                 /* The bank number, 0 .. n       */
-    Byte        memory[BANK_SIZE];      /* The memory in that bank       */
-    int         min_address_used;       /* Will be BANK_SIZE if not used */
-    int         max_address_used;       /* Will be -1 if not used        */
+    /* The bank number, 0 .. n
+    */
+    unsigned    number;
+
+    /* The memory in that bank.  NULL if not used.  Addressing starts at zero.
+    */
+    Byte        *memory;
+
+    /* The minumum address used in the bank.  Will be BANK_SIZE if not used.
+    */
+    int         min_address_used;
+
+    /* The maximum address used in the bank.  Will be -1 if not used.
+    */
+    int         max_address_used;
+
+    /* This is a field used internally by the state
+    */
+    int         memory_alloc_size;
 } MemoryBank;
 
 /* ---------------------------------------- INTERFACES
@@ -57,7 +70,7 @@ void    ClearState(void);
 
 
 /* Sets the current bank to use.  If it's never been used before it will be
-   initialised as an empty 64K of RAM.
+   initialised as an empty bank.
 */
 void    SetAddressBank(unsigned bank);
 
