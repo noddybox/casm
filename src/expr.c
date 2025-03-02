@@ -590,7 +590,7 @@ static int EvalPostfix(Stack **stack, long *result)
                 if (right<0)
                 {
                     sprintf(error,"Cannot shift left by a "
-                                        "negative number (%d)",right);
+                                        "negative number (%ld)",right);
                     *stack=expr;
                     return FALSE;
                 }
@@ -602,7 +602,7 @@ static int EvalPostfix(Stack **stack, long *result)
                 if (right<0)
                 {
                     sprintf(error,"Cannot shift right by a "
-                                        "negative number (%d)",right);
+                                        "negative number (%ld)",right);
                     *stack=expr;
                     return FALSE;
                 }

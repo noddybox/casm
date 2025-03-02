@@ -160,8 +160,9 @@ do                                                                      \
     }                                                                   \
     if (*mode == ADDR_MODE_ERROR && IsFinalPass())                      \
     {                                                                   \
-        snprintf(err, errsize, "%s: value %d out of range of allowable "\
-                                "addressing modes", argv[1], *value);   \
+        snprintf(err, errsize, "%s: value %ld out of range of "         \
+                                "allowable addressing modes",           \
+                                                argv[1], *value);       \
     }                                                                   \
 } while (0)
 
@@ -1848,7 +1849,7 @@ CommandStatus Handler_65c816(const char *label, int argc, char *argv[],
 
             if (IsFinalPass() && (offset < -128 || offset > 127))
             {
-                snprintf(err, errsize, "%s: Branch offset (%d) too big",
+                snprintf(err, errsize, "%s: Branch offset (%ld) too big",
                                             argv[1], offset);
                 return CMD_FAILED;
             }
@@ -1874,7 +1875,7 @@ CommandStatus Handler_65c816(const char *label, int argc, char *argv[],
 
             if (IsFinalPass() && (offset < -32768 || offset > 32767))
             {
-                snprintf(err, errsize, "%s: Branch offset (%d) too big",
+                snprintf(err, errsize, "%s: Branch offset (%ld) too big",
                                             argv[1], offset);
                 return CMD_FAILED;
             }

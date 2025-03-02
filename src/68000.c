@@ -131,7 +131,7 @@ do                                                                      \
         case ZP_ON:                                                     \
             if (*address < 0 || *address > 255)                         \
             {                                                           \
-                snprintf(err, errsize, "value %d outside of "           \
+                snprintf(err, errsize, "value %ld outside of "          \
                                             "zero page", *address);     \
                 *mode = ADDR_MODE_ERROR;                                \
                 return;                                                 \
@@ -287,7 +287,7 @@ static void CalcAddressMode(int argc, char *argv[], int quoted[],
 
         if (*address < 0 || *address > 255)
         {
-            snprintf(err, errsize, "value %d outside of zero page", *address);
+            snprintf(err, errsize, "value %ld outside of zero page", *address);
             *mode = ADDR_MODE_ERROR;
             return;
         }
@@ -320,7 +320,7 @@ static void CalcAddressMode(int argc, char *argv[], int quoted[],
 
         if (*address < 0 || *address > 255)
         {
-            snprintf(err, errsize, "value %d outside of zero page", *address);
+            snprintf(err, errsize, "value %ld outside of zero page", *address);
             *mode = ADDR_MODE_ERROR;
             return;
         }
@@ -1284,7 +1284,7 @@ static CommandStatus STX(const char *label, int argc, char *argv[],
         case ABSOLUTE_INDEX_Y:
             if (address < 0 || address > 255)
             {
-                snprintf(err, errsize, "%s: value %d outside of zero page",
+                snprintf(err, errsize, "%s: value %ld outside of zero page",
                                                             argv[0], address);
                 return CMD_FAILED;
             }
@@ -1328,7 +1328,7 @@ static CommandStatus STY(const char *label, int argc, char *argv[],
         case ABSOLUTE_INDEX_X:
             if (address < 0 || address > 255)
             {
-                snprintf(err, errsize, "%s: value %d outside of zero page",
+                snprintf(err, errsize, "%s: value %ld outside of zero page",
                                                             argv[0], address);
                 return CMD_FAILED;
             }
@@ -2261,7 +2261,7 @@ CommandStatus Handler_68000(const char *label, int argc, char *argv[],
 
             if (IsFinalPass() && (offset < -128 || offset > 127))
             {
-                snprintf(err, errsize, "%s: Branch offset (%d) too big",
+                snprintf(err, errsize, "%s: Branch offset (%ld) too big",
                                             argv[1], offset);
                 return CMD_FAILED;
             }

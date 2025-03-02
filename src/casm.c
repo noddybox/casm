@@ -184,7 +184,7 @@ CommandStatus SetOption(int opt, int argc, char *argv[],
             if (cpu && cpu->address_space > 0x10000)
             {
                 snprintf(err, errsize, "address24 makes no sense for CPU "
-                                        "with address space %d",
+                                        "with address space %ld",
                                                         cpu->address_space);
 
                 return CMD_FAILED;
@@ -417,7 +417,7 @@ static CommandStatus ALIGN(const char *label, int argc, char *argv[],
 
     if (count < 2 || count > 32768)
     {
-        snprintf(err, errsize, "%s: Illegal align size %d", argv[0], count);
+        snprintf(err, errsize, "%s: Illegal align size %ld", argv[0], count);
         return CMD_FAILED;
     }
 

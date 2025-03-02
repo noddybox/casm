@@ -173,7 +173,7 @@ do                                                                      \
         case DP_ON:                                                     \
             if (*address < 0 || *address > 255)                         \
             {                                                           \
-                snprintf(err, errsize, "value %d outside of "           \
+                snprintf(err, errsize, "value %ld outside of "          \
                                             "zero page", *address);     \
                 *mode = ADDR_MODE_ERROR;                                \
                 return;                                                 \
@@ -203,7 +203,7 @@ do                                                                      \
 do {                                                                    \
     if (val < min || val > max)                                         \
     {                                                                   \
-        snprintf(err, errsize, "%s: value %d outside "                  \
+        snprintf(err, errsize, "%s: value %ld outside "                 \
                                     "of valid range %d - %d",           \
                                         argv[0], val, min, max);        \
         return CMD_FAILED;                                              \
@@ -551,7 +551,7 @@ static int MakeRelative(long *addr, char *cmd, char *err, size_t errsize)
 
     if (IsFinalPass() && (*addr < -128 || *addr > 127))
     {
-        snprintf(err, errsize, "%s: Branch offset (%d) too big",
+        snprintf(err, errsize, "%s: Branch offset (%ld) too big",
                                     cmd, *addr);
         return FALSE;
     }
