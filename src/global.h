@@ -27,13 +27,6 @@
 #define CASM_GLOBAL_H
 
 
-/* ---------------------------------------- GLOBALLY NEEDED INCLUDES
-*/
-#include "basetype.h"
-#include "util.h"
-#include "state.h"
-
-
 /* ---------------------------------------- MACROS
 */
 #ifndef TRUE
@@ -43,6 +36,19 @@
 #ifndef FALSE
 #define FALSE 0
 #endif
+
+
+/* ---------------------------------------- GLOBAL TYPES
+*/
+typedef unsigned long ulong;
+
+
+/* ---------------------------------------- GLOBALLY NEEDED INCLUDES
+*/
+#include "basetype.h"
+#include "util.h"
+#include "state.h"
+
 
 #endif
 

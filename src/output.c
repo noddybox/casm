@@ -58,7 +58,8 @@ typedef enum
     NES,
     CPC,
     PRG,
-    HEX
+    HEX,
+    CBM_TAP
 } Format;
 
 static char             output[4096] = "output";
@@ -79,6 +80,7 @@ static ValueTable       format_table[] =
     {"cpc",             CPC},
     {"prg",             PRG},
     {"hex",             HEX},
+    {"cbm-tap",         CBM_TAP},
     {NULL}
 };
 

@@ -19,7 +19,7 @@
 
     -------------------------------------------------------------------------
 
-    6502 Assembler
+    68000 Assembler
 
 */
 #include <stdlib.h>
@@ -32,7 +32,7 @@
 #include "cmd.h"
 #include "codepage.h"
 
-#include "6502.h"
+#include "68000.h"
 
 
 /* ---------------------------------------- TYPES AND GLOBALS
@@ -2196,19 +2196,19 @@ static const HandlerTable undocumented_handler_table[] =
 /* ---------------------------------------- PUBLIC FUNCTIONS
 */
 
-void Init_6502(void)
+void Init_68000(void)
 {
     option.zp_mode = ZP_AUTO;
     SetNeededPasses(3);
 }
 
 
-const ValueTable *Options_6502(void)
+const ValueTable *Options_68000(void)
 {
     return options;
 }
 
-CommandStatus SetOption_6502(int opt, int argc, char *argv[],
+CommandStatus SetOption_68000(int opt, int argc, char *argv[],
                              int quoted[], char *err, size_t errsize)
 {
     const ValueTable *val;
@@ -2229,7 +2229,7 @@ CommandStatus SetOption_6502(int opt, int argc, char *argv[],
     return CMD_OK;
 }
 
-CommandStatus Handler_6502(const char *label, int argc, char *argv[],       
+CommandStatus Handler_68000(const char *label, int argc, char *argv[],       
                            int quoted[], char *err, size_t errsize)
 {
     int f;

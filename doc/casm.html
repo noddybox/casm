@@ -134,7 +134,7 @@ h2
 <div class="legalise">
 <p><b>casm</b> is a simple, portable multi-pass assembler</p>
 
-<p>Copyright (C) 2003-2015  Ian Cowburn</p>
+<p>Copyright (C) 2003-2025  Ian Cowburn</p>
 
 <p>This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -498,7 +498,8 @@ label2: ; Label2 == $8000
 </pre>
 
 Note that the name is rather misleading; bank numbers are allowed to be greater
-than 256.
+than 256.  Also it only makes sense for 8-bit processors.  If the CPU's address
+space is not 64K then an error is raised.
 
 </td></tr>
 
@@ -1027,7 +1028,7 @@ An Amstrad CPC CDT file.
 <a href="#prgout">prg</a>
 </td>
 <td class="def">
-A Commodore 64 PRG file.
+A Commodore 64 or VIC-20 PRG file.
 </td></tr>
 
 <tr><td class="cmd">
@@ -1554,7 +1555,7 @@ code.
 </table>
 
 
-<h3 id="prgout">C64 PRG Output Format</h3>
+<h3 id="prgout">C64/VIC-20 PRG Output Format</h3>
 <p>
 Generates a PRG file for an emulator or real hardware.
 </p>
@@ -1567,18 +1568,18 @@ have been used, in which case then each entry in the tape file will use the
 
 <p>All banks will have a small BASIC program inserted as part of
 the generated file.  For this reason the bank should start near the BASIC
-area (0x820 should be a safe place to start) unless you have a great
+area (0x820 should be a safe place to start for the C64) unless you have a great
 desire for a PRG full of zero bytes. This BASIC will simply hold a SYS command
 to start the machine code, e.g.
 </p>
 
 <pre class="codeblock">
-10 SYS 2080
+10 SYS2080
 </pre>
 
-<h4>C64 PRG Output Format options</h4>
+<h4>C64/VIC-20 PRG Output Format options</h4>
 
-<p>The C64 PRG output driver supports the following settings that can be
+<p>The PRG output driver supports the following settings that can be
 set via an <b>option</b> command.
 </p>
 
@@ -1593,6 +1594,15 @@ option prg-start, <i>address</i>
 <td class="def">
 The start address for the generated BASIC loader.  If left undefined defaults
 to the start of written memory in the bank.
+</td></tr>
+
+<tr><td class="cmd">
+option prg-system, &lt;c64|vic20|vic20+8k&gt;
+</td>
+<td class="def">
+The system to generate the PRG file for, either a Commodore 64 (<b>c64</b>),
+VIC-20 either unexpanded or with 3K expansion (<b>vic20</b>) or a VIC-20 with
+an 8K or 16K expansion (<b>vic20+8k</b>).
 </td></tr>
 
 </table>
@@ -1875,7 +1885,10 @@ directive, i.e.
 
 <h2>Opcodes</h2>
 
-The 6502 assembler uses the standard Motorola opcodes.
+The 6502 assembler uses the standard Motorola opcodes.  Undocumented opcodes are
+supported and use the opcodes as described at
+<a href="https://www.masswerk.at/nowgobang/2021/6502-illegal-opcodes">
+www.masswerk.at/nowgobang/2021/6502-illegal-opcodes</a>.
 
 
 <h2>Options</h2>

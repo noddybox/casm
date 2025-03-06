@@ -169,7 +169,7 @@ CommandStatus SNESOutputSetOption(int opt, int argc, char *argv[],
         case OPT_IRQ:
             CMD_ARGC_CHECK(2);
             CMD_TABLE(argv[0], irq_table, val);
-            CMD_EXPR(argv[1], f);
+            CMD_EXPR_INT(argv[1], f);
             option.irq_vector[val->value] = f;
             break;
 
@@ -178,17 +178,17 @@ CommandStatus SNESOutputSetOption(int opt, int argc, char *argv[],
             break;
 
         case OPT_START:
-            CMD_EXPR(argv[0], f);
+            CMD_EXPR_INT(argv[0], f);
             option.start = f;
             break;
 
         case OPT_ROM_SIZE:
-            CMD_EXPR(argv[0], f);
+            CMD_EXPR_INT(argv[0], f);
             option.rom_size = f;
             break;
 
         case OPT_RAM_SIZE:
-            CMD_EXPR(argv[0], f);
+            CMD_EXPR_INT(argv[0], f);
             option.ram_size = f;
             break;
 

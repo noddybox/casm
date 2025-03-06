@@ -245,7 +245,7 @@ CommandStatus CPCOutputSetOption(int opt, int argc, char *argv[], int quoted[],
     switch(opt)
     {
         case OPT_START_ADDR:
-            CMD_EXPR(argv[0], options.start_addr);
+            CMD_EXPR_INT(argv[0], options.start_addr);
             break;
 
 	case OPT_LOADER:

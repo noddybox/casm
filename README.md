@@ -12,7 +12,7 @@ Simply pass it the file to assemble, i.e.
 
 `casm source.txt`
 
-Full documentation can be found in [HTML](https://htmlpreview.github.io/?https://github.com/noddybox/casm/blob/master/doc/casm.html) format.
+Full documentation can be found in [HTML](https://deathstation9000.org.uk/cgit/cgit.cgi/casm/plain/doc/casm.html) format.
 
 ## Processors
 
@@ -39,7 +39,8 @@ Currently **casm** supports the following output drivers:
 * NES ROM
 * Amstrad CPC CDT tape file
 * Intel HEX format files
+* Commodore PRG file
 
 ## Latest changes
 
-* Added Intel HEX format output
+* Commodore PRG file for VIC-20

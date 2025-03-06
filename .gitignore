@@ -47,3 +47,4 @@ src/casm
 *.cdt
 src/A-Hdrive
 src/output
+.DS_Store

@@ -52,7 +52,8 @@ SOURCE	=	casm.c		\
 		nesout.c	\
 		cpcout.c	\
 		prgout.c        \
-                hexout.c
+                hexout.c	\
+		68000.c
 
 OBJECTS	=	casm.o		\
 		expr.o		\
@@ -82,7 +83,8 @@ OBJECTS	=	casm.o		\
 		nesout.o	\
 		cpcout.o	\
 		prgout.o        \
-                hexout.o
+                hexout.o	\
+		68000.o
 
 $(TARGET): $(OBJECTS)
 	$(CC) $(CLAGS) -o $(TARGET) $(OBJECTS)
@@ -94,6 +96,8 @@ clean:
  cmd.h codepage.h 6502.h
 65c816.o: 65c816.c global.h basetype.h util.h state.h expr.h label.h \
  parse.h cmd.h codepage.h 65c816.h
+68000.o: 68000.c global.h basetype.h util.h state.h expr.h label.h \
+ parse.h cmd.h codepage.h 68000.h
 alias.o: alias.c global.h basetype.h util.h state.h alias.h
 casm.o: casm.c global.h basetype.h util.h state.h expr.h label.h macro.h \
  cmd.h parse.h codepage.h stack.h listing.h alias.h output.h rawout.h \

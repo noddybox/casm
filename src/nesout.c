@@ -180,7 +180,7 @@ CommandStatus NESOutputSetOption(int opt, int argc, char *argv[],
         case OPT_VECTOR:
             CMD_ARGC_CHECK(2);
             CMD_TABLE(argv[0], vector_table, val);
-            CMD_EXPR(argv[1], f);
+            CMD_EXPR_INT(argv[1], f);
             option.vector[val->value] = f;
             break;
 
@@ -190,7 +190,7 @@ CommandStatus NESOutputSetOption(int opt, int argc, char *argv[],
             break;
 
         case OPT_MAPPER:
-            CMD_EXPR(argv[1], f);
+            CMD_EXPR_INT(argv[1], f);
             option.mapper = f;
             break;
 

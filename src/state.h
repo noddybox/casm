@@ -21,30 +21,48 @@
 
     Stores assembly state (passes, memory, etc).
 
-    Memory is arranged in banks of RAM of 64K each.
+    Memory is arranged in banks of RAM of 64K each.  This has now updated to
+    support larger memory banks for 16 bit processors.
 
 */
 
 #ifndef CASM_STATE_H
 #define CASM_STATE_H
 
+#include "global.h"
+
 /* ---------------------------------------- TYPES
 */
-#define BANK_SIZE       0x10000u
-
 typedef enum
 {
     MSB_Word,
     LSB_Word
 } WordMode;
 
-
 typedef struct
 {
-    unsigned    number;                 /* The bank number, 0 .. n       */
-    Byte        memory[BANK_SIZE];      /* The memory in that bank       */
-    int         min_address_used;       /* Will be BANK_SIZE if not used */
-    int         max_address_used;       /* Will be -1 if not used        */
+    /* The bank number, 0 .. n
+    */
+    unsigned    number;
+
+    /* The memory in that bank.  By default a 64K bank will be allocated.
+       This is to maintain compatibiility with it's original defination for
+       8-bit machines.  Addressing starts at zero so this will be wildly
+       inefficient on 16-bit machines if high addresses are used.
+    */
+    Byte        *memory;
+
+    /* The minumum address used in the bank.  Will be address space if not used.
+    */
+    int         min_address_used;
+
+    /* The maximum address used in the bank.  Will be -1 if not used.
+    */
+    int         max_address_used;
+
+    /* This is a field used internally by the state
+    */
+    long        memory_alloc_size;
 } MemoryBank;
 
 /* ---------------------------------------- INTERFACES
@@ -57,7 +75,7 @@ void    ClearState(void);
 
 
 /* Sets the current bank to use.  If it's never been used before it will be
-   initialised as an empty 64K of RAM.
+   initialised as an empty bank.
 */
 void    SetAddressBank(unsigned bank);
 
@@ -99,7 +117,7 @@ int     GetCurrentPass(void);
 
 /* Set the current PC
 */
-void    SetPC(int i);
+void    SetPC(long i);
 
 
 /* Set the mode to write words in
@@ -109,12 +127,12 @@ void    SetWordMode(WordMode mode);
 
 /* Set the size of address space
 */
-void    SetAddressSpace(int size);
+void    SetAddressSpace(long size);
 
 
 /* Get the current PC
 */
-int     PC(void);
+long    PC(void);
 
 
 /* Add a number to the PC
@@ -145,7 +163,7 @@ MemoryBank **MemoryBanks(int *count);
 
 /* Read a byte from the current bank.
 */
-Byte    ReadByte(int addr);
+Byte    ReadByte(long addr);
 
 
 #endif

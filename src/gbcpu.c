@@ -424,7 +424,7 @@ typedef struct
 static int CalcRegisterMode(const char *arg, int quote,
                             RegisterMode *mode,
                             RegisterType *type,
-                            int *offset,
+                            long *offset,
                             char *err, size_t errsize)
 {
     int f;
@@ -558,7 +558,7 @@ static CommandStatus AssumeAccumulator(int argc, char *argv[], int quoted[],
                                        char *err, size_t errsize,
                                        RegisterMode *r1, RegisterMode *r2,
                                        RegisterType *t1, RegisterType *t2,
-                                       int *off1, int *off2)
+                                       long *off1, long *off2)
 {
     CMD_ARGC_CHECK(2);
 
@@ -696,7 +696,7 @@ static CommandStatus LD(const char *label, int argc, char *argv[],
 
     RegisterMode r1, r2;
     RegisterType t1, t2;
-    int off1, off2;
+    long off1, off2;
 
     CMD_ARGC_CHECK(3);
 
@@ -861,7 +861,7 @@ static CommandStatus LDH(const char *label, int argc, char *argv[],
 
     RegisterMode r1, r2;
     RegisterType t1, t2;
-    int off1, off2;
+    long off1, off2;
 
     CMD_ARGC_CHECK(3);
 
@@ -916,7 +916,7 @@ static CommandStatus LDD(const char *label, int argc, char *argv[],
 
     RegisterMode r1, r2;
     RegisterType t1, t2;
-    int off1, off2;
+    long off1, off2;
 
     CMD_ARGC_CHECK(3);
 
@@ -951,7 +951,7 @@ static CommandStatus LDI(const char *label, int argc, char *argv[],
 
     RegisterMode r1, r2;
     RegisterType t1, t2;
-    int off1, off2;
+    long off1, off2;
 
     CMD_ARGC_CHECK(3);
 
@@ -980,7 +980,7 @@ static CommandStatus PUSH(const char *label, int argc, char *argv[],
 {
     RegisterMode r1;
     RegisterType t1;
-    int off1;
+    long off1;
 
     CMD_ARGC_CHECK(2);
 
@@ -1008,7 +1008,7 @@ static CommandStatus POP(const char *label, int argc, char *argv[],
 {
     RegisterMode r1;
     RegisterType t1;
-    int off1;
+    long off1;
 
     CMD_ARGC_CHECK(2);
 
@@ -1043,7 +1043,7 @@ static CommandStatus ADD(const char *label, int argc, char *argv[],
 
     RegisterMode r1, r2;
     RegisterType t1, t2;
-    int off1, off2;
+    long off1, off2;
 
     if (AssumeAccumulator(argc, argv, quoted, err, errsize,
                           &r1, &r2, &t1, &t2, &off1, &off2) != CMD_OK)
@@ -1088,7 +1088,7 @@ static CommandStatus ADC(const char *label, int argc, char *argv[],
 
     RegisterMode r1, r2;
     RegisterType t1, t2;
-    int off1, off2;
+    long off1, off2;
 
     if (AssumeAccumulator(argc, argv, quoted, err, errsize,
                           &r1, &r2, &t1, &t2, &off1, &off2) != CMD_OK)
@@ -1134,7 +1134,7 @@ static CommandStatus SUB(const char *label, int argc, char *argv[],
 
     RegisterMode r1, r2;
     RegisterType t1, t2;
-    int off1, off2;
+    long off1, off2;
 
     if (AssumeAccumulator(argc, argv, quoted, err, errsize,
                           &r1, &r2, &t1, &t2, &off1, &off2) != CMD_OK)
@@ -1171,7 +1171,7 @@ static CommandStatus SBC(const char *label, int argc, char *argv[],
 
     RegisterMode r1, r2;
     RegisterType t1, t2;
-    int off1, off2;
+    long off1, off2;
 
     if (AssumeAccumulator(argc, argv, quoted, err, errsize,
                           &r1, &r2, &t1, &t2, &off1, &off2) != CMD_OK)
@@ -1217,7 +1217,7 @@ static CommandStatus AND(const char *label, int argc, char *argv[],
 
     RegisterMode r1, r2;
     RegisterType t1, t2;
-    int off1, off2;
+    long off1, off2;
 
     if (AssumeAccumulator(argc, argv, quoted, err, errsize,
                           &r1, &r2, &t1, &t2, &off1, &off2) != CMD_OK)
@@ -1254,7 +1254,7 @@ static CommandStatus OR(const char *label, int argc, char *argv[],
 
     RegisterMode r1, r2;
     RegisterType t1, t2;
-    int off1, off2;
+    long off1, off2;
 
     if (AssumeAccumulator(argc, argv, quoted, err, errsize,
                           &r1, &r2, &t1, &t2, &off1, &off2) != CMD_OK)
@@ -1291,7 +1291,7 @@ static CommandStatus XOR(const char *label, int argc, char *argv[],
 
     RegisterMode r1, r2;
     RegisterType t1, t2;
-    int off1, off2;
+    long off1, off2;
 
     if (AssumeAccumulator(argc, argv, quoted, err, errsize,
                           &r1, &r2, &t1, &t2, &off1, &off2) != CMD_OK)
@@ -1328,7 +1328,7 @@ static CommandStatus CP(const char *label, int argc, char *argv[],
 
     RegisterMode r1, r2;
     RegisterType t1, t2;
-    int off1, off2;
+    long off1, off2;
 
     if (AssumeAccumulator(argc, argv, quoted, err, errsize,
                           &r1, &r2, &t1, &t2, &off1, &off2) != CMD_OK)
@@ -1359,7 +1359,7 @@ static CommandStatus INC(const char *label, int argc, char *argv[],
 {
     RegisterMode r1;
     RegisterType t1;
-    int off1;
+    long off1;
 
     CMD_ARGC_CHECK(2);
 
@@ -1401,7 +1401,7 @@ static CommandStatus DEC(const char *label, int argc, char *argv[],
 {
     RegisterMode r1;
     RegisterType t1;
-    int off1;
+    long off1;
 
     CMD_ARGC_CHECK(2);
 
@@ -1443,7 +1443,7 @@ static CommandStatus RLC_RL_SLA_SWAP(const char *label, int argc, char *argv[],
 {
     RegisterMode r1;
     RegisterType t1;
-    int off1;
+    long off1;
     int opcode_mask;
 
     CMD_ARGC_CHECK(2);
@@ -1502,7 +1502,7 @@ static CommandStatus BIT_SET_RES(const char *label, int argc, char *argv[],
 {
     RegisterMode r1, r2;
     RegisterType t1, t2;
-    int off1, off2;
+    long off1, off2;
     int opcode_mask;
 
     CMD_ARGC_CHECK(3);
@@ -1571,7 +1571,7 @@ static CommandStatus JP(const char *label, int argc, char *argv[],
     {
         RegisterMode mode;
         RegisterType type;
-        int val;
+        long val;
 
         if (!CalcRegisterMode(argv[1], quoted[1], &mode, &type, &val,
                               err, errsize))
@@ -1596,7 +1596,7 @@ static CommandStatus JP(const char *label, int argc, char *argv[],
     {
         RegisterMode mode;
         RegisterType type;
-        int val;
+        long val;
         ProcessorFlag flag;
         int mask;
 
@@ -1626,7 +1626,7 @@ static CommandStatus JR(const char *label, int argc, char *argv[],
     {
         RegisterMode mode;
         RegisterType type;
-        int val;
+        long val;
 
         if (!CalcRegisterMode(argv[1], quoted[1], &mode, &type, &val,
                               err, errsize))
@@ -1651,7 +1651,7 @@ static CommandStatus JR(const char *label, int argc, char *argv[],
     {
         RegisterMode mode;
         RegisterType type;
-        int val;
+        long val;
         ProcessorFlag flag;
         int mask;
 
@@ -1687,7 +1687,7 @@ static CommandStatus CALL(const char *label, int argc, char *argv[],
     {
         RegisterMode mode;
         RegisterType type;
-        int val;
+        long val;
 
         if (!CalcRegisterMode(argv[1], quoted[1], &mode, &type, &val,
                               err, errsize))
@@ -1706,7 +1706,7 @@ static CommandStatus CALL(const char *label, int argc, char *argv[],
     {
         RegisterMode mode;
         RegisterType type;
-        int val;
+        long val;
         ProcessorFlag flag;
         int mask;
 
@@ -1777,7 +1777,7 @@ static CommandStatus RST(const char *label, int argc, char *argv[],
 
     RegisterMode mode;
     RegisterType type;
-    int val;
+    long val;
 
     CMD_ARGC_CHECK(2);
 

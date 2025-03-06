@@ -5,6 +5,9 @@
 	option	list-labels,all
 	option	list-macros,all
 
+        option  output-file, "6502.bin"
+        option  output-format, raw
+
 	;
 	; Test basically created by pasting in opcodes from 6502.org
 	;
@@ -44,6 +47,8 @@ addr_mode_tests:	; Uncomment to test
 	; adc	$4400,z	; Unknown index reg
 	; adc	($44,y) ; Wrong indirect reg
 	; adc	($44),x ; Wrong indirect reg
+
+        option  zero-page,auto
 
 and_test
 	and #$44
@@ -270,3 +275,72 @@ stack_test
 
 fwd_80:	equ	$80
 fwd_101	equ	$101
+
+; Illegal opcodes
+        JAM
+        ALR     #$44
+        ANC     #$44
+        ANC2    #$44
+        ANE     #$44
+        ARR     #$44
+        DCP     $44
+        DCP     $44,X
+        DCP     $4400
+        DCP     $4400,X
+        DCP     $4400,Y
+        DCP     ($44,X)
+        DCP     ($44),Y
+        ISC     $44
+        ISC     $44,X
+        ISC     $4400
+        ISC     $4400,X
+        ISC     $4400,Y
+        ISC     ($44,X)
+        ISC     ($44),Y
+        LAS     $4400,Y
+        LAX     $44
+        LAX     $44,Y
+        LAX     $4400
+        LAX     $4400,Y
+        LAX     ($44,X)
+        LAX     ($44),Y
+        LXA     #$44
+        RLA     $44
+        RLA     $44,X
+        RLA     $4400
+        RLA     $4400,X
+        RLA     $4400,Y
+        RLA     ($44,X)
+        RLA     ($44),Y
+        RRA     $44
+        RRA     $44,X
+        RRA     $4400
+        RRA     $4400,X
+        RRA     $4400,Y
+        RRA     ($44,X)
+        RRA     ($44),Y
+        SAX     $44
+        SAX     $44,Y
+        SAX     $4400
+        SAX     ($44,X)
+        SBX     #$44
+        SHA     $4400,Y
+        SHA     ($44),Y
+        SHX     $4400,Y
+        SHY     $4400,X
+        SLO     $44
+        SLO     $44,X
+        SLO     $4400
+        SLO     $4400,X
+        SLO     $4400,Y
+        SLO     ($44,X)
+        SLO     ($44),Y
+        SRE     $44
+        SRE     $44,X
+        SRE     $4400
+        SRE     $4400,X
+        SRE     $4400,Y
+        SRE     ($44,X)
+        SRE     ($44),Y
+        TAS     $4400,Y
+        USBC    #$44

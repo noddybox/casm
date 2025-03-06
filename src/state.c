@@ -34,13 +34,11 @@
 
 /* ---------------------------------------- TYPES AND GLOBALS
 */
-#define BANK_SIZE       0x10000u
-
 static int      pass = 1;
 static int      maxpass = 2;
-static int      pc = 0;
+static long     pc = 0;
 static int      num_banks = 0;
-static int      address_space = 0;
+static long     address_space = 0;
 static unsigned currbank = 0;
 static WordMode wmode = LSB_Word;
 
@@ -64,6 +62,11 @@ static void RemoveBanks(void)
 
     for(f = 0; f < num_banks; f++)
     {
+        if (bank[f]->memory)
+        {
+            free(bank[f]->memory);
+        }
+
         free(bank[f]);
     }
 
@@ -95,7 +98,7 @@ static void ClearBankWriteMarkers(void)
 
     for(f = 0; f < num_banks; f++)
     {
-        bank[f]->min_address_used = BANK_SIZE;
+        bank[f]->min_address_used = address_space;
         bank[f]->max_address_used = -1;
     }
 }
@@ -108,6 +111,10 @@ static MemoryBank *AddBank(unsigned n)
     bank = Realloc(bank, (sizeof *bank) * num_banks);
     bank[num_banks-1] = Malloc(sizeof **bank);
     bank[num_banks-1]->number = n;
+    bank[num_banks-1]->memory_alloc_size = 0x10000;
+    bank[num_banks-1]->memory = Malloc(bank[num_banks-1]->memory_alloc_size);
+    bank[num_banks-1]->min_address_used = address_space;
+    bank[num_banks-1]->max_address_used = -1;
 
     qsort(bank, num_banks, sizeof *bank, SortBank);
 
@@ -201,29 +208,24 @@ void SetWordMode(WordMode mode)
 }
 
 
-void SetAddressSpace(int size)
+void SetAddressSpace(long size)
 {
     address_space = size;
 }
 
 
-void SetPC(int i)
+void SetPC(long i)
 {
     pc = i;
 
     if (address_space > 0)
     {
-        while (pc < 0)
-        {
-            pc += address_space;
-        }
-
         pc = pc % address_space;
     }
 }
 
 
-int PC(void)
+long PC(void)
 {
     return pc;
 }
@@ -232,13 +234,7 @@ int PC(void)
 void PCAdd(int i)
 {
     pc += i;
-
-    while(pc < 0)
-    {
-        pc += BANK_SIZE;
-    }
-
-    pc %= BANK_SIZE;
+    pc %= address_space;
 }
 
 
@@ -259,9 +255,15 @@ void PCWrite(int i)
         current->max_address_used = pc;
     }
 
+    if (pc >= current->memory_alloc_size)
+    {
+        current->memory_alloc_size = current->max_address_used + 0x100;
+        current->memory = Realloc(current->memory, current->memory_alloc_size);
+    }
+
     current->memory[pc] = ExprConvert(8, i);
 
-    pc = (pc + 1) % BANK_SIZE;
+    pc = (pc + 1) % address_space;
 }
 
 
@@ -304,7 +306,7 @@ MemoryBank **MemoryBanks(int *count)
 }
 
 
-Byte ReadByte(int addr)
+Byte ReadByte(long addr)
 {
     Byte b = 0;
 
@@ -313,7 +315,7 @@ Byte ReadByte(int addr)
         current = GetOrAddBank(currbank);
     }
 
-    if (addr > -1 && addr < BANK_SIZE && current)
+    if (addr > -1 && current && addr < current->memory_alloc_size)
     {
         b = current->memory[addr];
     }

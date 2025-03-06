@@ -444,7 +444,7 @@ static Stack *ToPostfix(const char *expr)
 }
 
 
-static int EvalPostfix(Stack **stack, int *result)
+static int EvalPostfix(Stack **stack, long *result)
 {
     Stack *expr;
     int token;
@@ -489,7 +489,7 @@ static int EvalPostfix(Stack **stack, int *result)
         }
         else
         {
-            int val;
+            long val;
 
             expr=Pop(expr);
 
@@ -526,7 +526,7 @@ static int EvalPostfix(Stack **stack, int *result)
     }
     else
     {
-        int left,right;
+        long left,right;
 
         expr=Pop(expr);
 
@@ -590,7 +590,7 @@ static int EvalPostfix(Stack **stack, int *result)
                 if (right<0)
                 {
                     sprintf(error,"Cannot shift left by a "
-                                        "negative number (%d)",right);
+                                        "negative number (%ld)",right);
                     *stack=expr;
                     return FALSE;
                 }
@@ -602,7 +602,7 @@ static int EvalPostfix(Stack **stack, int *result)
                 if (right<0)
                 {
                     sprintf(error,"Cannot shift right by a "
-                                        "negative number (%d)",right);
+                                        "negative number (%ld)",right);
                     *stack=expr;
                     return FALSE;
                 }
@@ -652,7 +652,7 @@ static int EvalPostfix(Stack **stack, int *result)
 /* ---------------------------------------- INTERFACES
 */
 
-int ExprConvert(int no_bits, int value)
+int ExprConvert(int no_bits, long value)
 {
     if (value<0)
     {
@@ -665,7 +665,7 @@ int ExprConvert(int no_bits, int value)
 }
 
 
-int ExprEval(const char *expr, int *result)
+int ExprEval(const char *expr, long *result)
 {
     Stack *output=ToPostfix(expr);
     int ret;
