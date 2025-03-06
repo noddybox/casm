@@ -1,7 +1,3 @@
-# repo moved
-
-This version of casm is here for reference and is no longer updated.  The repo has moved to https://deathstation9000.org.uk so it can be part of the backup processing for my own host.
-
 # casm
 
 Portable cross assembler.
