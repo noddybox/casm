@@ -77,7 +77,7 @@ static const char *casm_usage =
 typedef struct
 {
     const char          *name;
-    long                address_space;
+    ulong               address_space;
     WordMode            word_mode;
     void                (*init)(void);
     const ValueTable    *(*options)(void);
@@ -935,7 +935,7 @@ static void RunPass(const char *name, FILE *fp, int depth)
             */
             if (options.address24)
             {
-                LabelSet(label, (Bank() << 16) | PC(), type);
+                LabelSet(label, (CurrentBank() << 16) | PC(), type);
             }
             else
             {

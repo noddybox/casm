@@ -48,6 +48,7 @@ typedef unsigned long ulong;
 #include "basetype.h"
 #include "util.h"
 #include "state.h"
+#include "memory.h"
 
 
 #endif

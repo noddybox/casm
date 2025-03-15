@@ -301,7 +301,7 @@ int LabelExpand(const char *expr, long *result)
             case '$':
                 if (address24)
                 {
-                    *result = Bank() << 16 | PC();
+                    *result = CurrentBank() << 16 | PC();
                 }
                 else
                 {

@@ -53,7 +53,8 @@ SOURCE	=	casm.c		\
 		cpcout.c	\
 		prgout.c        \
                 hexout.c	\
-		68000.c
+		68000.c		\
+		memory.c
 
 OBJECTS	=	casm.o		\
 		expr.o		\
@@ -84,7 +85,8 @@ OBJECTS	=	casm.o		\
 		cpcout.o	\
 		prgout.o        \
                 hexout.o	\
-		68000.o
+		68000.o		\
+		memory.o
 
 $(TARGET): $(OBJECTS)
 	$(CC) $(CLAGS) -o $(TARGET) $(OBJECTS)
@@ -122,6 +124,7 @@ listing.o: listing.c global.h basetype.h util.h state.h label.h macro.h \
  cmd.h parse.h expr.h varchar.h listing.h
 macro.o: macro.c global.h basetype.h util.h state.h codepage.h parse.h \
  cmd.h varchar.h macro.h
+memory.o: memory.c global.h basetype.h util.h state.h memory.h
 nesout.o: nesout.c global.h basetype.h util.h state.h expr.h codepage.h \
  parse.h cmd.h nesout.h
 output.o: output.c global.h basetype.h util.h state.h output.h parse.h \
@@ -140,7 +143,7 @@ spc700.o: spc700.c global.h basetype.h util.h state.h expr.h label.h \
 specout.o: specout.c global.h basetype.h util.h state.h specout.h parse.h \
  cmd.h expr.h
 stack.o: stack.c global.h basetype.h util.h state.h stack.h
-state.o: state.c global.h basetype.h util.h state.h expr.h
+state.o: state.c global.h basetype.h util.h state.h memory.h expr.h
 t64out.o: t64out.c global.h basetype.h util.h state.h codepage.h parse.h \
  cmd.h t64out.h expr.h
 util.o: util.c global.h basetype.h util.h state.h
