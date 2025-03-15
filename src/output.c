@@ -126,15 +126,12 @@ CommandStatus OutputSetOption(int opt, int argc, char *argv[],
 
 int OutputCode(void)
 {
-    MemoryBank **bank;
     int count;
-    int min;
-    int max;
-    const Byte *mem;
+    const unsigned *banksl
 
-    bank = MemoryBanks(&count);
+    banks = DefinedBanks(&count);
 
-    if (!bank)
+    if (!banks || count == 0)
     {
         fprintf(stderr, "Skipping output; no written memory to write\n");
         return TRUE;
