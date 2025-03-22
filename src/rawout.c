@@ -43,7 +43,7 @@ CommandStatus RawOutputSetOption(int opt, int argc, char *argv[],
 }
 
 int RawOutput(const char *filename, const char *filename_bank,
-              MemoryBank **bank, int count, char *error, size_t error_size)
+              const unsigned *banks, int count, char *error, size_t error_size)
 {
     char buff[4096];
     int f;
@@ -52,8 +52,8 @@ int RawOutput(const char *filename, const char *filename_bank,
     {
         FILE *fp;
         const char *name;
-        const Byte *mem;
-        int min, max;
+        Byte *mem;
+        ulong min, max, len;
 
         if (count == 1)
         {
@@ -61,7 +61,7 @@ int RawOutput(const char *filename, const char *filename_bank,
         }
         else
         {
-            snprintf(buff, sizeof buff, filename_bank, bank[f]->number);
+            snprintf(buff, sizeof buff, filename_bank, banks[f]);
             name = buff;
         }
 
@@ -71,11 +71,13 @@ int RawOutput(const char *filename, const char *filename_bank,
             return FALSE;
         }
 
-        mem = bank[f]->memory;
-        min = bank[f]->min_address_used;
-        max = bank[f]->max_address_used;
+        min = GetLowWriteMarker(banks[f]);
+        max = GetHighWriteMarker(banks[f]);
+        len = max - min + 1;
 
-        fwrite(mem + min, 1, max - min + 1, fp);
+        mem = MemoryGetBlock(banks[f], min, len);
+        fwrite(mem, 1, len, fp);
+        free(mem);
 
         fclose(fp);
     }

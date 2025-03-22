@@ -46,7 +46,7 @@ CommandStatus T64OutputSetOption(int opt, int argc, char *argv[],
 /* C64 T64 tape output of assembly.  Returns TRUE if OK, FALSE for failure.
 */
 int T64Output(const char *filename, const char *filename_bank,
-              MemoryBank **bank, int count,
+              const unsigned *banks, int count,
               char *error, size_t error_size);
 
 #endif

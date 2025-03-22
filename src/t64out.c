@@ -152,7 +152,7 @@ CommandStatus T64OutputSetOption(int opt, int argc, char *argv[],
 }
 
 int T64Output(const char *filename, const char *filename_bank,
-              MemoryBank **bank, int count, char *error, size_t error_size)
+              const unsigned *banks, int count, char *error, size_t error_size)
 {
     FILE *fp = fopen(filename, "wb");
     int f;
@@ -186,8 +186,8 @@ int T64Output(const char *filename, const char *filename_bank,
     {
         int min, max, len;
 
-        min = bank[f]->min_address_used;
-        max = bank[f]->max_address_used;
+        min = GetLowWriteMarker(banks[f]);
+        max = GetHighWriteMarker(banks[f]);
 
         /* If this is the first bank, we're going to prepend some BASIC
         */
@@ -223,7 +223,7 @@ int T64Output(const char *filename, const char *filename_bank,
         {
             char fn[16];
 
-            snprintf(fn, sizeof fn, filename_bank, bank[f]->number);
+            snprintf(fn, sizeof fn, filename_bank, banks[f]);
             WriteString(fp, fn, 16, ' ', CP_CBM);
         }
 
@@ -240,10 +240,10 @@ int T64Output(const char *filename, const char *filename_bank,
         Byte *mem;
         int min, max, len;
 
-        mem = bank[f]->memory;
+        mem = MemoryGetBlock(banks[f], 0, 0x10000);
 
-        min = bank[f]->min_address_used;
-        max = bank[f]->max_address_used;
+        min = GetLowWriteMarker(banks[f]);
+        max = GetHighWriteMarker(banks[f]);
 
         /* If this is the first bank, we're going to prepend some BASIC.
            Note that output drivers are allowed to manipulate memory directly.
@@ -280,6 +280,8 @@ int T64Output(const char *filename, const char *filename_bank,
         len = max - min + 1;
 
         fwrite(mem + min, len, 1, fp);
+
+        free(mem);
     }
 
     fclose(fp);

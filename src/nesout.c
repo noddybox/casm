@@ -212,10 +212,9 @@ CommandStatus NESOutputSetOption(int opt, int argc, char *argv[],
 }
 
 int NESOutput(const char *filename, const char *filename_bank,
-              MemoryBank **bank, int count, char *error, size_t error_size)
+              const unsigned *banks, int count, char *error, size_t error_size)
 {
     FILE *fp;
-    Byte *mem;
     int num_rom;
     int num_vrom;
     int is_16k;
@@ -232,11 +231,11 @@ int NESOutput(const char *filename, const char *filename_bank,
 
     for(f = 0; f < count; f++)
     {
-        if (bank[f]->max_address_used < 0x2000)
+        if (GetLowWriteMarker(banks[f]) < 0x2000)
         {
             num_vrom++;
         }
-        else if (bank[f]->min_address_used >= 0xc000)
+        else if (GetLowWriteMarker(banks[f]) >= 0xc000)
         {
             if (first_code == -1)
             {
@@ -246,7 +245,7 @@ int NESOutput(const char *filename, const char *filename_bank,
             is_16k = TRUE;
             num_rom++;
         }
-        else if (bank[f]->min_address_used >= 0x8000)
+        else if (GetLowWriteMarker(banks[f]) >= 0x8000)
         {
             if (first_code == -1)
             {
@@ -286,36 +285,6 @@ int NESOutput(const char *filename, const char *filename_bank,
         return FALSE;
     }
 
-    /* Setup vectors
-    */
-    mem = bank[first_code]->memory;
-
-    start = option.vector[VECTOR_RESET];
-
-    if (start == -1)
-    {
-        start = is_16k ? 0xc000 : 0x8000;
-
-        fprintf(stderr, "WARNING: No reset vector provided; assuming 0x%4.4x\n",
-                                        start);
-    }
-
-    PokeW(mem, 0xfffc, start);
-
-    if (option.vector[VECTOR_NMI] != -1)
-    {
-        PokeW(mem, 0xfffa, option.vector[VECTOR_NMI]);
-    }
-    else
-    {
-        fprintf(stderr, "WARNING: NMI vector not set\n");
-    }
-
-    if (option.vector[VECTOR_BRK] != -1)
-    {
-        PokeW(mem, 0xfffe, option.vector[VECTOR_BRK]);
-    }
-
     /* Output header
     */
     fputs("NES", fp);
@@ -349,16 +318,54 @@ int NESOutput(const char *filename, const char *filename_bank,
     */
     for(f = 0; f < count; f++)
     {
-        if (bank[f]->min_address_used > 0x2000)
+        if (GetLowWriteMarker(banks[f]) > 0x2000)
         {
+            Byte *mem;
+
+            mem = MemoryGetBlock(banks[f], 0, 0x10000);
+
+            if (f == first_code)
+            {
+                /* Setup vectors
+                */
+                start = option.vector[VECTOR_RESET];
+
+                if (start == -1)
+                {
+                    start = is_16k ? 0xc000 : 0x8000;
+
+                    fprintf(stderr, "WARNING: No reset vector provided; "
+                                        "assuming 0x%4.4x\n",
+                                                    start);
+                }
+
+                PokeW(mem, 0xfffc, start);
+
+                if (option.vector[VECTOR_NMI] != -1)
+                {
+                    PokeW(mem, 0xfffa, option.vector[VECTOR_NMI]);
+                }
+                else
+                {
+                    fprintf(stderr, "WARNING: NMI vector not set\n");
+                }
+
+                if (option.vector[VECTOR_BRK] != -1)
+                {
+                    PokeW(mem, 0xfffe, option.vector[VECTOR_BRK]);
+                }
+            }
+
             if (is_16k)
             {
-                fwrite(bank[f]->memory + 0xc000, 0x4000, 1, fp);
+                fwrite(mem + 0xc000, 0x4000, 1, fp);
             }
             else
             {
-                fwrite(bank[f]->memory + 0x8000, 0x8000, 1, fp);
+                fwrite(mem + 0x8000, 0x8000, 1, fp);
             }
+
+            free(mem);
         }
     }
 
@@ -366,9 +373,15 @@ int NESOutput(const char *filename, const char *filename_bank,
     */
     for(f = 0; f < count; f++)
     {
-        if (bank[f]->min_address_used < 0x2000)
+        if (GetLowWriteMarker(banks[f]) < 0x2000)
         {
-            fwrite(bank[f]->memory, 0x2000, 1, fp);
+            Byte *mem;
+
+            mem = MemoryGetBlock(banks[f], 0, 0x2000);
+
+            fwrite(mem, 0x2000, 1, fp);
+
+            free(mem);
         }
     }
 

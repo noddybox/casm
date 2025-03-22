@@ -68,6 +68,10 @@ ulong   GetLowWriteMarker(unsigned bank);
 */
 ulong   GetHighWriteMarker(unsigned bank);
 
+/* Get whether a bank has actually been written to.
+*/
+int     IsBankUsed(unsigned bank);
+
 
 /* Set the mode to write words in
 */
@@ -128,6 +132,10 @@ void    MemoryWrite(ulong addr, Byte value);
 /* Write a byte to the passed bank.
 */
 void    MemoryWriteBank(unsigned bank, ulong addr, Byte value);
+
+/* Get a flat array of memory.  The return must be freed.
+*/
+Byte    *MemoryGetBlock(unsigned bank, ulong addr, ulong length);
 
 
 #endif

@@ -46,7 +46,7 @@ CommandStatus SpecTAPOutputSetOption(int opt, int argc, char *argv[],
 /* Spectrum TAP output of assembly.  Returns TRUE if OK, FALSE for failure.
 */
 int SpecTAPOutput(const char *filename, const char *filename_bank,
-                  MemoryBank **bank, int count,
+                  const unsigned *banks, int count,
                   char *error, size_t error_size);
 
 #endif

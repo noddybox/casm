@@ -33,7 +33,7 @@
 
 /* Magic value for library file
 */
-#define CASM_LIBRARY_MAGIC      "CASMLIBv1%"  
+#define CASM_LIBRARY_MAGIC      "CASMLIBv2%"  
 #define CASM_LIBRARY_MAGIC_LEN  10                
 
 
@@ -62,6 +62,28 @@ static int ReadNumber(FILE *fp)
 }
 
 
+static void WriteUlong(FILE *fp, ulong num)
+{
+    fprintf(fp, "%.8lx", num);
+}
+
+
+static ulong ReadUlong(FILE *fp)
+{
+    char buff[9];
+    int f;
+
+    for(f= 0 ;f < 8; f++)
+    {
+        buff[f] = getc(fp);
+    }
+
+    buff[f] = 0;
+
+    return strtoul(buff, NULL, 16);
+}
+
+
 /* ---------------------------------------- INTERFACES
 */
 const ValueTable *LibOutputOptions(void)
@@ -76,7 +98,7 @@ CommandStatus LibOutputSetOption(int opt, int argc, char *argv[],
 }
 
 int LibOutput(const char *filename, const char *filename_bank,
-              MemoryBank **bank, int count, char *error, size_t error_size)
+              const unsigned *banks, int count, char *error, size_t error_size)
 {
     FILE *fp;
     char buff[4096];
@@ -94,19 +116,22 @@ int LibOutput(const char *filename, const char *filename_bank,
 
     for(f = 0; f < count; f++)
     {
-        const Byte *mem;
-        int min, max, len;
+        Byte *mem;
+        ulong min, max, len;
 
-        mem = bank[f]->memory;
-        min = bank[f]->min_address_used;
-        max = bank[f]->max_address_used;
+        min = GetLowWriteMarker(banks[f]);
+        max = GetHighWriteMarker(banks[f]);
         len = max - min + 1;
 
-        WriteNumber(fp, (int)bank[f]->number);
-        WriteNumber(fp, min);
-        WriteNumber(fp, len);
+        mem = MemoryGetBlock(banks[f], min, len);
 
-        fwrite(mem + min, 1, len, fp);
+        WriteUlong(fp, banks[f]);
+        WriteUlong(fp, min);
+        WriteUlong(fp, len);
+
+        fwrite(mem, 1, len, fp);
+
+        free(mem);
     }
 
     LabelWriteBlob(fp);
@@ -122,7 +147,6 @@ int LibLoad(const char *filename, LibLoadOption opt, int offset,
 {
     char magic[CASM_LIBRARY_MAGIC_LEN + 1] = {0};
     FILE *fp;
-    Byte buff[0x10000];
     int count;
     int f;
 
@@ -145,37 +169,21 @@ int LibLoad(const char *filename, LibLoadOption opt, int offset,
 
     for(f = 0; f < count; f++)
     {
-        int bank;
-        int min;
-        int len;
-        int old_pc;
-        unsigned old_bank;
-        Byte *p;
+        unsigned bank;
+        ulong min;
+        ulong len;
 
-        old_bank = Bank();
-        old_pc = PC();
-
-        bank = ReadNumber(fp);
-        min = ReadNumber(fp);
-        len = ReadNumber(fp);
-
-        SetAddressBank(bank);
-
-        fread(buff, 1, len, fp);
-
-        SetPC((min + offset));
-        p = buff;
+        bank = ReadUlong(fp);
+        min = ReadUlong(fp);
+        len = ReadUlong(fp);
 
         if (opt != LibLoadLabels)
         {
             while(len-- > 0)
             {
-                PCWrite(*p++);
+                MemoryWriteBank(bank, min + offset + len, fgetc(fp));
             }
         }
-
-        SetPC(old_pc);
-        SetAddressBank(old_bank);
     }
 
     if (opt != LibLoadMemory)

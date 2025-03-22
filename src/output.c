@@ -127,7 +127,7 @@ CommandStatus OutputSetOption(int opt, int argc, char *argv[],
 int OutputCode(void)
 {
     int count;
-    const unsigned *banksl
+    const unsigned *banks;
 
     banks = DefinedBanks(&count);
 
@@ -140,47 +140,47 @@ int OutputCode(void)
     switch(format)
     {
         case RAW:
-            return RawOutput(output, output_bank, bank, count,
+            return RawOutput(output, output_bank, banks, count,
                              error, sizeof error);
 
         case TAP:
-            return SpecTAPOutput(output, output_bank, bank, count,
+            return SpecTAPOutput(output, output_bank, banks, count,
                                  error, sizeof error);
 
         case T64:
-            return T64Output(output, output_bank, bank, count,
+            return T64Output(output, output_bank, banks, count,
                              error, sizeof error);
 
         case ZX81:
-            return ZX81Output(output, output_bank, bank, count,
+            return ZX81Output(output, output_bank, banks, count,
                               error, sizeof error);
 
         case GAMEBOY:
-            return GBOutput(output, output_bank, bank, count,
+            return GBOutput(output, output_bank, banks, count,
                             error, sizeof error);
 
         case SNES:
-            return SNESOutput(output, output_bank, bank, count,
+            return SNESOutput(output, output_bank, banks, count,
                               error, sizeof error);
 
         case LIBRARY:
-            return LibOutput(output, output_bank, bank, count,
+            return LibOutput(output, output_bank, banks, count,
                              error, sizeof error);
 
         case NES:
-            return NESOutput(output, output_bank, bank, count,
+            return NESOutput(output, output_bank, banks, count,
                              error, sizeof error);
 
         case CPC:
-            return CPCOutput(output, output_bank, bank, count,
+            return CPCOutput(output, output_bank, banks, count,
                              error, sizeof error);
 
         case PRG:
-            return PRGOutput(output, output_bank, bank, count,
+            return PRGOutput(output, output_bank, banks, count,
                              error, sizeof error);
 
         case HEX:
-            return HEXOutput(output, output_bank, bank, count,
+            return HEXOutput(output, output_bank, banks, count,
                              error, sizeof error);
 
         default:

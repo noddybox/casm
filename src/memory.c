@@ -48,6 +48,7 @@ typedef struct
     Page        **page;
     ulong       min_address_used;
     ulong       max_address_used;
+    int         used;
 } Bank;
 
 static int      num_banks = 0;
@@ -103,7 +104,8 @@ static Bank *AddBank(unsigned n)
     banks[num_banks-1]->no_pages = 0;
     banks[num_banks-1]->page = NULL;
     banks[num_banks-1]->min_address_used = address_space;
-    banks[num_banks-1]->max_address_used = -1;
+    banks[num_banks-1]->max_address_used = 0;
+    banks[num_banks-1]->used = FALSE;
 
     defined_banks = Realloc(defined_banks, (sizeof *defined_banks) * num_banks);
     defined_banks[num_banks - 1] = n;
@@ -204,6 +206,18 @@ ulong GetHighWriteMarker(unsigned bank)
     Bank *b = GetOrAddBank(bank);
 
     return b->max_address_used;
+}
+
+int IsBankUsed(unsigned bank)
+{
+    Bank *b = FindBank(bank);
+
+    if (b)
+    {
+        return b->used;
+    }
+
+    return FALSE;
 }
 
 void SetWordMode(WordMode mode)
@@ -318,6 +332,7 @@ void MemoryWriteBank(unsigned bank, ulong addr, Byte value)
 
     p->memory[addr - p->base_address] = value;
 
+    b->used = TRUE;
 
     if (addr < b->min_address_used)
     {
@@ -328,6 +343,18 @@ void MemoryWriteBank(unsigned bank, ulong addr, Byte value)
     {
         b->max_address_used = addr;
     }
+}
+
+Byte *MemoryGetBlock(unsigned bank, ulong addr, ulong length)
+{
+    Byte *mem = Malloc(length);
+
+    for(ulong i = 0 ; i < length; i++)
+    {
+        mem[i] = MemoryReadBank(bank, addr + i);
+    }
+
+    return mem;
 }
 
 /*

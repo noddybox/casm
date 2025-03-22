@@ -90,7 +90,7 @@ CommandStatus HEXOutputSetOption(int opt, int argc, char *argv[],
 }
 
 int HEXOutput(const char *filename, const char *filename_bank,
-              MemoryBank **bank, int count, char *error, size_t error_size)
+              const unsigned *banks, int count, char *error, size_t error_size)
 {
     int f;
 
@@ -99,7 +99,6 @@ int HEXOutput(const char *filename, const char *filename_bank,
         FILE *fp;
         char buff[4096];
         const char *name;
-        Byte *mem;
         int r;
 
         if (count == 1)
@@ -108,7 +107,7 @@ int HEXOutput(const char *filename, const char *filename_bank,
         }
         else
         {
-            snprintf(buff, sizeof buff, filename_bank, bank[f]->number);
+            snprintf(buff, sizeof buff, filename_bank, banks[f]);
             name = buff;
         }
 
@@ -118,8 +117,6 @@ int HEXOutput(const char *filename, const char *filename_bank,
             return FALSE;
         }
 
-        mem = bank[f]->memory;
-
         for(r = 0; r < 0xffff; r += 16)
         {
             int n;
@@ -127,7 +124,7 @@ int HEXOutput(const char *filename, const char *filename_bank,
 
             for(n = 0; n < 16 && !found; n++)
             {
-                if (mem[r+n] != options.null_byte)
+                if (MemoryReadBank(banks[f], r+n) != options.null_byte)
                 {
                     found = 1;
                 }
@@ -141,8 +138,10 @@ int HEXOutput(const char *filename, const char *filename_bank,
 
                 for(n = 0; n < 16; n++)
                 {
-                    fprintf(fp, "%2.2X", mem[r+n]);
-                    csum += mem[r+n];
+                    Byte b = MemoryReadBank(banks[f], r + n);
+
+                    fprintf(fp, "%2.2X", (unsigned)b);
+                    csum += b;
                 }
 
                 csum = ~csum;

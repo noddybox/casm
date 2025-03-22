@@ -46,8 +46,8 @@ CommandStatus ZX81OutputSetOption(int opt, int argc, char *argv[],
 /* ZX81 P file output of assembly.  Returns TRUE if OK, FALSE for failure.
 */
 int ZX81Output(const char *filename, const char *filename_bank,
-              MemoryBank **bank, int count,
-              char *error, size_t error_size);
+               const unsigned *banks, int count,
+               char *error, size_t error_size);
 
 #endif
 

@@ -46,7 +46,7 @@ CommandStatus GBOutputSetOption(int opt, int argc, char *argv[],
 /* Gameboy ROM output of assembly.  Returns TRUE if OK, FALSE for failure.
 */
 int GBOutput(const char *filename, const char *filename_bank,
-             MemoryBank **bank, int count,
+             const unsigned *banks, int count,
              char *error, size_t error_size);
 
 #endif

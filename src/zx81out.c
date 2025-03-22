@@ -121,7 +121,7 @@ CommandStatus ZX81OutputSetOption(int opt, int argc, char *argv[],
 }
 
 int ZX81Output(const char *filename, const char *filename_bank,
-              MemoryBank **bank, int count, char *error, size_t error_size)
+               const unsigned *banks, int count, char *error, size_t error_size)
 {
     static const int line[] =
     {
@@ -140,9 +140,9 @@ int ZX81Output(const char *filename, const char *filename_bank,
     int addr;
     int f;
 
-    mem = bank[0]->memory;
-    min = bank[0]->min_address_used;
-    max = bank[0]->max_address_used;
+    mem = MemoryGetBlock(banks[0], 0, 0x10000);
+    min = GetLowWriteMarker(banks[0]);
+    max = GetHighWriteMarker(banks[0]);
 
     len = max - min + 1;
 

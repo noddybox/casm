@@ -133,11 +133,11 @@ static int PokeS(Byte *mem, int addr, const char *str, int maxlen, char pad)
     return addr;
 }
 
-static unsigned CalcChecksum(Byte *p, int len, unsigned csum)
+static unsigned CalcChecksum(unsigned bank, int p, int len, unsigned csum)
 {
     while(len-- > 0)
     {
-        csum += *p++;
+        csum += MemoryReadBank(bank, p++);
     }
 
     return csum & 0xffff;
@@ -201,7 +201,7 @@ CommandStatus SNESOutputSetOption(int opt, int argc, char *argv[],
 }
 
 int SNESOutput(const char *filename, const char *filename_bank,
-              MemoryBank **bank, int count, char *error, size_t error_size)
+               const unsigned *banks, int count, char *error, size_t error_size)
 {
     FILE *fp;
     Byte *mem;
@@ -217,10 +217,10 @@ int SNESOutput(const char *filename, const char *filename_bank,
     {
         for(f = 0; f < count; f++)
         {
-            if (bank[f]->min_address_used < 0x8000)
+            if (GetLowWriteMarker(banks[f]) < 0x8000)
             {
                 snprintf(error, error_size, "Bank %u uses memory below 0x8000",
-                                                bank[f]->number);
+                                                banks[f]);
                 return FALSE;
             }
         }
@@ -242,7 +242,7 @@ int SNESOutput(const char *filename, const char *filename_bank,
 
     /* Setup ROM header
     */
-    mem = bank[0]->memory;
+    mem = MemoryGetBlock(banks[0], 0, 0x10000);
 
     PokeS(mem, 0xffc0, option.name, 21, ' ');
 
@@ -294,7 +294,7 @@ int SNESOutput(const char *filename, const char *filename_bank,
 
     for(f = 0; f < count; f++)
     {
-        csum = CalcChecksum(bank[f]->memory + base, len, csum);
+        csum = CalcChecksum(banks[f], base, len, csum);
     }
 
     PokeW(mem, 0xffde, csum);
@@ -304,10 +304,14 @@ int SNESOutput(const char *filename, const char *filename_bank,
     */
     for(f = 0; f < count; f++)
     {
-        fwrite(bank[f]->memory + base, len, 1, fp);
+        Byte *m = MemoryGetBlock(banks[f], base, len);
+
+        fwrite(m, len, 1, fp);
+        free(m);
     }
 
     fclose(fp);
+    free(mem);
 
     return TRUE;
 }

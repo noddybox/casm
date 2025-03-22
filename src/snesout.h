@@ -46,7 +46,7 @@ CommandStatus SNESOutputSetOption(int opt, int argc, char *argv[],
 /* SNES ROM output of assembly.  Returns TRUE if OK, FALSE for failure.
 */
 int SNESOutput(const char *filename, const char *filename_bank,
-               MemoryBank **bank, int count,
+               const unsigned *banks, int count,
                char *error, size_t error_size);
 
 #endif

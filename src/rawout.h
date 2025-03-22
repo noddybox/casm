@@ -45,7 +45,7 @@ CommandStatus RawOutputSetOption(int opt, int argc, char *argv[],
 /* RAW output of assembly.  Returns TRUE if OK, FALSE for failure.
 */
 int RawOutput(const char *filename, const char *filename_bank,
-              MemoryBank **bank, int count,
+              const unsigned *banks, int count,
               char *error, size_t error_size);
 
 #endif

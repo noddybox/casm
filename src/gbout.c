@@ -177,7 +177,7 @@ CommandStatus GBOutputSetOption(int opt, int argc, char *argv[],
 }
 
 int GBOutput(const char *filename, const char *filename_bank,
-              MemoryBank **bank, int count, char *error, size_t error_size)
+             const unsigned  *banks, int count, char *error, size_t error_size)
 {
     static const int logo[] =
     {
@@ -204,16 +204,16 @@ int GBOutput(const char *filename, const char *filename_bank,
 
     /* Check bank sizes and layouts
     */
-    if (count == 1 && (bank[0]->min_address_used < 0x150 ||
-                        bank[0]->max_address_used > 0x7fff))
+    if (count == 1 && (GetLowWriteMarker(banks[0]) < 0x150 ||
+                        GetHighWriteMarker(banks[0]) > 0x7fff))
     {
         snprintf(error, error_size, "A simple ROM must be in the address "
                                         "space 0x150 to 0x7fff");
         return FALSE;
     }
 
-    if (count > 1 && (bank[0]->min_address_used < 0x150 ||
-                        bank[0]->max_address_used > 0x3fff))
+    if (count > 1 && (GetLowWriteMarker(banks[0]) < 0x150 ||
+                        GetHighWriteMarker(banks[0]) > 0x3fff))
     {
         snprintf(error, error_size, "Bank zero of a banked ROM must be in the "
                                         "address space 0x150 to 0x3fff");
@@ -222,12 +222,12 @@ int GBOutput(const char *filename, const char *filename_bank,
 
     for(f = 1 ; f < count; f++)
     {
-        if (bank[f]->min_address_used < 0x4000 ||
-               bank[f]->max_address_used > 0x7fff)
+        if (GetLowWriteMarker(banks[f]) < 0x4000 ||
+               GetHighWriteMarker(banks[f]) > 0x7fff)
         {
             snprintf(error, error_size,
                         "Bank %u must be in the address space "
-                                    "0x4000 to 0x7fff", bank[f]->number);
+                                    "0x4000 to 0x7fff", banks[f]);
             return FALSE;
         }
     }
@@ -258,7 +258,7 @@ int GBOutput(const char *filename, const char *filename_bank,
         rom_size = (count / 4) + 1;
     }
 
-    mem = bank[0]->memory;
+    mem = MemoryGetBlock(banks[f], 0, 0x10000);
 
     /* Create the log
     */
@@ -298,7 +298,7 @@ int GBOutput(const char *filename, const char *filename_bank,
     */
     PokeB(mem, 0x100, 0);
     PokeB(mem, 0x101, 0xc3);
-    PokeW(mem, 0x102, bank[0]->min_address_used);
+    PokeW(mem, 0x102, GetLowWriteMarker(banks[0]));
 
     /* Title (new smaller size)
     */
@@ -416,7 +416,7 @@ int GBOutput(const char *filename, const char *filename_bank,
         {
             for(f = 0x4000; f < 0x8000; f++)
             {
-                global_csum += bank[r]->memory[f];
+                global_csum += MemoryReadBank(banks[r], f);
             }
         }
     }
@@ -438,13 +438,15 @@ int GBOutput(const char *filename, const char *filename_bank,
 
         for(r = 1; r < count; r++)
         {
-            for(f = 0x4000; f < 0x8000; f++)
-            {
-                fwrite(bank[r]->memory + 0x4000, 0x4000, 1, fp);
-            }
+            Byte *bank = MemoryGetBlock(banks[r], 0x4000, 0x4000);
+
+            fwrite(bank, 0x4000, 1, fp);
+
+            free(bank);
         }
     }
 
+    free(mem);
 
     fclose(fp);
 

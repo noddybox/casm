@@ -260,7 +260,7 @@ CommandStatus CPCOutputSetOption(int opt, int argc, char *argv[], int quoted[],
 }
 
 int CPCOutput(const char *filename, const char *filename_bank,
-              MemoryBank **bank, int count, char *error, size_t error_size)
+              const unsigned *banks, int count, char *error, size_t error_size)
 {
     FILE *fp = fopen(filename, "wb");
     int f;
@@ -275,7 +275,7 @@ int CPCOutput(const char *filename, const char *filename_bank,
     */
     if (options.start_addr == -1)
     {
-        options.start_addr = bank[0]->min_address_used;
+        options.start_addr = GetLowWriteMarker(banks[0]);
     }
 
     /* Output the binary files
@@ -302,7 +302,7 @@ int CPCOutput(const char *filename, const char *filename_bank,
 	AddStreamWord(&basic, 10);
 	AddStreamByte(&basic, 0xaa);
 	AddStreamByte(&basic, 0x1c);
-	AddStreamWord(&basic, bank[0]->min_address_used);
+	AddStreamWord(&basic, GetLowWriteMarker(banks[0]));
 	AddStreamByte(&basic, 0);
 
 	/* Line 20 LOAD ""
@@ -385,15 +385,13 @@ int CPCOutput(const char *filename, const char *filename_bank,
 
     for(f = 0; f < count; f++)
     {
-        const Byte *mem;
         int min, max, len, blocks, addr;
         int block, blocklen;
         Stream stream;
 
-        mem = bank[f]->memory;
-        min = bank[f]->min_address_used;
+        min = GetLowWriteMarker(banks[f]);
         addr = min;
-        max = bank[f]->max_address_used;
+        max = GetHighWriteMarker(banks[f]);
         len = max - min + 1;
         blocks = len / BLOCK_SIZE;
 
@@ -424,7 +422,7 @@ int CPCOutput(const char *filename, const char *filename_bank,
             {
                 char fn[16];
 
-                snprintf(fn, sizeof fn, filename_bank, bank[f]->number);
+                snprintf(fn, sizeof fn, filename_bank, banks[f]);
                 WriteStringMem(header, 0, fn, 16, 0, CP_ASCII);
             }
 
@@ -508,7 +506,7 @@ int CPCOutput(const char *filename, const char *filename_bank,
 
                 while(min < addr)
                 {
-                    segment[segi++] = mem[min++];
+                    segment[segi++] = MemoryReadBank(banks[f], min++);
                 }
 
                 /* Add segment data to stream

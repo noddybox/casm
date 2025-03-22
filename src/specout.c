@@ -81,14 +81,14 @@ static Options options =
 
 /* Buffers used for BASIC loader
 */
-static unsigned char    basic[0x10000];
-static unsigned         endptr = 0;
-static unsigned         line_no = 10;
+static Byte     basic[0x10000];
+static unsigned endptr = 0;
+static unsigned line_no = 10;
 
 
 /* ---------------------------------------- PRIVATE FUNCTIONS
 */
-static void Poke(unsigned char b, int *len)
+static void Poke(Byte b, int *len)
 {
     if (len)
     {
@@ -180,8 +180,8 @@ static Byte TapString(FILE *fp, const char *p, int len, Byte chk)
 }
 
 
-static unsigned char TapStream(FILE *fp, const unsigned char *p,
-                               unsigned addr, unsigned len, unsigned char chk)
+static unsigned char TapStream(FILE *fp, Byte *p, unsigned addr,
+                               unsigned len, unsigned char chk)
 {
     while(len--)
     {
@@ -225,7 +225,8 @@ CommandStatus SpecTAPOutputSetOption(int opt, int argc, char *argv[],
 }
 
 int SpecTAPOutput(const char *filename, const char *filename_bank,
-                  MemoryBank **bank, int count, char *error, size_t error_size)
+                  const unsigned *banks, int count, char *error,
+                  size_t error_size)
 {
     FILE *fp = fopen(filename, "wb");
     int f;
@@ -240,7 +241,7 @@ int SpecTAPOutput(const char *filename, const char *filename_bank,
     */
     if (options.loader && options.start_addr == -1)
     {
-        options.start_addr = bank[0]->min_address_used;
+        options.start_addr = GetLowWriteMarker(banks[0]);
     }
 
     /* Output the BASIC loader if set
@@ -302,12 +303,10 @@ int SpecTAPOutput(const char *filename, const char *filename_bank,
     for(f = 0; f < count; f++)
     {
         Byte chk = 0;
-        const Byte *mem;
         int min, max, len;
 
-        mem = bank[f]->memory;
-        min = bank[f]->min_address_used;
-        max = bank[f]->max_address_used;
+        min = GetLowWriteMarker(banks[f]);
+        max = GetHighWriteMarker(banks[f]);
         len = max - min + 1;
 
         TapWord(fp, 19, 0);
@@ -323,7 +322,7 @@ int SpecTAPOutput(const char *filename, const char *filename_bank,
         {
             char fn[16];
 
-            snprintf(fn, sizeof fn, filename_bank, bank[f]->number);
+            snprintf(fn, sizeof fn, filename_bank, banks[f]);
             chk = TapString(fp, fn, 10, chk);
         }
 
@@ -343,7 +342,7 @@ int SpecTAPOutput(const char *filename, const char *filename_bank,
 
         while(min <= max)
         {
-            chk = TapByte(fp, mem[min], chk);
+            chk = TapByte(fp, MemoryReadBank(banks[f], min), chk);
             min++;
         }
 

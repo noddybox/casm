@@ -153,7 +153,7 @@ CommandStatus PRGOutputSetOption(int opt, int argc, char *argv[],
 }
 
 int PRGOutput(const char *filename, const char *filename_bank,
-              MemoryBank **bank, int count, char *error, size_t error_size)
+              const unsigned *banks, int count, char *error, size_t error_size)
 {
     int f;
 
@@ -175,7 +175,7 @@ int PRGOutput(const char *filename, const char *filename_bank,
         }
         else
         {
-            snprintf(buff, sizeof buff, filename_bank, bank[f]->number);
+            snprintf(buff, sizeof buff, filename_bank, banks[f]);
             name = buff;
         }
 
@@ -201,9 +201,9 @@ int PRGOutput(const char *filename, const char *filename_bank,
                 break;
         }
 
-        mem = bank[f]->memory;
-        min = bank[f]->min_address_used;
-        max = bank[f]->max_address_used;
+        mem = MemoryGetBlock(banks[f], 0, 0x10000);
+        min = GetLowWriteMarker(banks[f]);
+        max = GetHighWriteMarker(banks[f]);
 
         /* We're going to prepend some BASIC
         */
@@ -217,7 +217,7 @@ int PRGOutput(const char *filename, const char *filename_bank,
 
         if (options.start_addr == -1)
         {
-            snprintf(sys, sizeof sys, "%d", bank[f]->min_address_used);
+            snprintf(sys, sizeof sys, "%d", GetLowWriteMarker(banks[f]));
         }
         else
         {
@@ -245,6 +245,8 @@ int PRGOutput(const char *filename, const char *filename_bank,
         fwrite(mem + min, len, 1, fp);
 
         fclose(fp);
+
+        free(mem);
     }
 
     return TRUE;

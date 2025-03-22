@@ -317,7 +317,7 @@ void ListLine(const char *line)
             {
                 for(f = line_PC; f < PC(); f++)
                 {
-                    VarcharPrintf(hex, " $%2.2X", (unsigned)ReadByte(f));
+                    VarcharPrintf(hex, " $%2.2X", (unsigned)MemoryRead(f));
                 }
             }
 
