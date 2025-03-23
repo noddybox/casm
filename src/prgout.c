@@ -217,7 +217,7 @@ int PRGOutput(const char *filename, const char *filename_bank,
 
         if (options.start_addr == -1)
         {
-            snprintf(sys, sizeof sys, "%d", GetLowWriteMarker(banks[f]));
+            snprintf(sys, sizeof sys, "%lu", GetLowWriteMarker(banks[f]));
         }
         else
         {
