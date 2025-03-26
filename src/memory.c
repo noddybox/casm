@@ -309,7 +309,7 @@ Byte MemoryRead(ulong addr)
 
 Byte MemoryReadBank(unsigned bank, ulong addr)
 {
-    Bank* b = GetOrAddBank(currbank);
+    Bank* b = GetOrAddBank(bank);
     Page *p = FindPage(b, addr);
 
     if (p)
@@ -327,7 +327,7 @@ void MemoryWrite(ulong addr, Byte value)
 
 void MemoryWriteBank(unsigned bank, ulong addr, Byte value)
 {
-    Bank *b = GetOrAddBank(currbank);
+    Bank *b = GetOrAddBank(bank);
     Page *p = GetOrAddPage(b, addr);
 
     p->memory[addr - p->base_address] = value;
