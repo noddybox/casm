@@ -220,7 +220,7 @@ do                                                      \
     }                                                   \
 } while(0)
 
-#define CheckOffset(a,o)        CheckRange(a,0,-128,127)
+#define CheckOffset(a,o)        CheckRange(a,o,-128,127)
 
 static const int flag_bitmask[] =
 {
