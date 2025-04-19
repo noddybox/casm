@@ -20,6 +20,16 @@
 # Tests Makefile
 #
 
+all: ../src/casm z80test
+
+z80test: output/z80.bin output/z80.bin.asm
+
+output/z80.bin: Makefile z80.asm ../src/casm
+	../src/casm z80.asm
+
+output/z80.bin.asm: Makefile output/z80.bin
+	disx -! -c Z80 -a output/z80.bin
+
 ../src/casm:
 	cd ../src ; make
 
