@@ -1610,26 +1610,42 @@ static CommandStatus CP(const char *label, int argc, char *argv[],
 static CommandStatus IM(const char *label, int argc, char *argv[],       
                         int quoted[], char *err, size_t errsize)
 {
-    static int im[3] = {0x46, 0x56, 0x5e};
-    RegisterMode r1;
-    RegisterType t1;
-    long off1;
+    static struct
+    {
+        const char *ident;
+        int opcode;
+    } im[] =
+    {
+        {"0", 0x46},
+        {"1", 0x56},
+        {"2", 0x5e},
+        {"0/1", 0x4e},
+        {0}
+    };
+
+    int f;
+    int index;
 
     CMD_ARGC_CHECK(2);
 
-    if (!CalcRegisterMode(argv[1], quoted[1], &r1, &t1, &off1, err, errsize))
+    index = -1;
+
+    for(f = 0; im[f].ident; f++)
     {
-        return CMD_FAILED;
+        if (strcmp(argv[1], im[f].ident) == 0)
+        {
+            index = f;
+        }
     }
 
-    if (r1 != VALUE || (off1 < 0 || off1 > 2))
+    if (index == -1)
     {
         snprintf(err, errsize, "%s: invalid argument %s", argv[0], argv[1]);
         return CMD_FAILED;
     }
 
     PCWrite(0xed);
-    PCWrite(im[off1]);
+    PCWrite(im[index].opcode);
 
     return CMD_OK;
 }
