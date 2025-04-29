@@ -201,7 +201,7 @@
     CALL NZ,$1234
     PUSH BC
     ADD A,$e5
-    RST 0H
+    RST $00
     RET Z
     RET
     JP Z,$1234
@@ -464,7 +464,7 @@
     CALL Z,$1234
     CALL $1234
     ADC A,$e5
-    RST 8H
+    RST $08
     RET NC
     POP DE
     JP NC,$1234
@@ -1023,134 +1023,134 @@
     BIT 5,(IY+1)
     BIT 6,(IY+1)
     BIT 7,(IY+1)
-    LD B,RES 0,(IY+1)
-    LD C,RES 0,(IY+1)
-    LD D,RES 0,(IY+1)
-    LD E,RES 0,(IY+1)
-    LD H,RES 0,(IY+1)
-    LD L,RES 0,(IY+1)
+    RES 0,(IY+1),B
+    RES 0,(IY+1),C
+    RES 0,(IY+1),D
+    RES 0,(IY+1),E
+    RES 0,(IY+1),H
+    RES 0,(IY+1),L
     RES 0,(IY+1)
-    LD A,RES 0,(IY+1)
-    LD B,RES 1,(IY+1)
-    LD C,RES 1,(IY+1)
-    LD D,RES 1,(IY+1)
-    LD E,RES 1,(IY+1)
-    LD H,RES 1,(IY+1)
-    LD L,RES 1,(IY+1)
+    RES 0,(IY+1),A
+    RES 1,(IY+1),B
+    RES 1,(IY+1),C
+    RES 1,(IY+1),D
+    RES 1,(IY+1),E
+    RES 1,(IY+1),H
+    RES 1,(IY+1),L
     RES 1,(IY+1)
-    LD A,RES 1,(IY+1)
-    LD B,RES 2,(IY+1)
-    LD C,RES 2,(IY+1)
-    LD D,RES 2,(IY+1)
-    LD E,RES 2,(IY+1)
-    LD H,RES 2,(IY+1)
-    LD L,RES 2,(IY+1)
+    RES 1,(IY+1),A
+    RES 2,(IY+1),B
+    RES 2,(IY+1),C
+    RES 2,(IY+1),D
+    RES 2,(IY+1),E
+    RES 2,(IY+1),H
+    RES 2,(IY+1),L
     RES 2,(IY+1)
-    LD A,RES 2,(IY+1)
-    LD B,RES 3,(IY+1)
-    LD C,RES 3,(IY+1)
-    LD D,RES 3,(IY+1)
-    LD E,RES 3,(IY+1)
-    LD H,RES 3,(IY+1)
-    LD L,RES 3,(IY+1)
+    RES 2,(IY+1),A
+    RES 3,(IY+1),B
+    RES 3,(IY+1),C
+    RES 3,(IY+1),D
+    RES 3,(IY+1),E
+    RES 3,(IY+1),H
+    RES 3,(IY+1),L
     RES 3,(IY+1)
-    LD A,RES 3,(IY+1)
-    LD B,RES 4,(IY+1)
-    LD C,RES 4,(IY+1)
-    LD D,RES 4,(IY+1)
-    LD E,RES 4,(IY+1)
-    LD H,RES 4,(IY+1)
-    LD L,RES 4,(IY+1)
+    RES 3,(IY+1),A
+    RES 4,(IY+1),B
+    RES 4,(IY+1),C
+    RES 4,(IY+1),D
+    RES 4,(IY+1),E
+    RES 4,(IY+1),H
+    RES 4,(IY+1),L
     RES 4,(IY+1)
-    LD A,RES 4,(IY+1)
-    LD B,RES 5,(IY+1)
-    LD C,RES 5,(IY+1)
-    LD D,RES 5,(IY+1)
-    LD E,RES 5,(IY+1)
-    LD H,RES 5,(IY+1)
-    LD L,RES 5,(IY+1)
+    RES 4,(IY+1),A
+    RES 5,(IY+1),B
+    RES 5,(IY+1),C
+    RES 5,(IY+1),D
+    RES 5,(IY+1),E
+    RES 5,(IY+1),H
+    RES 5,(IY+1),L
     RES 5,(IY+1)
-    LD A,RES 5,(IY+1)
-    LD B,RES 6,(IY+1)
-    LD C,RES 6,(IY+1)
-    LD D,RES 6,(IY+1)
-    LD E,RES 6,(IY+1)
-    LD H,RES 6,(IY+1)
-    LD L,RES 6,(IY+1)
+    RES 5,(IY+1),A
+    RES 6,(IY+1),B
+    RES 6,(IY+1),C
+    RES 6,(IY+1),D
+    RES 6,(IY+1),E
+    RES 6,(IY+1),H
+    RES 6,(IY+1),L
     RES 6,(IY+1)
-    LD A,RES 6,(IY+1)
-    LD B,RES 7,(IY+1)
-    LD C,RES 7,(IY+1)
-    LD D,RES 7,(IY+1)
-    LD E,RES 7,(IY+1)
-    LD H,RES 7,(IY+1)
-    LD L,RES 7,(IY+1)
+    RES 6,(IY+1),A
+    RES 7,(IY+1),B
+    RES 7,(IY+1),C
+    RES 7,(IY+1),D
+    RES 7,(IY+1),E
+    RES 7,(IY+1),H
+    RES 7,(IY+1),L
     RES 7,(IY+1)
-    LD A,RES 7,(IY+1)
-    LD B,SET 0,(IY+1)
-    LD C,SET 0,(IY+1)
-    LD D,SET 0,(IY+1)
-    LD E,SET 0,(IY+1)
-    LD H,SET 0,(IY+1)
-    LD L,SET 0,(IY+1)
+    RES 7,(IY+1),A
+    SET 0,(IY+1),B
+    SET 0,(IY+1),C
+    SET 0,(IY+1),D
+    SET 0,(IY+1),E
+    SET 0,(IY+1),H
+    SET 0,(IY+1),L
     SET 0,(IY+1)
-    LD A,SET 0,(IY+1)
-    LD B,SET 1,(IY+1)
-    LD C,SET 1,(IY+1)
-    LD D,SET 1,(IY+1)
-    LD E,SET 1,(IY+1)
-    LD H,SET 1,(IY+1)
-    LD L,SET 1,(IY+1)
+    SET 0,(IY+1),A
+    SET 1,(IY+1),B
+    SET 1,(IY+1),C
+    SET 1,(IY+1),D
+    SET 1,(IY+1),E
+    SET 1,(IY+1),H
+    SET 1,(IY+1),L
     SET 1,(IY+1)
-    LD A,SET 1,(IY+1)
-    LD B,SET 2,(IY+1)
-    LD C,SET 2,(IY+1)
-    LD D,SET 2,(IY+1)
-    LD E,SET 2,(IY+1)
-    LD H,SET 2,(IY+1)
-    LD L,SET 2,(IY+1)
+    SET 1,(IY+1),A
+    SET 2,(IY+1),B
+    SET 2,(IY+1),C
+    SET 2,(IY+1),D
+    SET 2,(IY+1),E
+    SET 2,(IY+1),H
+    SET 2,(IY+1),L
     SET 2,(IY+1)
-    LD A,SET 2,(IY+1)
-    LD B,SET 3,(IY+1)
-    LD C,SET 3,(IY+1)
-    LD D,SET 3,(IY+1)
-    LD E,SET 3,(IY+1)
-    LD H,SET 3,(IY+1)
-    LD L,SET 3,(IY+1)
+    SET 2,(IY+1),A
+    SET 3,(IY+1),B
+    SET 3,(IY+1),C
+    SET 3,(IY+1),D
+    SET 3,(IY+1),E
+    SET 3,(IY+1),H
+    SET 3,(IY+1),L
     SET 3,(IY+1)
-    LD A,SET 3,(IY+1)
-    LD B,SET 4,(IY+1)
-    LD C,SET 4,(IY+1)
-    LD D,SET 4,(IY+1)
-    LD E,SET 4,(IY+1)
-    LD H,SET 4,(IY+1)
-    LD L,SET 4,(IY+1)
+    SET 3,(IY+1),A
+    SET 4,(IY+1),B
+    SET 4,(IY+1),C
+    SET 4,(IY+1),D
+    SET 4,(IY+1),E
+    SET 4,(IY+1),H
+    SET 4,(IY+1),L
     SET 4,(IY+1)
-    LD A,SET 4,(IY+1)
-    LD B,SET 5,(IY+1)
-    LD C,SET 5,(IY+1)
-    LD D,SET 5,(IY+1)
-    LD E,SET 5,(IY+1)
-    LD H,SET 5,(IY+1)
-    LD L,SET 5,(IY+1)
+    SET 4,(IY+1),A
+    SET 5,(IY+1),B
+    SET 5,(IY+1),C
+    SET 5,(IY+1),D
+    SET 5,(IY+1),E
+    SET 5,(IY+1),H
+    SET 5,(IY+1),L
     SET 5,(IY+1)
-    LD A,SET 5,(IY+1)
-    LD B,SET 6,(IY+1)
-    LD C,SET 6,(IY+1)
-    LD D,SET 6,(IY+1)
-    LD E,SET 6,(IY+1)
-    LD H,SET 6,(IY+1)
-    LD L,SET 6,(IY+1)
+    SET 5,(IY+1),A
+    SET 6,(IY+1),B
+    SET 6,(IY+1),C
+    SET 6,(IY+1),D
+    SET 6,(IY+1),E
+    SET 6,(IY+1),H
+    SET 6,(IY+1),L
     SET 6,(IY+1)
-    LD A,SET 6,(IY+1)
-    LD B,SET 7,(IY+1)
-    LD C,SET 7,(IY+1)
-    LD D,SET 7,(IY+1)
-    LD E,SET 7,(IY+1)
-    LD H,SET 7,(IY+1)
-    LD L,SET 7,(IY+1)
+    SET 6,(IY+1),A
+    SET 7,(IY+1),B
+    SET 7,(IY+1),C
+    SET 7,(IY+1),D
+    SET 7,(IY+1),E
+    SET 7,(IY+1),H
+    SET 7,(IY+1),L
     SET 7,(IY+1)
-    LD A,SET 7,(IY+1)
+    SET 7,(IY+1),A
     POP IY
     EX (SP),IY
     PUSH IY

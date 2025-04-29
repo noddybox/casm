@@ -49,3 +49,4 @@ src/A-Hdrive
 src/output
 .DS_Store
 test/output
+test/compare
