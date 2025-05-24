@@ -20,21 +20,32 @@
 # Tests Makefile
 #
 
-all: ../src/casm compare z80test
+all: ../src/casm compare z80test 6502test
 
 z80test: output/z80.bin output/z80.bin.asm
 	@echo ========= Begin Z80 Test =========
 	@./compare z80.asm output/z80.bin.asm && echo Passed
 	@echo ========= End Z80 Test =========
 
-compare: compare.c
-	$(CC) -o compare compare.c
-
 output/z80.bin: Makefile z80.asm ../src/casm
 	../src/casm z80.asm
 
 output/z80.bin.asm: Makefile output/z80.bin
 	dasm -c z80 -a -m output/z80.bin > output/z80.bin.asm
+
+6502test: output/6502.bin output/6502.bin.asm
+	@echo ========= Begin 6502 Test =========
+	@./compare 6502.asm output/6502.bin.asm && echo Passed
+	@echo ========= End 6502 Test =========
+
+output/6502.bin: Makefile 6502.asm ../src/casm
+	../src/casm 6502.asm
+
+output/6502.bin.asm: Makefile output/6502.bin
+	dasm -c 6502 -a -m output/6502.bin > output/6502.bin.asm
+
+compare: compare.c
+	$(CC) -o compare compare.c
 
 ../src/casm: ../src/*.c ../src/*.h
 	cd ../src ; make
