@@ -39,4 +39,5 @@ Currently **casm** supports the following output drivers:
 
 ## Latest changes
 
-* Commodore PRG file for VIC-20
+* Fixed code generation bug in Z80 "ld (address),a"
+* Added Z80 and 6502 tests

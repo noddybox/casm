@@ -26,3 +26,7 @@ V1.14
 * Fixed Z80 code generation of "ld (address),a".
 * Added Z80 support for "im 0/1".
 * Initial scaffolding for 68000.  Early release due to Z80 fixes.
+
+V1.15
+=====
+* Added test for 6502
