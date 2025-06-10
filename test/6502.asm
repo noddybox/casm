@@ -24,14 +24,14 @@
 	asl $4400,x
 	bit $44
 	bit $4400
-	bpl 1
-	bmi 1
-	bvc 1
-	bvs 1
-	bcc 1
-	bcs 1
-	bne 1
-	beq 1
+	bpl $0001
+	bmi $0001
+	bvc $0001
+	bvs $0001
+	bcc $0001
+	bcs $0001
+	bne $0001
+	beq $0001
     	brk
 	cmp #$44
 	cmp $44
