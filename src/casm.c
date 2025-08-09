@@ -443,7 +443,7 @@ static CommandStatus INCBIN(const char *label, int argc, char *argv[],
 {
     FILE *fp;
     int num;
-    unsigned char buff[4096];
+    unsigned char buff[CASM_MAX_LINE_LENGTH];
 
     CMD_ARGC_CHECK(2);
 
@@ -810,8 +810,8 @@ static CommandStatus RunLine(const char *label, int argc, char *argv[],
 
 static void RunPass(const char *name, FILE *fp, int depth)
 {
-    char src[4096];
-    char err[4096];
+    char src[CASM_MAX_LINE_LENGTH];
+    char err[CASM_MAX_LINE_LENGTH];
     int line_no = 1;
     MacroDef *macro_def = NULL;
     Stack *macro_stack;

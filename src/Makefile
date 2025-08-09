@@ -54,7 +54,8 @@ SOURCE	=	casm.c		\
 		prgout.c        \
                 hexout.c	\
 		68000.c		\
-		memory.c
+		memory.c        \
+                source.c
 
 OBJECTS	=	casm.o		\
 		expr.o		\
@@ -86,7 +87,8 @@ OBJECTS	=	casm.o		\
 		prgout.o        \
                 hexout.o	\
 		68000.o		\
-		memory.o
+		memory.o        \
+                source.o
 
 $(TARGET): $(OBJECTS)
 	$(CC) $(CLAGS) -o $(TARGET) $(OBJECTS)
@@ -94,62 +96,65 @@ $(TARGET): $(OBJECTS)
 clean:
 	rm -f $(TARGET) $(TARGET).exe $(OBJECTS) core *.core
 
-6502.o: 6502.c global.h basetype.h util.h state.h expr.h label.h parse.h \
- cmd.h codepage.h 6502.h
-65c816.o: 65c816.c global.h basetype.h util.h state.h expr.h label.h \
- parse.h cmd.h codepage.h 65c816.h
-68000.o: 68000.c global.h basetype.h util.h state.h expr.h label.h \
- parse.h cmd.h codepage.h 68000.h
-alias.o: alias.c global.h basetype.h util.h state.h alias.h
-casm.o: casm.c global.h basetype.h util.h state.h expr.h label.h macro.h \
- cmd.h parse.h codepage.h stack.h listing.h alias.h output.h rawout.h \
- specout.h t64out.h zx81out.h gbout.h snesout.h libout.h nesout.h \
- cpcout.h prgout.h hexout.h z80.h 6502.h gbcpu.h 65c816.h spc700.h
-codepage.o: codepage.c global.h basetype.h util.h state.h codepage.h \
- parse.h cmd.h
-cpcout.o: cpcout.c global.h basetype.h util.h state.h codepage.h parse.h \
- cmd.h cpcout.h expr.h
-expr.o: expr.c global.h basetype.h util.h state.h expr.h label.h
-gbcpu.o: gbcpu.c global.h basetype.h util.h state.h expr.h label.h \
- parse.h cmd.h codepage.h varchar.h gbcpu.h
-gbout.o: gbout.c global.h basetype.h util.h state.h expr.h codepage.h \
- parse.h cmd.h gbout.h
-hexout.o: hexout.c global.h basetype.h util.h state.h codepage.h parse.h \
- cmd.h hexout.h expr.h
-label.o: label.c global.h basetype.h util.h state.h codepage.h parse.h \
- cmd.h stack.h label.h
-libout.o: libout.c global.h basetype.h util.h state.h libout.h parse.h \
- cmd.h label.h
-listing.o: listing.c global.h basetype.h util.h state.h label.h macro.h \
- cmd.h parse.h expr.h varchar.h listing.h
-macro.o: macro.c global.h basetype.h util.h state.h codepage.h parse.h \
- cmd.h varchar.h macro.h
-memory.o: memory.c global.h basetype.h util.h state.h memory.h
-nesout.o: nesout.c global.h basetype.h util.h state.h expr.h codepage.h \
- parse.h cmd.h nesout.h
-output.o: output.c global.h basetype.h util.h state.h output.h parse.h \
- cmd.h rawout.h specout.h t64out.h zx81out.h gbout.h snesout.h libout.h \
- nesout.h cpcout.h prgout.h hexout.h
-parse.o: parse.c global.h basetype.h util.h state.h codepage.h parse.h \
- cmd.h
-prgout.o: prgout.c global.h basetype.h util.h state.h codepage.h parse.h \
- cmd.h prgout.h expr.h
-rawout.o: rawout.c global.h basetype.h util.h state.h rawout.h parse.h \
- cmd.h
-snesout.o: snesout.c global.h basetype.h util.h state.h expr.h codepage.h \
- parse.h cmd.h snesout.h
-spc700.o: spc700.c global.h basetype.h util.h state.h expr.h label.h \
- parse.h cmd.h codepage.h spc700.h
-specout.o: specout.c global.h basetype.h util.h state.h specout.h parse.h \
- cmd.h expr.h
-stack.o: stack.c global.h basetype.h util.h state.h stack.h
+6502.o: 6502.c global.h basetype.h util.h state.h memory.h expr.h label.h \
+  parse.h cmd.h codepage.h 6502.h
+65c816.o: 65c816.c global.h basetype.h util.h state.h memory.h expr.h \
+  label.h parse.h cmd.h codepage.h 65c816.h
+68000.o: 68000.c global.h basetype.h util.h state.h memory.h expr.h \
+  label.h parse.h cmd.h codepage.h 68000.h
+alias.o: alias.c global.h basetype.h util.h state.h memory.h alias.h
+casm.o: casm.c global.h basetype.h util.h state.h memory.h expr.h label.h \
+  macro.h cmd.h parse.h codepage.h stack.h listing.h alias.h output.h \
+  rawout.h specout.h t64out.h zx81out.h gbout.h snesout.h libout.h \
+  nesout.h cpcout.h prgout.h hexout.h z80.h 6502.h gbcpu.h 65c816.h \
+  spc700.h
+codepage.o: codepage.c global.h basetype.h util.h state.h memory.h \
+  codepage.h parse.h cmd.h
+cpcout.o: cpcout.c global.h basetype.h util.h state.h memory.h codepage.h \
+  parse.h cmd.h cpcout.h expr.h
+expr.o: expr.c global.h basetype.h util.h state.h memory.h expr.h label.h
+gbcpu.o: gbcpu.c global.h basetype.h util.h state.h memory.h expr.h \
+  label.h parse.h cmd.h codepage.h varchar.h gbcpu.h
+gbout.o: gbout.c global.h basetype.h util.h state.h memory.h expr.h \
+  codepage.h parse.h cmd.h gbout.h
+hexout.o: hexout.c global.h basetype.h util.h state.h memory.h codepage.h \
+  parse.h cmd.h hexout.h expr.h
+label.o: label.c global.h basetype.h util.h state.h memory.h codepage.h \
+  parse.h cmd.h stack.h label.h
+libout.o: libout.c global.h basetype.h util.h state.h memory.h libout.h \
+  parse.h cmd.h label.h
+listing.o: listing.c global.h basetype.h util.h state.h memory.h label.h \
+  macro.h cmd.h parse.h expr.h varchar.h listing.h
+macro.o: macro.c global.h basetype.h util.h state.h memory.h codepage.h \
+  parse.h cmd.h varchar.h macro.h
+memory.o: memory.c global.h basetype.h util.h state.h memory.h expr.h
+nesout.o: nesout.c global.h basetype.h util.h state.h memory.h expr.h \
+  codepage.h parse.h cmd.h nesout.h
+output.o: output.c global.h basetype.h util.h state.h memory.h output.h \
+  parse.h cmd.h rawout.h specout.h t64out.h zx81out.h gbout.h snesout.h \
+  libout.h nesout.h cpcout.h prgout.h hexout.h
+parse.o: parse.c global.h basetype.h util.h state.h memory.h codepage.h \
+  parse.h cmd.h
+prgout.o: prgout.c global.h basetype.h util.h state.h memory.h codepage.h \
+  parse.h cmd.h prgout.h expr.h
+rawout.o: rawout.c global.h basetype.h util.h state.h memory.h rawout.h \
+  parse.h cmd.h
+snesout.o: snesout.c global.h basetype.h util.h state.h memory.h expr.h \
+  codepage.h parse.h cmd.h snesout.h
+source.o: source.c global.h basetype.h util.h state.h memory.h source.h \
+  parse.h
+spc700.o: spc700.c global.h basetype.h util.h state.h memory.h expr.h \
+  label.h parse.h cmd.h codepage.h spc700.h
+specout.o: specout.c global.h basetype.h util.h state.h memory.h \
+  specout.h parse.h cmd.h expr.h
+stack.o: stack.c global.h basetype.h util.h state.h memory.h stack.h
 state.o: state.c global.h basetype.h util.h state.h memory.h expr.h
-t64out.o: t64out.c global.h basetype.h util.h state.h codepage.h parse.h \
- cmd.h t64out.h expr.h
-util.o: util.c global.h basetype.h util.h state.h
-varchar.o: varchar.c global.h basetype.h util.h state.h codepage.h \
- parse.h cmd.h varchar.h
-z80.o: z80.c global.h basetype.h util.h state.h expr.h label.h parse.h \
- cmd.h codepage.h varchar.h z80.h
-zx81out.o: zx81out.c global.h basetype.h util.h state.h codepage.h \
- parse.h cmd.h zx81out.h
+t64out.o: t64out.c global.h basetype.h util.h state.h memory.h codepage.h \
+  parse.h cmd.h t64out.h expr.h
+util.o: util.c global.h basetype.h util.h state.h memory.h
+varchar.o: varchar.c global.h basetype.h util.h state.h memory.h \
+  codepage.h parse.h cmd.h varchar.h
+z80.o: z80.c global.h basetype.h util.h state.h memory.h expr.h label.h \
+  parse.h cmd.h codepage.h varchar.h z80.h
+zx81out.o: zx81out.c global.h basetype.h util.h state.h memory.h \
+  codepage.h parse.h cmd.h zx81out.h

@@ -37,6 +37,8 @@
 #define FALSE 0
 #endif
 
+#define CASM_MAX_LINE_LENGTH 4096
+
 
 /* ---------------------------------------- GLOBAL TYPES
 */
