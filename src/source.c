@@ -96,7 +96,7 @@ int SourceLoad(const char *path)
     {
         Line line;
 
-        Trim(buff);
+        RemoveNL(buff);
 
         if (!ParseLine(&line, buff))
         {
@@ -107,6 +107,18 @@ int SourceLoad(const char *path)
 
         AddSourceLine(DupStr(buff), path, line_no);
         line_no++;
+
+        if (line.no_tokens == 2 &&
+                (CompareString(line.token[0], "include") ||
+                  CompareString(line.token[0], ".include")))
+        {
+            if (!SourceLoad(line.token[1]))
+            {
+                ParseFree(&line);
+                return FALSE;
+            }
+        }
+
         ParseFree(&line);
     }
 
@@ -115,10 +127,7 @@ int SourceLoad(const char *path)
         fclose(fp);
     }
 
-    if (head)
-    {
-        current = head;
-    }
+    current = head;
 
     return TRUE;
 }
@@ -133,20 +142,23 @@ void SourceRewind(void)
     current = head;
 }
 
-void SourceRead(char buff[], size_t maxlen)
+int SourceRead(char buff[], size_t maxlen)
 {
-    CopyStr(buff, current->line, maxlen);
-}
-
-int SourceAdvance(void)
-{
-    if (current == tail)
+    if (!current)
     {
         return 0;
     }
 
-    current = current->next;
+    CopyStr(buff, current->line, maxlen);
     return 1;
+}
+
+void SourceNext(void)
+{
+    if (current)
+    {
+        current = current->next;
+    }
 }
 
 const char *SourceGetPath(void)

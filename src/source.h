@@ -43,13 +43,13 @@ int     SourceHasContents(void);
 */
 void    SourceRewind(void);
 
-/* Get the current line
+/* Get the current line.  Returns FALSE at the end of the sources.
 */
-void    SourceRead(char buff[], size_t maxlen);
+int     SourceRead(char buff[], size_t maxlen);
 
-/* Move to the next line.  Returns FALSE when there is no next line.
+/* Advance to the next line
 */
-int     SourceAdvance(void);
+void    SourceNext(void);
 
 /* Get the source filename for the current line
 */

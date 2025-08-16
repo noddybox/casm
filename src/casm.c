@@ -41,6 +41,7 @@
 #include "listing.h"
 #include "alias.h"
 #include "output.h"
+#include "source.h"
 
 /* ---------------------------------------- PROCESSORS
 */
@@ -66,7 +67,7 @@ static const char *casm_usage =
 "MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n"
 "GNU General Public License (Version 3) for more details.\n"
 "\n"
-"usage: casm file\n";
+"usage: casm [-h|file]\n";
 
 
 /* ---------------------------------------- TYPES
@@ -205,10 +206,8 @@ CommandStatus SetOption(int opt, int argc, char *argv[],
 /* ---------------------------------------- PROTOS
 */
 static void             CheckLimits(void);
-
 static void             InitProcessors(void);        
-
-static void             RunPass(const char *name, FILE *, int depth);
+static void             RunPass(void);
 static void             ProduceOutput(void);
 
 
@@ -682,18 +681,10 @@ int main(int argc, char *argv[])
 
     CheckLimits();
 
-    if (!argv[1])
+    if (argv[1] && strcmp(argv[1], "-h") == 0)
     {
         fprintf(stderr,"%s\n", casm_usage);
-        exit(EXIT_FAILURE);
-    }
-
-    fp = fopen(argv[1], "r");
-
-    if (!fp)
-    {
-        fprintf(stderr,"Failed to read from %s\n", argv[1]);
-        return EXIT_FAILURE;
+        return EXIT_SUCCESS;
     }
 
     PushValTableHandler(option_set, SetOption);
@@ -718,10 +709,20 @@ int main(int argc, char *argv[])
     SetPC(0);
     InitProcessors();
 
+    if (!SourceLoad(argv[1]))
+    {
+        return EXIT_FAILURE;
+    }
+
+    if (!SourceHasContents())
+    {
+        return EXIT_FAILURE;
+    }
+
     while(!done)
     {
-        RunPass(argv[1], fp, 0);
-        rewind(fp);
+        RunPass();
+        SourceRewind();
 
         SetAddressBank(0);
         SetPC(0);
@@ -741,6 +742,8 @@ int main(int argc, char *argv[])
     }
 
     ProduceOutput();
+
+    SourceFree();
 
     return EXIT_SUCCESS;
 }
@@ -808,21 +811,14 @@ static CommandStatus RunLine(const char *label, int argc, char *argv[],
 }
 
 
-static void RunPass(const char *name, FILE *fp, int depth)
+static void RunPass(void)
 {
     char src[CASM_MAX_LINE_LENGTH];
     char err[CASM_MAX_LINE_LENGTH];
-    int line_no = 1;
     MacroDef *macro_def = NULL;
     Stack *macro_stack;
     Macro *macro = NULL;
     int skip_macro = FALSE;
-
-    if (depth == 1024)
-    {
-        fprintf(stderr, "Include files too deep\n");
-        exit(EXIT_FAILURE);
-    }
 
     macro_stack = StackCreate();
 
@@ -862,7 +858,7 @@ static void RunPass(const char *name, FILE *fp, int depth)
         
         if (!macro)
         {
-            if (!fgets(src, sizeof src, fp))
+            if (!SourceRead(src, sizeof src))
             {
                 if (macro_def)
                 {
@@ -978,25 +974,8 @@ static void RunPass(const char *name, FILE *fp, int depth)
         if (CompareString(argv[0], "include") ||
                 CompareString(argv[0], ".include"))
         {
-            FILE *fp;
-
-            if (argc < 2)
-            {
-                snprintf(err, sizeof err, "%s: missing argument", argv[0]);
-                cmdstat = CMD_FAILED;
-                goto error_handling;
-            }
-
-            if (!(fp = fopen(argv[1], "r")))
-            {
-                snprintf(err, sizeof err, "%s: failed to open '%s'",
-                                                    argv[0], argv[1]);
-                cmdstat = CMD_FAILED;
-                goto error_handling;
-            }
-
-            RunPass(argv[1], fp, depth + 1);
-
+            /* Already handled by source loading
+            */
             goto next_line;
         }
 
@@ -1115,25 +1094,33 @@ error_handling:
                 break;
 
             case CMD_OK_WARNING:
-                ListError("%s(%d): WARNING %s", name, line_no, err);
-                ListError("%s(%d): %s", name, line_no, src);
+                ListError("%s(%d): WARNING %s", SourceGetPath(), 
+                                                SourceGetLineNumber(), err);
+                ListError("%s(%d): %s", SourceGetPath(), 
+                                        SourceGetLineNumber(), src);
 
                 if (macro)
                 {
                     ListError("%s(%d): In macro '%s'",
-                                        name, line_no, MacroName(macro));
+                                SourceGetPath(),
+                                SourceGetLineNumber(),
+                                MacroName(macro));
                 }
 
                 break;
 
             case CMD_NOT_KNOWN:
                 ListError("%s(%d): Unknown command/opcode '%s'",
-                                        name, line_no, line.token[cmd_offset]);
+                                        SourceGetPath(), 
+                                        SourceGetLineNumber(),
+                                        line.token[cmd_offset]);
 
                 if (macro)
                 {
                     ListError("%s(%d): In macro '%s'",
-                                        name, line_no, MacroName(macro));
+                                        SourceGetPath(),
+                                        SourceGetLineNumber(),
+                                        MacroName(macro));
                 }
 
                 exit(EXIT_FAILURE);
@@ -1141,13 +1128,17 @@ error_handling:
                 break;
 
             case CMD_FAILED:
-                ListError("%s(%d): ERROR %s", name, line_no, err);
-                ListError("%s(%d): %s", name, line_no, src);
+                ListError("%s(%d): ERROR %s", SourceGetPath(),
+                                              SourceGetLineNumber(), err);
+                ListError("%s(%d): %s", SourceGetPath(), 
+                                        SourceGetLineNumber(), src);
 
                 if (macro)
                 {
                     ListError("%s(%d): In macro '%s'",
-                                        name, line_no, MacroName(macro));
+                                        SourceGetPath(), 
+                                        SourceGetLineNumber(),
+                                        MacroName(macro));
                 }
 
                 exit(EXIT_FAILURE);
@@ -1156,12 +1147,9 @@ error_handling:
         }
 
 next_line:
-        if (!macro)
-        {
-            line_no++;
-        }
-
         ParseFree(&line);
+
+        SourceNext();
     }
 }
 
